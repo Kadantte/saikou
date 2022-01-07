@@ -32,11 +32,12 @@ class NineAnime(private val dub:Boolean=false, override val name: String = "9Ani
             val token = Regex("(?<=window.skey = )'.*?'").find(
                 Jsoup.connect(embedLink).header("referer", host[0]).get().html()
             )?.value?.trim('\'') //token to get the m3u8
-
+            try{
             val m3u8Link = Json.decodeFromString<JsonObject>(Jsoup.connect("${embedLink.replace("/e/", "/info/")}&skey=$token")
                 .header("referer", host[0])
                 .ignoreContentType(true).get().body().text())["media"]!!.jsonObject["sources"]!!.jsonArray[0].jsonObject["file"].toString().trim('"')
             streams.add(Episode.StreamLinks(name,listOf(Episode.Quality(m3u8Link,"Multi",0)),"https://vidstream.pro/"))
+            }catch (e:Exception){}
         }
         episode.streamLinks = streams
         return episode
