@@ -20,6 +20,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.text.DecimalFormat
 
 class SelectorDialogFragment : BottomSheetDialogFragment(){
     private var _binding: BottomSheetSelectorBinding? = null
@@ -99,7 +100,8 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
             val url = urls[position]
             binding.urlQuality.text = url.quality
             binding.urlSize.visibility = if(url.size!=null) View.VISIBLE else View.GONE
-            binding.urlSize.text = url.size.toString()+"MB"
+
+            binding.urlSize.text = DecimalFormat("#.##").format(url.size?:0).toString()+" MB"
         }
 
         override fun getItemCount(): Int = urls.size

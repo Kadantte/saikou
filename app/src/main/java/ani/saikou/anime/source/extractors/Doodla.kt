@@ -9,7 +9,7 @@ class Doodla : Extractor() {
     override fun getStreamLinks(name: String, url: String): Episode.StreamLinks {
 //        println(name)
         val stockPage = Jsoup.connect(url.replace("/e/","/d/")).get()
-        val size = stockPage.select("div.size").text().toInt()
+        val size = stockPage.select("div.size").text().toDouble()
 //        println(
 //            Jsoup.connect(stockPage.select(".download-content > a").attr("href")).get().select(".container a").attr("onclick").split("'")[1]
 //        )

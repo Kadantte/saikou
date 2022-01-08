@@ -28,7 +28,7 @@ class GogoCDN: Extractor() {
         val encrypted = response.select("script[data-name='crypto']").attr("data-value")
         val iv = response.select("script[data-name='ts']").attr("data-value").toByteArray()
 
-        val id = Regex("id=([^&]+)").find(url)!!.value
+        val id = Regex("id=([^&]+)").find(url)!!.value.removePrefix("id=")
 
         val secretKey = cryptoHandler(encrypted,iv,iv+iv,false)
         val encryptedId = cryptoHandler(id,"0000000000000000".toByteArray(),secretKey.toByteArray())
@@ -43,7 +43,7 @@ class GogoCDN: Extractor() {
             if(label != "auto"){
                 list.add(Episode.Quality(
                     fileURL,
-                    label,
+                    label.replace(" ",""),
                     getSize(fileURL,"https://gogoanime.pe")
                 ))
             }

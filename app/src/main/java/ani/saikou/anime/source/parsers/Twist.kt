@@ -69,8 +69,8 @@ class Twist(override val name: String="twist.moe") :AnimeParser() {
                 listOf(
                     Episode.Quality(
                         url = "https://cdn.twist.moe${DecodeTwistSources.decryptSource(url)}",
-                        quality = "unknown",
-                        size = 0
+                        quality = "Default Quality",
+                        size = 0.0
                     )
                 ),
                 "https://twist.moe/"

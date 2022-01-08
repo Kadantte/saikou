@@ -331,14 +331,14 @@ fun loadImage(url:String?,imageView: ImageView,referer:String?=null){
     }
 }
 
-fun getSize(url: String,referer: String=""):Int?{
+fun getSize(url: String,referer: String=""):Double?{
     return try {
         Jsoup.connect(url)
             .ignoreContentType(true)
             .ignoreHttpErrors(true).timeout(750)
             .header("referer",referer)
             .method(Connection.Method.HEAD)
-            .execute().header("Content-Length")?.toInt()?.div(1048576)
+            .execute().header("Content-Length")?.toDouble()?.div(1048576)
     } catch (e:Exception){
         logger(e)
         null

@@ -16,7 +16,7 @@ data class Episode (
     data class Quality(
         val url: String,
         val quality: String,
-        val size: Int?
+        val size: Double?
     ):Serializable
 
     data class StreamLinks(

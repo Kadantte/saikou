@@ -37,7 +37,9 @@ class Gogo(private val dub:Boolean=false, override val name: String = "gogoanime
 //            "dood" in domain -> Doodla()
             else -> null
         }
-        return extractor?.getStreamLinks(name,url)
+        val a = extractor?.getStreamLinks(name,url)
+        if (a!=null && a.quality.isNotEmpty()) return a
+        return null
     }
 
     override fun getStream(episode: Episode): Episode {
