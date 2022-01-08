@@ -332,12 +332,17 @@ fun loadImage(url:String?,imageView: ImageView,referer:String?=null){
 }
 
 fun getSize(url: String,referer: String=""):Int?{
-    return Jsoup.connect(url)
-        .ignoreContentType(true)
-        .ignoreHttpErrors(true)
-        .header("referer",referer)
-        .method(Connection.Method.HEAD)
-        .execute().header("Content-Length")?.toInt()?.div(1048576)
+    return try {
+        Jsoup.connect(url)
+            .ignoreContentType(true)
+            .ignoreHttpErrors(true).timeout(750)
+            .header("referer",referer)
+            .method(Connection.Method.HEAD)
+            .execute().header("Content-Length")?.toInt()?.div(1048576)
+    } catch (e:Exception){
+        logger(e)
+        null
+    }
 }
 
 
