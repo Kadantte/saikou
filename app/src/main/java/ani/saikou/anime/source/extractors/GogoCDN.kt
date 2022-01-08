@@ -3,13 +3,13 @@ package ani.saikou.anime.source.extractors
 import android.util.Base64
 import ani.saikou.anime.Episode
 import ani.saikou.anime.source.Extractor
+import ani.saikou.getSize
 import ani.saikou.logger
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
-import org.jsoup.Connection
 import org.jsoup.Jsoup
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
@@ -44,12 +44,7 @@ class GogoCDN: Extractor() {
                 list.add(Episode.Quality(
                     fileURL,
                     label,
-                    Jsoup.connect(fileURL)
-                        .ignoreContentType(true)
-                        .ignoreHttpErrors(true)
-                        .header("referer","https://gogoanime.pe")
-                        .method(Connection.Method.HEAD)
-                        .execute().header("Content-Length")?.toInt()?.div(1048576)
+                    getSize(fileURL,"https://gogoanime.pe")
                 ))
             }
         }

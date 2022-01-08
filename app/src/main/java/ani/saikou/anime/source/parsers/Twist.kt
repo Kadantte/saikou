@@ -63,7 +63,6 @@ class Twist(override val name: String="twist.moe") :AnimeParser() {
         val url = Json.decodeFromString<JsonArray>(
             Jsoup.connect(episode.link!!).ignoreContentType(true).get().body().text()
         )[episode.number.toInt()-1].jsonObject["source"].toString().trim('"')
-        1 ushr 2
         episode.streamLinks =  arrayListOf(
             Episode.StreamLinks(
                 "Twist",

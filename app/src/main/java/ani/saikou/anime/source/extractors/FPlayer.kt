@@ -2,6 +2,7 @@ package ani.saikou.anime.source.extractors
 
 import ani.saikou.anime.Episode
 import ani.saikou.anime.source.Extractor
+import ani.saikou.getSize
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.*
 import org.jsoup.Jsoup
@@ -17,7 +18,7 @@ class FPlayer: Extractor() {
                     Episode.Quality(
                         it.jsonObject["file"].toString().trim('"'),
                         it.jsonObject["label"].toString().trim('"'),
-                        1
+                        getSize(it.jsonObject["file"].toString().trim('"'))
                     )
                 )
             }

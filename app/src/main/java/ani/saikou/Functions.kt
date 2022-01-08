@@ -24,7 +24,6 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.DialogFragment
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
-import androidx.lifecycle.MutableLiveData
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import androidx.recyclerview.widget.RecyclerView
@@ -41,6 +40,7 @@ import kotlin.math.min
 import com.squareup.picasso.OkHttp3Downloader
 import okhttp3.Cache
 import okhttp3.OkHttpClient
+import org.jsoup.Connection
 
 const val STATE_RESUME_WINDOW = "resumeWindow"
 const val STATE_RESUME_POSITION = "resumePosition"
@@ -330,6 +330,16 @@ fun loadImage(url:String?,imageView: ImageView,referer:String?=null){
         }
     }
 }
+
+fun getSize(url: String,referer: String=""):Int?{
+    return Jsoup.connect(url)
+        .ignoreContentType(true)
+        .ignoreHttpErrors(true)
+        .header("referer",referer)
+        .method(Connection.Method.HEAD)
+        .execute().header("Content-Length")?.toInt()?.div(1048576)
+}
+
 
 class App: MultiDexApplication() {
     override fun attachBaseContext(base: Context?) {
