@@ -18,7 +18,7 @@ import kotlin.collections.ArrayList
 
 fun executeQuery(query:String, variables:String="",force:Boolean=false,useToken:Boolean=true): JsonObject? {
     try {
-        val set = Jsoup.connect("https://graphql.Anilist.co/")
+        val set = Jsoup.connect("https://graphql.anilist.co/")
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
             .requestBody("""{"query":"$query","variables": "$variables"}""")

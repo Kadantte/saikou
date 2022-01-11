@@ -31,14 +31,8 @@ class MangaDex(override val name: String="mangadex.org") :MangaParser() {
                 if(it.jsonObject["attributes"]!!.jsonObject["translatedLanguage"].toString() == "\"en\""){
                     val chapter = it.jsonObject["attributes"]!!.jsonObject["chapter"].toString().trim('"')
                     val title = it.jsonObject["attributes"]!!.jsonObject["title"].toString().trim('"')
-                    val hash = it.jsonObject["attributes"]!!.jsonObject["hash"].toString().trim('"')
-                    val images = arrayListOf<String>()
-                    for(page in it.jsonObject["attributes"]!!.jsonObject["data"]!!.jsonArray){
-                        images.add("https://uploads.mangadex.org/data/$hash/${page.toString().trim('"')}")
-                    }
-                    saveData("mangadex_${chapter}_$hash",images)
-//                    println(images)
-                    arr[chapter] = MangaChapter(chapter,title,hash)
+                    val id = it.jsonObject["id"].toString().trim('"')
+                    arr[chapter] = MangaChapter(chapter,title,id)
                 }
             }
             var a = (index.toFloat() / totalChapters * 100)
@@ -49,7 +43,15 @@ class MangaDex(override val name: String="mangadex.org") :MangaParser() {
     }
 
     override fun getChapter(chapter: MangaChapter): MangaChapter {
-        chapter.images = loadData<ArrayList<String>>("mangadex_${chapter.number}_${chapter.link}")
+        val json = Json.decodeFromString<JsonObject>(Jsoup.connect("$host/at-home/server/${chapter.link}").ignoreContentType(true).get().text())
+        println("$json")
+        val images = arrayListOf<String>()
+        val hash = json.jsonObject["chapter"]!!.jsonObject["hash"].toString().trim('"')
+        for(page in json.jsonObject["chapter"]!!.jsonObject["data"]!!.jsonArray){
+            images.add("https://uploads.mangadex.org/data/${hash}/${page.toString().trim('"')}")
+        }
+        println(images)
+        chapter.images = images
         return chapter
     }
 

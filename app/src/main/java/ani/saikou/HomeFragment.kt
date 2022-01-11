@@ -56,34 +56,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-        model.homeRefresh.observe(viewLifecycleOwner, {
-            if (it) {
-                scope.launch {
-                    //Get userData First
-                    if (Anilist.userid == null)
-                        if (Anilist.query.getUserData()) load() else logger("Error loading data")
-                    else load()
-                    model.load.postValue(true)
-                    //get Watching in new Thread
-                    val a = async { model.setAnimeContinue() }
-                    //get Reading in new Thread
-                    val b = async { model.setMangaContinue() }
-                    // get genres and respective images
-                    val c = async { model.setListImages() }
-                    //get List Images in current Thread(idle)
-
-                    //get Recommended in current Thread(idle)
-                    model.setRecommendation()
-
-                    awaitAll(a, b, c)
-                    requireActivity().runOnUiThread {
-                        model.homeRefresh.postValue(false)
-                        binding.homeRefresh.isRefreshing = false
-                    }
-                }
-            }
-        })
-
 
         binding.homeContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> {
             topMargin = statusBarHeight
@@ -200,5 +172,33 @@ class HomeFragment : Fragment() {
             binding.homeRecommendedProgressBar,
             binding.homeRecommendedEmpty
         )
+
+        model.homeRefresh.observe(viewLifecycleOwner, {
+            if (it) {
+                scope.launch {
+                    //Get userData First
+                    if (Anilist.userid == null)
+                        if (Anilist.query.getUserData()) load() else logger("Error loading data")
+                    else load()
+                    model.load.postValue(true)
+                    //get Watching in new Thread
+                    val a = async { model.setAnimeContinue() }
+                    //get Reading in new Thread
+                    val b = async { model.setMangaContinue() }
+                    // get genres and respective images
+                    val c = async { model.setListImages() }
+                    //get List Images in current Thread(idle)
+
+                    //get Recommended in current Thread(idle)
+                    model.setRecommendation()
+
+                    awaitAll(a, b, c)
+                    requireActivity().runOnUiThread {
+                        model.homeRefresh.postValue(false)
+                        binding.homeRefresh.isRefreshing = false
+                    }
+                }
+            }
+        })
     }
 }
