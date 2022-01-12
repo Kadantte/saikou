@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -24,16 +25,20 @@ import ani.saikou.anime.AnimeSourceFragment
 import ani.saikou.databinding.ActivityMediaBinding
 import ani.saikou.manga.MangaSourceFragment
 import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayout.OnTabSelectedListener
 import kotlinx.coroutines.*
-import nl.joery.animatedbottombar.AnimatedBottomBar
 import kotlin.math.abs
+import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
+
 
 class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedListener {
 
     private lateinit var binding: ActivityMediaBinding
     private val scope = CoroutineScope(Dispatchers.Default)
     private val model: MediaDetailsViewModel by viewModels()
-    private lateinit var tabLayout : AnimatedBottomBar
+    private var timer: CountDownTimer? = null
+    private lateinit var tabLayout : TabLayout
     var selected = 0
 
     @SuppressLint("SetTextI18n")
@@ -65,7 +70,7 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
             onBackPressed()
         }
         val viewPager = binding.mediaViewPager
-        viewPager.isUserInputEnabled = false
+        tabLayout = binding.mediaTab
 
         val media: Media = intent.getSerializableExtra("media") as Media
         media.selected = loadData<Selected>(media.id.toString()+".select")?: Selected()
@@ -113,29 +118,58 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         }
         if (media.anime!=null){
             binding.mediaTotal.text = if (media.anime.nextAiringEpisode!=null) " | "+(media.anime.nextAiringEpisode.toString()+" | "+(media.anime.totalEpisodes?:"~").toString()) else " | "+(media.anime.totalEpisodes?:"~").toString()
-            tabLayout = binding.mediaAnimeTab
             viewPager.adapter = ViewPagerAdapter(supportFragmentManager, lifecycle,true)
+            tabLayout.addTab(tabLayout.newTab().setText(R.string.watch).setIcon(R.drawable.ic_round_movie_filter_24))
+
         }
         else if (media.manga!=null){
             binding.mediaTotal.text = " | "+(media.manga.totalChapters?:"~").toString()
-            tabLayout = binding.mediaMangaTab
             viewPager.adapter = ViewPagerAdapter(supportFragmentManager, lifecycle,false)
+            tabLayout.addTab(tabLayout.newTab().setText(R.string.read).setIcon(R.drawable.ic_round_import_contacts_24))
         }
-        selected = media.selected!!.window
-        viewPager.setPageTransformer(ZoomOutPageTransformer())
-        binding.mediaTitle.translationX = -screenWidth
-        tabLayout.visibility = View.VISIBLE
-//        tabLayout.setupWithViewPager2(viewPager)
-        tabLayout.selectTabAt(selected,false)
-        viewPager.post { viewPager.setCurrentItem(selected, false) }
-        tabLayout.setOnTabSelectListener(object : AnimatedBottomBar.OnTabSelectListener {
-            override fun onTabSelected(lastIndex: Int, lastTab: AnimatedBottomBar.Tab?, newIndex: Int, newTab: AnimatedBottomBar.Tab) {
-                selected = newIndex
-                viewPager.setCurrentItem(selected, false)
-                media.selected!!.window = newIndex
-                saveData(media.id.toString(),media.selected!!)
+
+        model.getMedia().observe(this,{
+            if(it!=null) {
+                if (media.anime?.nextAiringEpisodeTime != null && (media.anime.nextAiringEpisodeTime!! - System.currentTimeMillis() / 1000) <= 86400 * 7.toLong()) {
+                    binding.mediaCountdownContainer.visibility = View.VISIBLE
+                    timer = object : CountDownTimer((media.anime.nextAiringEpisodeTime!! + 10000) * 1000 - System.currentTimeMillis(), 1000) {
+                        override fun onTick(millisUntilFinished: Long) {
+                            val a = millisUntilFinished / 1000
+                            binding.mediaCountdown.text =
+                                "Next Episode will be released in \n ${a / 86400} days ${a % 86400 / 3600} hrs ${a % 86400 % 3600 / 60} mins ${a % 86400 % 3600 % 60} secs"
+                        }
+                        override fun onFinish() {
+                            binding.mediaCountdownContainer.visibility = View.GONE
+                        }
+                    }
+                    timer?.start()
+                }
             }
         })
+
+        selected = media.selected!!.window
+        binding.mediaTitle.translationX = -screenWidth
+        tabLayout.visibility = View.VISIBLE
+
+        tabLayout.addOnTabSelectedListener(object : OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                selected = tab.position
+                viewPager.currentItem = selected
+                media.selected!!.window = tab.position
+                saveData(media.id.toString(),media.selected!!)
+            }
+            override fun onTabUnselected(tab: TabLayout.Tab?) {}
+            override fun onTabReselected(tab: TabLayout.Tab?) {}
+        })
+
+        viewPager.registerOnPageChangeCallback(object : OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                tabLayout.selectTab(tabLayout.getTabAt(position))
+            }
+        })
+
+        viewPager.post { viewPager.setCurrentItem(selected, false) }
+
         scope.launch {
             model.loadMedia(media)
         }
@@ -143,11 +177,12 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
 
     override fun onDestroy() {
         scope.cancel()
+        timer?.cancel()
         super.onDestroy()
     }
 
     override fun onResume() {
-        tabLayout.selectTabAt(selected,false)
+        tabLayout.selectTab(tabLayout.getTabAt(selected),false)
         binding.mediaBannerStatus.visibility=if (!isCollapsed) View.VISIBLE else View.GONE
         super.onResume()
     }

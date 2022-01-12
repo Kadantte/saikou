@@ -9,9 +9,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import ani.saikou.*
 import ani.saikou.databinding.ActivityExoplayerBinding
 import com.google.android.exoplayer2.*
@@ -37,6 +34,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     private var currentWindow = 0
     private var playbackPosition: Long = 0
     private var isFullscreen = false
+    private var isInitialized = false
     private var isPlayerPlaying = true
     private var trackDialog: Dialog? = null
 
@@ -49,6 +47,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         super.onCreate(savedInstanceState)
         binding = ActivityExoplayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        initActivity(this)
 
         if (android.provider.Settings.System.getInt(contentResolver, android.provider.Settings.System.ACCELEROMETER_ROTATION, 0) != 1) requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 
@@ -105,11 +104,18 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     }
 
     private fun hideSystemBars() {
-        val windowInsetsController = ViewCompat.getWindowInsetsController(window.decorView) ?: return
-        // Configure the behavior of the hidden system bars
-        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        // Hide both the status bar and the navigation bar
-        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+        @Suppress("DEPRECATION")
+        window.decorView.systemUiVisibility = (
+                // Do not let system steal touches for showing the navigation bar
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        // Hide the nav bar and status bar
+                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_FULLSCREEN
+                        // Keep the app content behind the bars even if user swipes them up
+                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
+        // make navbar translucent - do this already in hideSystemUI() so that the bar
+        // is translucent if user swipes it up
     }
 
     private fun initPlayer(){
@@ -137,6 +143,8 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                 }
             }
         })
+
+        isInitialized = true
     }
 
 //    private fun releasePlayer(){
@@ -162,8 +170,10 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
     override fun onResume() {
         super.onResume()
-        playerView.onResume()
-        playerView.useController = true
+        if(isInitialized) {
+            playerView.onResume()
+            playerView.useController = true
+        }
     }
 
     override fun onStop() {

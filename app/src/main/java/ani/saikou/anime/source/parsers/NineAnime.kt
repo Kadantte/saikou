@@ -1,13 +1,10 @@
 package ani.saikou.anime.source.parsers
 
+import ani.saikou.*
 import ani.saikou.anime.Episode
 import ani.saikou.anime.source.AnimeParser
-import ani.saikou.loadData
-import ani.saikou.logger
 import ani.saikou.media.Media
 import ani.saikou.media.Source
-import ani.saikou.saveData
-import ani.saikou.sortByTitle
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -83,6 +80,7 @@ class NineAnime(private val dub:Boolean=false, override val name: String = "9Ani
 
     override fun getSlugEpisodes(slug:String): MutableMap<String, Episode>{
         val responseArray = mutableMapOf<String,Episode>()
+        try{
         val pageBody = Jsoup.connect(slug).get().body()
         pageBody.select(".tab-pane > ul.nav").forEach{
             it.select("li>a").forEach { i ->
@@ -91,6 +89,7 @@ class NineAnime(private val dub:Boolean=false, override val name: String = "9Ani
             }
         }
         logger("Response Episodes : $responseArray")
+        }catch (e:Exception){ toastString(e.toString()) }
         return responseArray
     }
 

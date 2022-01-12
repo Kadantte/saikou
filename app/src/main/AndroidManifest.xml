@@ -38,7 +38,7 @@
             android:name=".anime.ExoplayerView"
             android:configChanges="orientation|screenSize|layoutDirection"
             android:keepScreenOn="true"
-            android:theme="@style/Theme.Saikou.Exoplayer" />
+             />
         <activity
             android:name=".anilist.Login"
             android:exported="true">
@@ -86,7 +86,6 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

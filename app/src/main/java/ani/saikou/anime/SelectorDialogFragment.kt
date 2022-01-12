@@ -117,6 +117,7 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
             }
         }
     }
+
     companion object {
         fun newInstance(media: Media, episode: Episode): SelectorDialogFragment =
             SelectorDialogFragment().apply {

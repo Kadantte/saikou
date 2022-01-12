@@ -28,7 +28,9 @@
             android:id="@+id/streamRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            tools:itemCount="2"
+            android:isScrollContainer="false"
+            android:nestedScrollingEnabled="false"
+            tools:itemCount="4"
             tools:listitem="@layout/item_url" />
 
     </androidx.cardview.widget.CardView>

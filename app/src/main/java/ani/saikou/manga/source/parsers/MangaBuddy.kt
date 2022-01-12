@@ -74,6 +74,7 @@ class MangaBuddy(override val name: String="mangabuddy.com") : MangaParser() {
 
     override fun search(string: String): ArrayList<Source> {
         val response = arrayListOf<Source>()
+        try{
         Jsoup.connect("https://mangabuddy.com/search?status=all&sort=views&q=$string").get().select(".list > .book-item > .book-detailed-item > .thumb > a").forEach {
             if (it.attr("title")!=""){
                 response.add(Source(
@@ -82,7 +83,7 @@ class MangaBuddy(override val name: String="mangabuddy.com") : MangaParser() {
                     cover = it.select("img").attr("data-src"))
                 )
             }
-        }
+        }} catch(e:Exception){ toastString(e.toString()) }
         return response
     }
 

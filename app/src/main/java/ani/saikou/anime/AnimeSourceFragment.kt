@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -34,7 +33,6 @@ class AnimeSourceFragment : Fragment() {
     private val binding get() = _binding!!
     private val scope = CoroutineScope(Dispatchers.Default)
     private var screenWidth:Float =0f
-    private var timer:CountDownTimer?=null
 
     private var selected:ImageView?=null
     private var selectedChip:Chip?= null
@@ -60,20 +58,6 @@ class AnimeSourceFragment : Fragment() {
         model.getMedia().observe(viewLifecycleOwner,{
             val media = it
             if (media?.anime != null) {
-                if (media.anime.nextAiringEpisodeTime!=null && (media.anime.nextAiringEpisodeTime!!-System.currentTimeMillis()/1000)<=86400*7.toLong()) {
-                    binding.animeSourceCountdownContainer.visibility = View.VISIBLE
-                    timer = object :
-                        CountDownTimer((media.anime.nextAiringEpisodeTime!! + 10000)*1000-System.currentTimeMillis(), 1000) {
-                        override fun onTick(millisUntilFinished: Long) {
-                            val a = millisUntilFinished/1000
-                            binding.animeSourceCountdown.text = "Next Episode will be released in \n ${a/86400} days ${a%86400/3600} hrs ${a%86400%3600/60} mins ${a%86400%3600%60} secs"
-                        }
-                        override fun onFinish() {
-                            binding.animeSourceCountdownContainer.visibility = View.GONE
-                        }
-                    }
-                    timer?.start()
-                }
                 binding.animeSourceContainer.visibility = View.VISIBLE
                 binding.mediaLoadProgressBar.visibility = View.GONE
                 progress = View.GONE
@@ -188,7 +172,6 @@ class AnimeSourceFragment : Fragment() {
     }
 
     override fun onDestroy() {
-        timer?.cancel()
         AnimeSources.flushLive()
         super.onDestroy()
     }

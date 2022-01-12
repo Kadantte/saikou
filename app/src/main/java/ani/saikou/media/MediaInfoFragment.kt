@@ -3,7 +3,6 @@ package ani.saikou.media
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,7 +19,6 @@ class MediaInfoFragment : Fragment() {
     private var _binding: FragmentMediaInfoBinding? = null
     private val binding get() = _binding!!
     private var loaded = false
-    private var timer: CountDownTimer? = null
     private var type = "ANIME"
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -55,22 +53,6 @@ class MediaInfoFragment : Fragment() {
                 binding.mediaInfoStart.text = if (media.startDate.toString()!="") media.startDate.toString() else "??"
                 binding.mediaInfoEnd.text = if (media.endDate.toString()!="") media.endDate.toString() else "??"
                 if (media.anime!=null) {
-                    if (media.anime.nextAiringEpisodeTime!=null && (media.anime.nextAiringEpisodeTime!!-System.currentTimeMillis()/1000)<=86400*7.toLong()) {
-                        binding.mediaInfoCountdownContainer.visibility = View.VISIBLE
-                        timer = object :
-                            CountDownTimer((media.anime.nextAiringEpisodeTime!! + 10000)*1000-System.currentTimeMillis(), 1000) {
-
-                            override fun onTick(millisUntilFinished: Long) {
-                                val a = millisUntilFinished/1000
-                                binding.mediaInfoCountdown.text = "Next Episode will be released in \n ${a/86400} days ${a%86400/3600} hrs ${a%86400%3600/60} mins ${a%86400%3600%60} secs"
-                            }
-                            override fun onFinish() {
-                                binding.mediaInfoCountdownContainer.visibility = View.GONE
-                            }
-                        }
-                        timer?.start()
-                    }
-
                     binding.mediaInfoDuration.text = if (media.anime.episodeDuration!=null) media.anime.episodeDuration.toString() else "??"
                     binding.mediaInfoDurationContainer.visibility = View.VISIBLE
                     binding.mediaInfoSeasonContainer.visibility = View.VISIBLE
@@ -114,10 +96,5 @@ class MediaInfoFragment : Fragment() {
     override fun onResume() {
         binding.mediaInfoProgressBar.visibility = if (!loaded) View.VISIBLE else View.GONE
         super.onResume()
-    }
-
-    override fun onDestroy() {
-        timer?.cancel()
-        super.onDestroy()
     }
 }

@@ -124,7 +124,7 @@ class MediaListDialogFragment : BottomSheetDialogFragment(){
                         if (start.date.year!=null) start.date.getEpoch() else null,
                         if (end.date.year!=null) end.date.getEpoch() else null,
                         )
-                        requireActivity().runOnUiThread {
+                        activity?.runOnUiThread {
                             val m : AnilistHomeViewModel by activityViewModels()
                             m.homeRefresh.postValue(true)
                             if (binding.mediaListScore.text.toString()!="") model.userScore.postValue(binding.mediaListScore.text.toString().toDouble()*10)

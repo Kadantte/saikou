@@ -358,30 +358,38 @@ class AnilistQueries{
             val returnMap = mutableMapOf<String,String>()
             val query = "{GenreCollection}"
             val ids = arrayListOf<String>()
-            val executedQuery = executeQuery(query, force = true)!!
-            if(executedQuery["data"]!=JsonNull) {
-                executedQuery["data"]!!.jsonObject["GenreCollection"]!!.jsonArray.forEach { genre ->
-                    val genreQuery = """{ Page(perPage: 10){media(genre:${genre.toString().replace("\"", "\\\"")}, sort: TRENDING_DESC, type: ANIME, countryOfOrigin:\"JP\") {id bannerImage } } }"""
-                    val response = executeQuery(genreQuery, force = true)!!["data"]!!.jsonObject["Page"]!!
-                    if (response.jsonObject["media"] != JsonNull) {
-                        run next@{
-                            response.jsonObject["media"]!!.jsonArray.forEach {
-                                if (it.jsonObject["id"].toString() !in ids && it.jsonObject["bannerImage"] != JsonNull) {
-                                    ids.add(it.jsonObject["id"].toString())
-                                    returnMap[genre.toString().trim('"')] = it.jsonObject["bannerImage"].toString().trim('"')
-                                    return@next
+            try {
+                val executedQuery = executeQuery(query, force = true)!!
+                if (executedQuery["data"] != JsonNull) {
+                    executedQuery["data"]!!.jsonObject["GenreCollection"]!!.jsonArray.forEach { genre ->
+                        val genreQuery = """{ Page(perPage: 10){media(genre:${
+                            genre.toString().replace("\"", "\\\"")
+                        }, sort: TRENDING_DESC, type: ANIME, countryOfOrigin:\"JP\") {id bannerImage } } }"""
+                        val response =
+                            executeQuery(genreQuery, force = true)!!["data"]!!.jsonObject["Page"]!!
+                        if (response.jsonObject["media"] != JsonNull) {
+                            run next@{
+                                response.jsonObject["media"]!!.jsonArray.forEach {
+                                    if (it.jsonObject["id"].toString() !in ids && it.jsonObject["bannerImage"] != JsonNull) {
+                                        ids.add(it.jsonObject["id"].toString())
+                                        returnMap[genre.toString().trim('"')] =
+                                            it.jsonObject["bannerImage"].toString().trim('"')
+                                        return@next
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                saveData("genres", returnMap, activity)
+                saveData("genresTime", System.currentTimeMillis(), activity)
+                success = true
+                Anilist.genres = returnMap
+                logger("$returnMap \nfinished")
+                snack("Genres Updated! Now Loading...")
+            }catch (e:Exception){
+                toastString(e.toString())
             }
-            saveData("genres",returnMap,activity)
-            saveData("genresTime",System.currentTimeMillis(),activity)
-            success = true
-            Anilist.genres = returnMap
-            logger("$returnMap \nfinished")
-            snack("Genres Updated! Now Loading...")
         }
         if (genres==null) {
             get();println("genres null")
