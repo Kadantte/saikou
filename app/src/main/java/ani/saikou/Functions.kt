@@ -218,7 +218,7 @@ fun getMalMedia(media:Media) : Media{
 
 fun toastString(s: String?){
     currActivity()?.runOnUiThread { Toast.makeText(currActivity(), s, Toast.LENGTH_LONG).show() }
-//    logger(s)
+    logger(s)
 }
 
 class ZoomOutPageTransformer(private val bottom:Boolean=false) : ViewPager2.PageTransformer {
@@ -297,13 +297,19 @@ fun ArrayList<Source>.sortByTitle(string: String){
     for (i in 0 until this.size){
         temp[i] = levenshtein(string.lowercase(),this[i].name.lowercase())
     }
-    val a = temp.toList().sortedBy { (_, value) -> value}.toMap().keys.toTypedArray()
+    val a = temp.toList().sortedBy{ (_, value) -> value}.toMap().keys.toList().subList(0,25)
     val temp2 = arrayListOf<Source>()
     temp2.addAll(this)
     this.clear()
     for (i in a.indices){
         this.add(temp2[a[i]])
     }
+}
+
+fun String.findBetween(a:String,b:String):String?{
+    val start = this.indexOf(a)
+    val end = if(start!=-1) this.indexOf(b,start) else return null
+    return if(end!=-1) this.subSequence(start,end).removePrefix(a).removeSuffix(b).toString() else null
 }
 
 fun loadImage(url:String?,imageView: ImageView,referer:String?=null){

@@ -95,7 +95,7 @@ class Twist(override val name: String="twist.moe") :AnimeParser() {
             arr.add(Source(it.jsonObject["slug"]!!.jsonObject["slug"].toString().trim('"'),it.jsonObject["title"].toString().trim('"'),"https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/default.jpg"))
         }
         arr.sortByTitle(string)
-        return  ArrayList(arr.subList(0,25))
+        return arr
     }
 
     override fun getSlugEpisodes(slug: String): MutableMap<String, Episode> {

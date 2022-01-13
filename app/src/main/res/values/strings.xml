@@ -104,8 +104,9 @@
     </string-array>
     <string-array name="manga_sources">
         <item>MANGABUDDY</item>
-        <item>MANGADEX</item>
+        <item>MANGASEE</item>
         <item>MANGAPILL</item>
+        <item>MANGADEX</item>
     </string-array>
     <string name="source_not_found">
         Couldn\'t find anything X( \n
