@@ -3,6 +3,7 @@ package ani.saikou.anime.source
 import ani.saikou.anime.source.parsers.Gogo
 import ani.saikou.anime.source.parsers.NineAnime
 import ani.saikou.anime.source.parsers.Twist
+import ani.saikou.anime.source.parsers.Zoro
 
 object AnimeSources {
     private val animeParsers:MutableMap<Int,AnimeParser> = mutableMapOf()
@@ -12,7 +13,8 @@ object AnimeSources {
             1 -> animeParsers.getOrPut(i, { Gogo(true) })
             2 -> animeParsers.getOrPut(i, { NineAnime() })
             3 -> animeParsers.getOrPut(i, { NineAnime(true) })
-            4 -> animeParsers.getOrPut(i, { Twist() })
+            4 -> animeParsers.getOrPut(i, { Zoro() })
+            5 -> animeParsers.getOrPut(i, { Twist() })
             else -> null
         }
         return a
