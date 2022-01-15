@@ -51,7 +51,7 @@ object Kitsu {
                             number = it.jsonObject["number"]?.toString()?.replace("\"", "")!!,
                             title = name,
                             desc = if (it.jsonObject["description"]!!.jsonObject["en"]!=JsonNull) it.jsonObject["description"]!!.jsonObject["en"]?.toString()?.replace("\"", "")?.replace("\\n", "\n") else null,
-                            thumb = if (it.jsonObject["thumbnail"]!=JsonNull) "https://image-compression-api.herokuapp.com/?q=" + it.jsonObject["thumbnail"]!!.jsonObject["original"]!!.jsonObject["url"]?.toString()?.replace("\"", "") else null,
+                            thumb = if (it.jsonObject["thumbnail"]!=JsonNull) it.jsonObject["thumbnail"]!!.jsonObject["original"]!!.jsonObject["url"]?.toString()?.replace("\"", "") else null,
                         )
                         logger("Kitsu : arr[$i] = ${arr[i]}",print)
                     }

@@ -23,6 +23,13 @@
         android:alpha="0.6"
         android:background="@color/bg_black" />
 
+    <View
+        android:id="@+id/itemEpisodeFillerView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/filler"
+        android:visibility="gone" />
+
     <TextView
         android:id="@+id/itemEpisodeNumber"
         android:layout_width="wrap_content"
@@ -44,6 +51,19 @@
         android:layout_margin="16dp"
         android:gravity="center_vertical"
         android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/itemEpisodeFiller"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="marquee"
+            android:fontFamily="@font/poppins_bold"
+            android:text="@string/filler"
+            android:textColor="@color/bg_white"
+            android:textAlignment="center"
+            android:textStyle="italic"
+            android:visibility="gone"
+            app:lineHeight="15sp" />
 
         <TextView
             android:id="@+id/itemEpisodeTitle"

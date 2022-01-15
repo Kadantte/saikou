@@ -6,6 +6,12 @@
     android:layout_margin="8dp"
     app:cardCornerRadius="16dp">
 
+    <View
+        android:id="@+id/itemEpisodeFillerView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/filler"
+        android:visibility="gone" />
     <TextView
         android:id="@+id/itemEpisodeNumber"
         android:layout_width="wrap_content"

@@ -10,6 +10,7 @@ import ani.saikou.databinding.ItemEpisodeGridBinding
 import ani.saikou.databinding.ItemEpisodeListBinding
 import ani.saikou.loadImage
 import ani.saikou.media.Media
+import com.squareup.picasso.Picasso
 
 
 fun episodeAdapter(media:Media,fragment: AnimeSourceFragment,style:Int,reversed:Boolean=false,start:Int=0,e:Int?=null): RecyclerView.Adapter<*> {
@@ -42,6 +43,7 @@ class EpisodeCompactAdapter(
 
         val ep = arr[position]
         binding.itemEpisodeNumber.text = ep.number
+        if (ep.filler) binding.itemEpisodeFillerView.visibility = View.VISIBLE
         if (media.userProgress!=null) {
             if (ep.number.toIntOrNull()?:9999<=media.userProgress!!) binding.root.alpha = 0.66f
         }
@@ -72,9 +74,13 @@ class EpisodeGridAdapter(
     override fun onBindViewHolder(holder: EpisodeGridViewHolder, position: Int) {
         val binding = holder.binding
         val ep = arr[position]
-        loadImage(ep.thumb?:media.cover,binding.itemEpisodeImage)
+        Picasso.get().load(ep.thumb?:media.cover).resize(0,300).into(binding.itemEpisodeImage)
         binding.itemEpisodeNumber.text = ep.number
         binding.itemEpisodeTitle.text = ep.title?:media.name
+        if(ep.filler){
+            binding.itemEpisodeFiller.visibility = View.VISIBLE
+            binding.itemEpisodeFillerView.visibility = View.VISIBLE
+        }
         if (media.userProgress!=null) {
             if (ep.number.toIntOrNull()?:9999<=media.userProgress!!) binding.root.alpha = 0.66f
         }
@@ -105,8 +111,12 @@ class EpisodeListAdapter(
     override fun onBindViewHolder(holder: EpisodeListViewHolder, position: Int) {
         val binding = holder.binding
         val ep = arr[position]
-        loadImage(ep.thumb?:media.cover,binding.itemEpisodeImage)
+        Picasso.get().load(ep.thumb?:media.cover).resize(0,300).into(binding.itemEpisodeImage)
         binding.itemEpisodeNumber.text = ep.number
+        if(ep.filler){
+            binding.itemEpisodeFiller.visibility = View.VISIBLE
+            binding.itemEpisodeFillerView.visibility = View.VISIBLE
+        }
         if (ep.desc==null) binding.itemEpisodeDesc.visibility = View.GONE
         binding.itemEpisodeDesc.text = ep.desc?:""
         binding.itemEpisodeTitle.text = ep.title?:media.userPreferredName
