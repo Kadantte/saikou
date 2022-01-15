@@ -1,38 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/selectorContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:backgroundTintMode="src_atop"
-    android:orientation="vertical"
-    android:paddingBottom="10dp">
+    android:orientation="vertical">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:layout_height="wrap_content"
+        tools:ignore="UselessParent">
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fontFamily="@font/poppins_bold"
         android:padding="10dp"
-        android:text="@string/quality_selector"
+        android:text="@string/server_selector"
         android:textAlignment="center"
         android:textAllCaps="true"
         android:textSize="20sp" />
 
-    <ProgressBar
-        android:id="@+id/selectorProgressBar"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_margin="10dp" />
+        <CheckBox
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:checked="false"
+            android:layoutDirection="rtl"
+            android:text="@string/make_default"
+            android:textAlignment="textEnd" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/selectorRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clipToPadding="false"
-        android:isScrollContainer="false"
-        android:nestedScrollingEnabled="false"
-        android:padding="8dp"
-        tools:listitem="@layout/item_stream" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/selectorRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:requiresFadingEdge="vertical"
+            tools:itemCount="4"
+            tools:listitem="@layout/item_stream" />
 
-</LinearLayout>
+        <ProgressBar
+            android:id="@+id/selectorProgressBar"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_margin="10dp" />
+
+    </LinearLayout>
+</FrameLayout>

@@ -31,7 +31,7 @@ class Gogo(private val dub:Boolean=false, override val name: String = "gogoanime
         val domain = Regex("""(?<=^http[s]?://).+?(?=/)""").find(url)!!.value
         val extractor : Extractor?=when {
             "gogo" in domain -> GogoCDN()
-            "sb" in domain ->  SBPlay()
+            "sb" in domain ->  StreamSB()
             "fplayer" in domain -> FPlayer()
             "fembed" in domain -> FPlayer()
 //            "dood" in domain -> Doodla()
@@ -128,7 +128,7 @@ class Gogo(private val dub:Boolean=false, override val name: String = "gogoanime
     }
 
     override fun saveSource(source: Source, id: Int, selected: Boolean) {
-        live.postValue("${if(selected) "Selected" else "Found"} : ${source.name}")
+        super.saveSource(source, id, selected)
         saveData("go-go${if(dub) "dub" else ""}_$id", source)
     }
 }

@@ -3,9 +3,11 @@ package ani.saikou.anime.source.parsers
 
 import ani.saikou.anime.Episode
 import ani.saikou.anime.source.AnimeParser
+import ani.saikou.loadData
 import ani.saikou.logger
 import ani.saikou.media.Media
 import ani.saikou.media.Source
+import ani.saikou.saveData
 import ani.saikou.sortByTitle
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.*
@@ -80,11 +82,16 @@ class Twist(override val name: String="twist.moe") :AnimeParser() {
     }
 
     override fun getEpisodes(media: Media): MutableMap<String, Episode> {
+        val load : Source? = loadData("twist_${media.id}")
+        if (load!=null) return getSlugEpisodes(load.link)
         val animeJson = Jsoup.connect("https://api.twist.moe/api/anime").ignoreContentType(true).get().body().text()
         if (media.idMAL!=null) {
             val slug = Regex(""""mal_id": ${media.idMAL},(.|\n)+?"slug": "(.+?)"""").find(animeJson)?.destructured?.component2()
             logger("Twist : Loaded : $slug")
-            if (slug!=null) return getSlugEpisodes(slug)
+            if (slug!=null) {
+                live.postValue("Selected : ${media.userPreferredName}")
+                return getSlugEpisodes(slug)
+            }
         }
         return mutableMapOf()
     }
@@ -111,6 +118,8 @@ class Twist(override val name: String="twist.moe") :AnimeParser() {
     }
 
     override fun saveSource(source: Source, id: Int, selected: Boolean) {
+        super.saveSource(source, id, selected)
+        saveData("twist_$id", source)
     }
 }
 

@@ -118,9 +118,9 @@
                 android:id="@id/exo_progress"
                 android:layout_width="match_parent"
                 android:layout_height="16dp"
-                android:contentDescription="@string/quality_selector"
                 app:played_color="@color/pink_700"
-                app:scrubber_color="@color/pink_500" />
+                app:scrubber_color="@color/pink_500"
+                tools:ignore="SpeakableTextPresentCheck" />
 
         </LinearLayout>
 
@@ -130,10 +130,11 @@
             android:layout_height="48dp"
             android:backgroundTint="#00FFFFFF"
             android:src="@drawable/ic_round_high_quality_24"
-            android:visibility="visible"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
+            tools:ignore="ContentDescription,SpeakableTextPresentCheck"
+            tools:visibility="visible" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

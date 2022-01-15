@@ -4,22 +4,31 @@ package ani.saikou.anime
 
 import android.app.AlertDialog
 import android.app.Dialog
+import android.content.Context
 import android.content.pm.ActivityInfo
+import android.graphics.Color
+import android.graphics.Typeface
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.res.ResourcesCompat
 import ani.saikou.*
 import ani.saikou.databinding.ActivityExoplayerBinding
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector
+import com.google.android.exoplayer2.ui.CaptionStyleCompat
+import com.google.android.exoplayer2.ui.CaptionStyleCompat.EDGE_TYPE_OUTLINE
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.ui.TrackSelectionDialogBuilder
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.upstream.HttpDataSource
+import com.google.android.exoplayer2.util.MimeTypes
+import java.security.AccessController.getContext
 
 class ExoplayerView : AppCompatActivity(), Player.Listener {
     private lateinit var binding : ActivityExoplayerBinding
@@ -68,9 +77,18 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         }
         println("$episode")
         println(episode.streamLinks[episode.selectedStream]!!.quality[episode.selectedQuality].url)
-        mediaItem = MediaItem.Builder()
-            .setUri(episode.streamLinks[episode.selectedStream]!!.quality[episode.selectedQuality].url)
+
+        val a = episode.streamLinks[episode.selectedStream]!!.subtitles
+        println(a?.get("English"))
+        val subtitle: MediaItem.SubtitleConfiguration? = if (a!=null && a.contains("English"))
+            MediaItem.SubtitleConfiguration.Builder(Uri.parse(a["English"]))
+            .setMimeType(MimeTypes.TEXT_VTT).setSelectionFlags(C.SELECTION_FLAG_FORCED)
             .build()
+            else null
+
+        val builder =  MediaItem.Builder().setUri(episode.streamLinks[episode.selectedStream]!!.quality[episode.selectedQuality].url)
+        if(subtitle!=null) builder.setSubtitleConfigurations(mutableListOf(subtitle))
+        mediaItem = builder.build()
 
         exoQuality.setOnClickListener{
             if(trackDialog == null){
@@ -82,7 +100,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         val speeds: IntArray = resources.getIntArray(R.array.exo_speed_multiplied_by_100)
         var curSpeed = 3
         var speed: Float
-        val speedDialog = AlertDialog.Builder(this).setTitle("Speed")
+        val speedDialog = AlertDialog.Builder(this,R.style.ThemeOverlay_MaterialComponents_Dialog_Alert).setTitle("Speed")
 
         exoSpeed.setOnClickListener{
             speedDialog.setSingleChoiceItems(speedsName,curSpeed) { dialog, i ->
@@ -90,9 +108,13 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                 curSpeed = i
                 exoPlayer.playbackParameters = PlaybackParameters(speed)
                 dialog.dismiss()
+                hideSystemBars()
             }.show()
         }
 
+        speedDialog.setOnCancelListener {
+            hideSystemBars()
+        }
 
         if (savedInstanceState != null) {
             currentWindow = savedInstanceState.getInt(STATE_RESUME_WINDOW)
@@ -143,7 +165,8 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                 }
             }
         })
-
+        playerView.subtitleView?.setStyle(CaptionStyleCompat(Color.WHITE,Color.TRANSPARENT,Color.TRANSPARENT,EDGE_TYPE_OUTLINE,Color.BLACK,
+            ResourcesCompat.getFont(currActivity()!!, R.font.poppins)))
         isInitialized = true
     }
 
@@ -204,9 +227,12 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             return
         }
 
-        val trackSelectionDialogBuilder = TrackSelectionDialogBuilder(this, getString(R.string.quality_selector), trackSelector, videoRenderer)
+        val trackSelectionDialogBuilder = TrackSelectionDialogBuilder(this, "Available Qualities", trackSelector, videoRenderer)
         trackSelectionDialogBuilder.setTrackNameProvider{ it.height.toString()+"p" }
         trackDialog = trackSelectionDialogBuilder.build()
+        trackDialog!!.setOnDismissListener {
+            hideSystemBars()
+        }
     }
 
     private fun isVideoRenderer(mappedTrackInfo: MappingTrackSelector.MappedTrackInfo, rendererIndex: Int): Boolean {

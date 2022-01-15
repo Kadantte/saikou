@@ -13,5 +13,7 @@ abstract class AnimeParser {
     abstract fun getEpisodes(media: Media):MutableMap<String,Episode>
     abstract fun search(string: String):ArrayList<Source>
     abstract fun getSlugEpisodes(slug: String): MutableMap<String, Episode>
-    abstract fun saveSource(source: Source,id:Int,selected:Boolean=true)
+    open fun saveSource(source: Source, id:Int, selected:Boolean=true){
+        live.postValue("${if(selected) "Selected" else "Found"} : ${source.name}")
+    }
 }

@@ -33,7 +33,7 @@ class NineAnime(private val dub:Boolean=false, override val name: String = "9Ani
             val m3u8Link = Json.decodeFromString<JsonObject>(Jsoup.connect("${embedLink.replace("/e/", "/info/")}&skey=$token")
                 .header("referer", host[0])
                 .ignoreContentType(true).get().body().text())["media"]!!.jsonObject["sources"]!!.jsonArray[0].jsonObject["file"].toString().trim('"')
-            streams.add(Episode.StreamLinks(name,listOf(Episode.Quality(m3u8Link,"Multi",null)),"https://vidstream.pro/"))
+            streams.add(Episode.StreamLinks(name,listOf(Episode.Quality(m3u8Link,"Multi Quality",null)),"https://vidstream.pro/"))
             }catch (e:Exception){}
         }
         episode.streamLinks = streams
@@ -94,6 +94,7 @@ class NineAnime(private val dub:Boolean=false, override val name: String = "9Ani
     }
 
     override fun saveSource(source: Source, id: Int, selected: Boolean) {
+        super.saveSource(source, id, selected)
         saveData("animekisa_in${if(dub) "dub" else ""}_$id", source)
     }
 }

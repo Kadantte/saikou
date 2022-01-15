@@ -107,6 +107,7 @@ class Zoro(override val name: String = "Zoro") : AnimeParser() {
     }
 
     override fun saveSource(source: Source, id: Int, selected: Boolean) {
+        super.saveSource(source, id, selected)
         saveData("zoro_$id", source)
     }
 }
