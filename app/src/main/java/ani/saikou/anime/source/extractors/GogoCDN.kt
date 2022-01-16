@@ -15,7 +15,7 @@ import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-class GogoCDN: Extractor() {
+class GogoCDN(private val getSize:Boolean): Extractor() {
     override fun getStreamLinks(name: String, url: String): Episode.StreamLinks {
         println(url)
         val list = arrayListOf<Episode.Quality>()
@@ -44,7 +44,7 @@ class GogoCDN: Extractor() {
                 list.add(Episode.Quality(
                     fileURL,
                     label.replace(" ",""),
-                    getSize(fileURL,"https://gogoanime.pe")
+                    if(getSize) getSize(fileURL,"https://gogoanime.pe") else null
                 ))
             }
         }

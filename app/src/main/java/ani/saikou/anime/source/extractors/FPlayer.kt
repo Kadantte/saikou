@@ -8,7 +8,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.*
 import org.jsoup.Jsoup
 
-class FPlayer: Extractor() {
+class FPlayer(private val getSize:Boolean): Extractor() {
     override fun getStreamLinks(name: String, url: String): Episode.StreamLinks {
         val apiLink = url.replace("/v/","/api/source/")
         val tempQuality = mutableListOf<Episode.Quality>()
@@ -20,7 +20,7 @@ class FPlayer: Extractor() {
                     Episode.Quality(
                         it.jsonObject["file"].toString().trim('"'),
                         it.jsonObject["label"].toString().trim('"'),
-                        getSize(it.jsonObject["file"].toString().trim('"'))
+                        if(getSize) getSize(it.jsonObject["file"].toString().trim('"')) else null
                     )
                 )
             }

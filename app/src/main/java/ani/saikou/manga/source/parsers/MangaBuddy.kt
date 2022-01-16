@@ -1,13 +1,10 @@
 package ani.saikou.manga.source.parsers
 
-import ani.saikou.loadData
-import ani.saikou.logger
+import ani.saikou.*
 import ani.saikou.manga.MangaChapter
 import ani.saikou.manga.source.MangaParser
 import ani.saikou.media.Media
 import ani.saikou.media.Source
-import ani.saikou.saveData
-import ani.saikou.toastString
 import org.jsoup.Jsoup
 
 class MangaBuddy(override val name: String="mangabuddy.com") : MangaParser() {
@@ -43,9 +40,11 @@ class MangaBuddy(override val name: String="mangabuddy.com") : MangaParser() {
 
     override fun getChapter(chapter: MangaChapter): MangaChapter {
         chapter.images = arrayListOf()
-        val arr = Regex("(?<=var chapImages = ').+(?=')").find(Jsoup.connect(chapter.link!!).get().toString())?.value?.split(",")
+        val res = Jsoup.connect(chapter.link!!).get().toString()
+        val cdn = res.findBetween("var mainServer = \"","\";")
+        val arr = res.findBetween("var chapImages = ","\n")?.trim('\'')?.split(",")
         arr?.forEach {
-            val link = "https://s1.madcdnv2.xyz/file/img-mbuddy/manga/$it"
+            val link = "https:$cdn$it"
             chapter.images!!.add(link)
         }
 //        println("${chapter.images}")

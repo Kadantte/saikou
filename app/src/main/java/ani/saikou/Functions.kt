@@ -297,7 +297,7 @@ fun ArrayList<Source>.sortByTitle(string: String){
     for (i in 0 until this.size){
         temp[i] = levenshtein(string.lowercase(),this[i].name.lowercase())
     }
-    val a = temp.toList().sortedBy{ (_, value) -> value}.toMap().keys.toList().subList(0,25)
+    val a = temp.toList().sortedBy{ (_, value) -> value}.toMap().keys.toList().subList(0,min(this.size,25))
     val temp2 = arrayListOf<Source>()
     temp2.addAll(this)
     this.clear()
