@@ -20,7 +20,6 @@ import ani.saikou.media.Media
 import ani.saikou.media.MediaDetailsViewModel
 import ani.saikou.media.SourceSearchDialogFragment
 import ani.saikou.navBarHeight
-import ani.saikou.saveData
 import com.google.android.material.chip.Chip
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -89,7 +88,7 @@ class MangaSourceFragment : Fragment() {
                         loading = true
                         binding.mangaSourceProgressBar.visibility = View.VISIBLE
                         media.selected!!.source = i
-                        saveData(media.id.toString()+".select", media.selected!!)
+                        model.saveSelected(media.id,media.selected!!,requireActivity())
                         MangaSources[i]!!.live.observe(viewLifecycleOwner,{ j ->
                             binding.mangaSourceTitle.text = j
                         })
@@ -168,7 +167,7 @@ class MangaSourceFragment : Fragment() {
     }
 
     private fun updateRecycler(media: Media){
-        saveData(media.id.toString()+".select", media.selected!!)
+        model.saveSelected(media.id,media.selected!!,requireActivity())
         if(media.manga?.chapters!=null) {
             binding.mangaSourceRecycler.adapter = mangaChapterAdapter(media, this, media.selected!!.recyclerStyle, media.selected!!.recyclerReversed, start, end)
             val gridCount = when (media.selected!!.recyclerStyle){

@@ -20,7 +20,6 @@ import ani.saikou.media.Media
 import ani.saikou.media.MediaDetailsViewModel
 import ani.saikou.media.SourceSearchDialogFragment
 import ani.saikou.navBarHeight
-import ani.saikou.saveData
 import com.google.android.material.chip.Chip
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +39,7 @@ class AnimeSourceFragment : Fragment() {
     private var end:Int?=null
     private var loading = true
     private var progress = View.VISIBLE
+    private lateinit var model : MediaDetailsViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentAnimeSourceBinding.inflate(inflater, container, false)
@@ -53,8 +53,8 @@ class AnimeSourceFragment : Fragment() {
         binding.animeSourceContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin += navBarHeight }
         binding.animeSourceTitle.isSelected = true
         super.onViewCreated(view, savedInstanceState)
-        val model : MediaDetailsViewModel by activityViewModels()
-
+        val a : MediaDetailsViewModel by activityViewModels()
+        model = a
         model.getMedia().observe(viewLifecycleOwner,{
             val media = it
             if (media?.anime != null) {
@@ -77,7 +77,7 @@ class AnimeSourceFragment : Fragment() {
                     loading=true
                     binding.animeSourceProgressBar.visibility=View.VISIBLE
                     media.selected!!.source = i
-                    saveData(media.id.toString()+".select", media.selected!!)
+                    model.saveSelected(media.id,media.selected!!,requireActivity())
                     AnimeSources[i]!!.live.observe(viewLifecycleOwner,{ j->
                         binding.animeSourceTitle.text = j
                     })
@@ -177,7 +177,7 @@ class AnimeSourceFragment : Fragment() {
     }
 
     private fun updateRecycler(media: Media){
-        saveData(media.id.toString()+".select", media.selected!!)
+        model.saveSelected(media.id,media.selected!!,requireActivity())
         if(media.anime?.episodes!=null) {
             binding.animeEpisodesRecycler.adapter = episodeAdapter(media, this, media.selected!!.recyclerStyle, media.selected!!.recyclerReversed, start, end)
             val gridCount = when (media.selected!!.recyclerStyle){
@@ -198,7 +198,11 @@ class AnimeSourceFragment : Fragment() {
     fun onEpisodeClick(media: Media, i:String){
         if (media.anime?.episodes?.get(i)!=null)
             media.anime.selectedEpisode = i
-            SelectorDialogFragment.newInstance(media,media.anime!!.episodes!![i]!!).show(requireActivity().supportFragmentManager,"dialog")
+            model.loadSelected(media.id)
+            if(media.selected!!.stream!=null)
+                SelectorDialogFragment.newInstance(media.selected!!.stream).show(requireActivity().supportFragmentManager,"dialog")
+            else
+                SelectorDialogFragment.newInstance().show(requireActivity().supportFragmentManager,"dialog")
     }
 
     private fun addPageChips(media: Media, total: Int){

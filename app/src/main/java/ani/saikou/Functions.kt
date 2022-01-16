@@ -41,13 +41,6 @@ import com.squareup.picasso.OkHttp3Downloader
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import org.jsoup.Connection
-import android.view.MotionEvent
-import android.view.ViewConfiguration
-import android.widget.FrameLayout
-import androidx.core.widget.NestedScrollView
-import androidx.viewpager2.widget.ViewPager2.ORIENTATION_HORIZONTAL
-import kotlin.math.absoluteValue
-import kotlin.math.sign
 
 const val STATE_RESUME_WINDOW = "resumeWindow"
 const val STATE_RESUME_POSITION = "resumePosition"
@@ -391,27 +384,4 @@ class FTActivityLifecycleCallbacks: Application.ActivityLifecycleCallbacks {
     override fun onActivityStopped(p0: Activity) {}
     override fun onActivitySaveInstanceState(p0: Activity, p1: Bundle) {}
     override fun onActivityDestroyed(p0: Activity) {}
-}
-
-val recyclerViewListener = object : RecyclerView.OnItemTouchListener {
-    override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
-        val action = e.action
-        return if (rv.canScrollHorizontally(RecyclerView.FOCUS_FORWARD)) {
-            when (action) {
-                MotionEvent.ACTION_MOVE -> rv.parent
-                    .requestDisallowInterceptTouchEvent(true)
-            }
-            false
-        } else {
-            when (action) {
-                MotionEvent.ACTION_MOVE -> rv.parent
-                    .requestDisallowInterceptTouchEvent(false)
-            }
-            rv.removeOnItemTouchListener(this)
-            true
-        }
-    }
-
-    override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {}
-    override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {}
 }

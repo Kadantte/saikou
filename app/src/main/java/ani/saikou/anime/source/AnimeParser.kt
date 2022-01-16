@@ -9,7 +9,8 @@ abstract class AnimeParser {
     abstract val name : String
     var referer : String?=null
     val live: MutableLiveData<String> = MutableLiveData()
-    abstract fun getStream(episode: Episode):Episode
+    abstract fun getStream(episode: Episode,server:String):Episode
+    abstract fun getStreams(episode: Episode):Episode
     abstract fun getEpisodes(media: Media):MutableMap<String,Episode>
     abstract fun search(string: String):ArrayList<Source>
     abstract fun getSlugEpisodes(slug: String): MutableMap<String, Episode>

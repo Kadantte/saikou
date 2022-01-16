@@ -25,12 +25,9 @@ import ani.saikou.anime.AnimeSourceFragment
 import ani.saikou.databinding.ActivityMediaBinding
 import ani.saikou.manga.MangaSourceFragment
 import com.google.android.material.appbar.AppBarLayout
-import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayout.OnTabSelectedListener
 import kotlinx.coroutines.*
 import kotlin.math.abs
-import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
-
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedListener {
 
@@ -38,8 +35,9 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
     private val scope = CoroutineScope(Dispatchers.Default)
     private val model: MediaDetailsViewModel by viewModels()
     private var timer: CountDownTimer? = null
-    private lateinit var tabLayout : TabLayout
+    private lateinit var tabLayout : BottomNavigationView
     var selected = 0
+    var anime = true
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,6 +56,7 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         binding.mediaClose.updateLayoutParams<ViewGroup.MarginLayoutParams> { topMargin += statusBarHeight }
         binding.mediaAppBar.updateLayoutParams<ViewGroup.MarginLayoutParams> { topMargin += statusBarHeight }
         binding.mediaCover.updateLayoutParams<ViewGroup.MarginLayoutParams> { topMargin += statusBarHeight }
+        binding.mediaViewPager.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin += 64f.px }
         binding.mediaTitle.isSelected = true
         binding.mediaTitleCollapse.isSelected = true
         binding.mediaUserStatus.isSelected = true
@@ -71,9 +70,11 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         }
         val viewPager = binding.mediaViewPager
         tabLayout = binding.mediaTab
+        viewPager.isUserInputEnabled = false
+        viewPager.setPageTransformer(ZoomOutPageTransformer(true))
 
         val media: Media = intent.getSerializableExtra("media") as Media
-        media.selected = loadData<Selected>(media.id.toString()+".select")?: Selected()
+        media.selected = model.loadSelected(media.id)
         loadImage(media.cover,binding.mediaCoverImage)
         loadImage(media.banner,binding.mediaBanner)
         loadImage(media.banner,binding.mediaBannerStatus)
@@ -116,16 +117,17 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
                 MediaListDialogFragment().show(supportFragmentManager, "dialog")
             else toastString("Please Login with Anilist!")
         }
+        tabLayout.menu.clear()
         if (media.anime!=null){
             binding.mediaTotal.text = if (media.anime.nextAiringEpisode!=null) " | "+(media.anime.nextAiringEpisode.toString()+" | "+(media.anime.totalEpisodes?:"~").toString()) else " | "+(media.anime.totalEpisodes?:"~").toString()
             viewPager.adapter = ViewPagerAdapter(supportFragmentManager, lifecycle,true)
-            tabLayout.addTab(tabLayout.newTab().setText(R.string.watch).setIcon(R.drawable.ic_round_movie_filter_24))
-
+            tabLayout.inflateMenu(R.menu.anime_menu_detail)
         }
         else if (media.manga!=null){
             binding.mediaTotal.text = " | "+(media.manga.totalChapters?:"~").toString()
             viewPager.adapter = ViewPagerAdapter(supportFragmentManager, lifecycle,false)
-            tabLayout.addTab(tabLayout.newTab().setText(R.string.read).setIcon(R.drawable.ic_round_import_contacts_24))
+            tabLayout.inflateMenu(R.menu.manga_menu_detail)
+            anime = false
         }
 
         model.getMedia().observe(this,{
@@ -151,28 +153,40 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         binding.mediaTitle.translationX = -screenWidth
         tabLayout.visibility = View.VISIBLE
 
-        tabLayout.addOnTabSelectedListener(object : OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab) {
-                selected = tab.position
-                viewPager.currentItem = selected
-                media.selected!!.window = tab.position
-                saveData(media.id.toString(),media.selected!!)
-            }
-            override fun onTabUnselected(tab: TabLayout.Tab?) {}
-            override fun onTabReselected(tab: TabLayout.Tab?) {}
-        })
+        tabLayout.setOnItemSelectedListener { item ->
+            selectFromID(item.itemId)
+            viewPager.setCurrentItem(selected,false)
+            media.selected!!.window = selected
+            saveData(media.id.toString(),media.selected!!)
+            true
+        }
 
-        viewPager.registerOnPageChangeCallback(object : OnPageChangeCallback() {
-            override fun onPageSelected(position: Int) {
-                tabLayout.selectTab(tabLayout.getTabAt(position))
-            }
-        })
-
-        viewPager.post { viewPager.setCurrentItem(selected, false) }
+        tabLayout.selectedItemId = idFromSelect()
+        viewPager.setCurrentItem(selected,false)
 
         scope.launch {
             model.loadMedia(media)
         }
+    }
+
+
+    private fun selectFromID(id:Int){
+        when(id) {
+            R.id.info -> { selected = 0 }
+            R.id.watch,R.id.read -> { selected = 1 }
+        }
+    }
+
+    private fun idFromSelect():Int{
+        if(anime) when(selected){
+            0 -> return R.id.info
+            1 -> return R.id.watch
+        }
+        else when(selected){
+            0 -> return R.id.info
+            1 -> return R.id.read
+        }
+        return R.id.info
     }
 
     override fun onDestroy() {
@@ -182,7 +196,7 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
     }
 
     override fun onResume() {
-        tabLayout.selectTab(tabLayout.getTabAt(selected),false)
+        tabLayout.selectedItemId = idFromSelect()
         binding.mediaBannerStatus.visibility=if (!isCollapsed) View.VISIBLE else View.GONE
         super.onResume()
     }

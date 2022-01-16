@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import ani.saikou.R
 import ani.saikou.databinding.FragmentMediaInfoBinding
-import ani.saikou.recyclerViewListener
 
 @SuppressLint("SetTextI18n")
 class MediaInfoFragment : Fragment() {
@@ -80,19 +79,15 @@ class MediaInfoFragment : Fragment() {
                 }
                 binding.mediaInfoRelationRecyclerView.adapter=MediaAdaptor(media.relations!!,requireActivity())
                 binding.mediaInfoRelationRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-                binding.mediaInfoRelationRecyclerView.addOnItemTouchListener(recyclerViewListener)
 
                 binding.mediaInfoGenresRecyclerView.adapter = GenreAdapter(media.genres!!,type,requireActivity())
                 binding.mediaInfoGenresRecyclerView.layoutManager = GridLayoutManager(requireContext(), (screenWidth/156f).toInt())
-                binding.mediaInfoGenresRecyclerView.addOnItemTouchListener(recyclerViewListener)
 
                 binding.mediaInfoCharacterRecyclerView.adapter = CharacterAdapter(media.characters!!)
                 binding.mediaInfoCharacterRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-                binding.mediaInfoCharacterRecyclerView.addOnItemTouchListener(recyclerViewListener)
 
                 binding.mediaInfoRecommendedRecyclerView.adapter = MediaAdaptor(media.recommendations!!,requireActivity())
                 binding.mediaInfoRecommendedRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-                binding.mediaInfoRecommendedRecyclerView.addOnItemTouchListener(recyclerViewListener)
             }
         })
         super.onViewCreated(view, null)

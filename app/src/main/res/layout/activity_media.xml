@@ -80,7 +80,8 @@
                 android:gravity="center"
                 android:minHeight="64dp"
                 android:orientation="horizontal"
-                app:layout_scrollFlags="scroll|enterAlways|snap">
+                app:layout_scrollFlags="scroll|enterAlways|snap"
+                tools:ignore="UselessParent">
 
 
                 <TextView
@@ -108,6 +109,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="end"
+                    android:layout_marginTop="-8dp"
                     android:gravity="center_horizontal|center_vertical"
                     android:paddingStart="32dp"
                     android:paddingEnd="32dp">
@@ -115,7 +117,8 @@
                     <Button
                         android:id="@+id/mediaAddToList"
                         android:layout_width="108dp"
-                        android:layout_height="64dp"
+                        android:layout_height="56dp"
+                        android:layout_gravity="bottom"
                         android:ellipsize="marquee"
                         android:fontFamily="@font/poppins_bold"
                         android:insetTop="8dp"
@@ -204,28 +207,6 @@
                 </LinearLayout>
             </FrameLayout>
 
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/mediaTab"
-                android:layout_width="match_parent"
-                android:layout_height="64dp"
-                android:background="@color/nav_bg"
-                android:visibility="gone"
-                app:tabIconTint="@color/tab_layout_icon"
-                app:tabIndicatorColor="?attr/colorSecondary"
-                app:tabInlineLabel="true"
-                app:tabTextAppearance="@style/NavBarText"
-                app:tabTextColor="@color/tab_layout_text"
-                tools:ignore="SpeakableTextPresentCheck"
-                tools:visibility="visible">
-
-                <com.google.android.material.tabs.TabItem
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:icon="@drawable/ic_round_info_24"
-                    android:text="@string/info" />
-
-            </com.google.android.material.tabs.TabLayout>
-
         </LinearLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -267,6 +248,16 @@
             tools:ignore="SpeakableTextPresentCheck" />
     </LinearLayout>
 
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/mediaTab"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/nav_bg"
+        app:itemTextAppearanceActive="@style/NavBarText"
+        app:itemTextAppearanceInactive="@style/NavBarText"
+        app:menu="@menu/anime_menu_detail" />
+
     <androidx.cardview.widget.CardView
         android:id="@+id/mediaClose"
         android:layout_width="32dp"
@@ -307,5 +298,4 @@
             tools:ignore="ContentDescription,ImageContrastCheck"
             tools:srcCompat="@tools:sample/backgrounds/scenic[2]" />
     </androidx.cardview.widget.CardView>
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

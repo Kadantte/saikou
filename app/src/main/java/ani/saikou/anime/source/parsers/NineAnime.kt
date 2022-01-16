@@ -21,8 +21,29 @@ class NineAnime(private val dub:Boolean=false, override val name: String = "9Ani
         //where 9anime.to
     )
 
-    override fun getStream(episode: Episode): Episode {
-        val streams = arrayListOf<Episode.StreamLinks?>()
+    override fun getStream(episode: Episode, server: String): Episode {
+        val streams = mutableMapOf<String,Episode.StreamLinks?>()
+        Jsoup.connect(episode.link!!).get().select("#servers-list ul.nav li a").forEach { servers ->
+            val embedLink = servers.attr("data-embed") // embed link of servers
+            val name = servers.select("span").text()
+            if(name==server){
+                val token = Regex("(?<=window.skey = )'.*?'").find(
+                    Jsoup.connect(embedLink).header("referer", host[0]).get().html()
+                )?.value?.trim('\'') //token to get the m3u8
+                try{
+                    val m3u8Link = Json.decodeFromString<JsonObject>(Jsoup.connect("${embedLink.replace("/e/", "/info/")}&skey=$token")
+                        .header("referer", host[0])
+                        .ignoreContentType(true).get().body().text())["media"]!!.jsonObject["sources"]!!.jsonArray[0].jsonObject["file"].toString().trim('"')
+                    streams[name] = (Episode.StreamLinks(name,listOf(Episode.Quality(m3u8Link,"Multi Quality",null)),"https://vidstream.pro/"))
+                }catch (e:Exception){}
+            }
+        }
+        episode.streamLinks = streams
+        return episode
+    }
+
+    override fun getStreams(episode: Episode): Episode {
+        val streams = mutableMapOf<String,Episode.StreamLinks?>()
         Jsoup.connect(episode.link!!).get().select("#servers-list ul.nav li a").forEach { servers ->
             val embedLink = servers.attr("data-embed") // embed link of servers
             val name = servers.select("span").text()
@@ -33,7 +54,7 @@ class NineAnime(private val dub:Boolean=false, override val name: String = "9Ani
             val m3u8Link = Json.decodeFromString<JsonObject>(Jsoup.connect("${embedLink.replace("/e/", "/info/")}&skey=$token")
                 .header("referer", host[0])
                 .ignoreContentType(true).get().body().text())["media"]!!.jsonObject["sources"]!!.jsonArray[0].jsonObject["file"].toString().trim('"')
-            streams.add(Episode.StreamLinks(name,listOf(Episode.Quality(m3u8Link,"Multi Quality",null)),"https://vidstream.pro/"))
+            streams[name] = (Episode.StreamLinks(name,listOf(Episode.Quality(m3u8Link,"Multi Quality",null)),"https://vidstream.pro/"))
             }catch (e:Exception){}
         }
         episode.streamLinks = streams

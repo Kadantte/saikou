@@ -42,10 +42,31 @@ class Gogo(private val dub:Boolean=false, override val name: String = "gogoanime
         return null
     }
 
-    override fun getStream(episode: Episode): Episode {
+    override fun getStream(episode: Episode, server: String): Episode {
+        episode.streamLinks = runBlocking {
+            val linkForVideos = mutableMapOf<String,Episode.StreamLinks?>()
+            withContext(Dispatchers.Default) {
+                Jsoup.connect(episode.link!!).ignoreHttpErrors(true).get().select("div.anime_muti_link > ul > li:not(li.anime)").forEach {
+                    val name = it.select("a").text().replace("Choose this server", "")
+                    if(name==server)
+                        launch {
+                            val directLinks = directLinkify(
+                                name,
+                                httpsIfy(it.select("a").attr("data-video"))
+                            )
+                            if(directLinks != null){linkForVideos[name] = directLinks}
+                        }
+                }
+            }
+            return@runBlocking (linkForVideos)
+        }
+        return episode
+    }
+
+    override fun getStreams(episode: Episode): Episode {
 //        try {
         episode.streamLinks = runBlocking {
-            val linkForVideos = arrayListOf<Episode.StreamLinks?>()
+            val linkForVideos = mutableMapOf<String,Episode.StreamLinks?>()
             withContext(Dispatchers.Default) {
                 Jsoup.connect(episode.link!!).ignoreHttpErrors(true).get().select("div.anime_muti_link > ul > li:not(li.anime)").forEach {
 //                    println(it.select("a").attr("data-video"))
@@ -54,7 +75,7 @@ class Gogo(private val dub:Boolean=false, override val name: String = "gogoanime
                             it.select("a").text().replace("Choose this server", ""),
                             httpsIfy(it.select("a").attr("data-video"))
                         )
-                        if(directLinks != null){linkForVideos.add(directLinks)}
+                        if(directLinks != null){linkForVideos[directLinks.server] = directLinks}
                     }
                 }
             }

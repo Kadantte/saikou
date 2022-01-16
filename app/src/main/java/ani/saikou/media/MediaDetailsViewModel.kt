@@ -1,5 +1,6 @@
 package ani.saikou.media
 
+import android.app.Activity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -7,11 +8,19 @@ import ani.saikou.anilist.Anilist
 import ani.saikou.anime.Episode
 import ani.saikou.anime.source.AnimeSources
 import ani.saikou.kitsu.Kitsu
+import ani.saikou.loadData
 import ani.saikou.logger
 import ani.saikou.manga.MangaChapter
 import ani.saikou.manga.source.MangaSources
+import ani.saikou.saveData
 
 class MediaDetailsViewModel:ViewModel() {
+    fun saveSelected(id:Int,data:Selected,activity: Activity){
+        saveData("$id-select",data,activity)
+    }
+    fun loadSelected(id:Int):Selected{
+        return loadData<Selected>("$id-select")?: Selected()
+    }
 
     private val media: MutableLiveData<Media> = MutableLiveData<Media>(null)
     fun getMedia(): LiveData<Media> = media
@@ -45,8 +54,15 @@ class MediaDetailsViewModel:ViewModel() {
     private var streams: MutableLiveData<Episode> = MutableLiveData<Episode>(null)
     fun getStreams() : LiveData<Episode> = streams
     fun loadStreams(episode: Episode,i:Int){
-        streams.postValue(AnimeSources[i]?.getStream(episode)?:episode)
+        streams.postValue(AnimeSources[i]?.getStreams(episode)?:episode)
         streams = MutableLiveData<Episode>(null)
+    }
+    fun loadStream(episode: Episode,selected: Selected):Boolean{
+        return if(selected.stream!=null) {
+            streams.postValue(AnimeSources[selected.source]?.getStream(episode, selected.stream!!))
+            streams = MutableLiveData<Episode>(null)
+            true
+        } else false
     }
 
     private val mangaChapters: MutableLiveData<MutableMap<Int,MutableMap<String,MangaChapter>>> = MutableLiveData<MutableMap<Int,MutableMap<String,MangaChapter>>>(null)

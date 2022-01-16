@@ -4,10 +4,8 @@ package ani.saikou.anime
 
 import android.app.AlertDialog
 import android.app.Dialog
-import android.content.Context
 import android.content.pm.ActivityInfo
 import android.graphics.Color
-import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -28,7 +26,6 @@ import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.exoplayer2.upstream.HttpDataSource
 import com.google.android.exoplayer2.util.MimeTypes
-import java.security.AccessController.getContext
 
 class ExoplayerView : AppCompatActivity(), Player.Listener {
     private lateinit var binding : ActivityExoplayerBinding

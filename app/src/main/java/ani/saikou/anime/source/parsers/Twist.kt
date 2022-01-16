@@ -61,11 +61,15 @@ class Twist(override val name: String="twist.moe") :AnimeParser() {
         }
     }
 
-    override fun getStream(episode: Episode): Episode {
+    override fun getStream(episode: Episode, server: String): Episode {
+        return getStreams(episode)
+    }
+
+    override fun getStreams(episode: Episode): Episode {
         val url = Json.decodeFromString<JsonArray>(
             Jsoup.connect(episode.link!!).ignoreContentType(true).get().body().text()
         )[episode.number.toInt()-1].jsonObject["source"].toString().trim('"')
-        episode.streamLinks =  arrayListOf(
+        episode.streamLinks =  mutableMapOf("Twist" to
             Episode.StreamLinks(
                 "Twist",
                 listOf(

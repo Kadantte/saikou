@@ -115,6 +115,7 @@
     </string>
     <string name="novel_na">Novels are not supported yet!</string>
     <string name="server_selector">Select Server</string>
+    <string name="auto_select_server">Auto Selecting Server</string>
     <string name="make_default">Make Default</string>
     <string name="filler">Filler</string>
 </resources>
