@@ -33,6 +33,7 @@ class Zoro(override val name: String = "Zoro") : AnimeParser() {
     }
 
     override fun getStream(episode: Episode, server: String): Episode {
+        try{
         episode.streamLinks = runBlocking {
             val linkForVideos = mutableMapOf<String,Episode.StreamLinks?>()
             withContext(Dispatchers.Default) {
@@ -52,13 +53,14 @@ class Zoro(override val name: String = "Zoro") : AnimeParser() {
             }
             return@runBlocking (linkForVideos)
         }
-//        }catch (e:Exception){
-//            toastString("$e")
-//        }
+        }catch (e:Exception){
+            toastString("$e")
+        }
         return episode
     }
 
     override fun getStreams(episode: Episode): Episode {
+        try{
         episode.streamLinks = runBlocking {
             val linkForVideos = mutableMapOf<String,Episode.StreamLinks?>()
             withContext(Dispatchers.Default) {
@@ -76,9 +78,9 @@ class Zoro(override val name: String = "Zoro") : AnimeParser() {
             }
             return@runBlocking (linkForVideos)
         }
-//        }catch (e:Exception){
-//            toastString("$e")
-//        }
+        }catch (e:Exception){
+            toastString("$e")
+        }
         return episode
     }
 
@@ -102,17 +104,20 @@ class Zoro(override val name: String = "Zoro") : AnimeParser() {
     }
 
     override fun search(string: String): ArrayList<Source> {
+        val responseArray = arrayListOf<Source>()
+        try{
         var url = URLEncoder.encode(string, "utf-8")
         if(string.startsWith("$!")){
             val a = string.replace("$!","").split(" | ")
             url = URLEncoder.encode(a[0], "utf-8")+a[1]
         }
-        val responseArray = arrayListOf<Source>()
         Jsoup.connect("${host}/search?keyword=$url").get().select(".film_list-wrap > .flw-item > .film-poster").forEach {
             val link = it.select("a").attr("data-id")
             val title = it.select("a").attr("title")
             val cover = it.select("img").attr("data-src")
             responseArray.add(Source(link,title,cover))
+        }}catch (e:Exception){
+            toastString(e.toString())
         }
         return responseArray
     }

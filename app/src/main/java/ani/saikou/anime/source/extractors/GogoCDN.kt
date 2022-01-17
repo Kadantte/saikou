@@ -5,6 +5,7 @@ import ani.saikou.anime.Episode
 import ani.saikou.anime.source.Extractor
 import ani.saikou.getSize
 import ani.saikou.logger
+import ani.saikou.toastString
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -19,38 +20,44 @@ class GogoCDN(private val getSize:Boolean): Extractor() {
     override fun getStreamLinks(name: String, url: String): Episode.StreamLinks {
         println(url)
         val list = arrayListOf<Episode.Quality>()
+        try {
+            val response = Jsoup.connect(url)
+                .ignoreContentType(true)
+                .ignoreHttpErrors(true)
+                .get()
 
-        val response = Jsoup.connect(url)
-            .ignoreContentType(true)
-            .ignoreHttpErrors(true)
-            .get()
+            val encrypted = response.select("script[data-name='crypto']").attr("data-value")
+            val iv = response.select("script[data-name='ts']").attr("data-value").toByteArray()
 
-        val encrypted = response.select("script[data-name='crypto']").attr("data-value")
-        val iv = response.select("script[data-name='ts']").attr("data-value").toByteArray()
+            val id = Regex("id=([^&]+)").find(url)!!.value.removePrefix("id=")
 
-        val id = Regex("id=([^&]+)").find(url)!!.value.removePrefix("id=")
+            val secretKey = cryptoHandler(encrypted, iv, iv + iv, false)
+            val encryptedId =
+                cryptoHandler(id, "0000000000000000".toByteArray(), secretKey.toByteArray())
 
-        val secretKey = cryptoHandler(encrypted,iv,iv+iv,false)
-        val encryptedId = cryptoHandler(id,"0000000000000000".toByteArray(),secretKey.toByteArray())
+            val jsonResponse =
+                Jsoup.connect("http://gogoplay.io/encrypt-ajax.php?id=$encryptedId&time=00000000000000000000")
+                    .ignoreHttpErrors(true).ignoreContentType(true)
+                    .header("X-Requested-With", "XMLHttpRequest").get().body().text()
 
-        val jsonResponse = Jsoup.connect("http://gogoplay.io/encrypt-ajax.php?id=$encryptedId&time=00000000000000000000")
-            .ignoreHttpErrors(true).ignoreContentType(true)
-            .header("X-Requested-With","XMLHttpRequest").get().body().text()
-
-        Json.decodeFromString<JsonObject>(jsonResponse).jsonObject["source"]!!.jsonArray.forEach {
-           val label = it.jsonObject["label"].toString().lowercase().trim('"')
-            val fileURL = it.jsonObject["file"].toString().trim('"')
-            if(label != "auto"){
-                list.add(Episode.Quality(
-                    fileURL,
-                    label.replace(" ",""),
-                    if(getSize) getSize(fileURL,"https://gogoanime.pe") else null
-                ))
+            Json.decodeFromString<JsonObject>(jsonResponse).jsonObject["source"]!!.jsonArray.forEach {
+                val label = it.jsonObject["label"].toString().lowercase().trim('"')
+                val fileURL = it.jsonObject["file"].toString().trim('"')
+                if (label != "auto") {
+                    list.add(
+                        Episode.Quality(
+                            fileURL,
+                            label.replace(" ", ""),
+                            if (getSize) getSize(fileURL, "https://gogoanime.pe") else null
+                        )
+                    )
+                }
             }
+
+            logger(jsonResponse)
+        }catch (e:Exception){
+            toastString(e.toString())
         }
-
-        logger(jsonResponse)
-
         return Episode.StreamLinks(name, list, "https://gogoplay1.com/")
     }
 

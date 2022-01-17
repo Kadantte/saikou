@@ -7,6 +7,7 @@ import ani.saikou.manga.source.MangaParser
 import ani.saikou.media.Media
 import ani.saikou.media.Source
 import ani.saikou.saveData
+import ani.saikou.toastString
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -43,6 +44,7 @@ class MangaDex(override val name: String="mangadex.org") :MangaParser() {
     }
 
     override fun getChapter(chapter: MangaChapter): MangaChapter {
+        try{
         val json = Json.decodeFromString<JsonObject>(Jsoup.connect("$host/at-home/server/${chapter.link}").ignoreContentType(true).get().text())
         println("$json")
         val images = arrayListOf<String>()
@@ -52,6 +54,9 @@ class MangaDex(override val name: String="mangadex.org") :MangaParser() {
         }
         println(images)
         chapter.images = images
+        }catch (e:Exception){
+            toastString(e.toString())
+        }
         return chapter
     }
 
