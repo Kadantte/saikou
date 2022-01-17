@@ -1,5 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Theme.Base" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+    <style name="Theme.Base" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@color/status</item>
 
@@ -9,7 +9,9 @@
         <item name="colorSecondary">@color/violet_400</item>
         <item name="colorSecondaryVariant">@color/violet_700</item>
         <item name="colorOnSecondary">@color/bg_black</item>
-
+        <item name="colorSecondaryContainer">?attr/colorSecondary</item>
+        <item name="colorOnSecondaryContainer">?attr/colorOnSecondary</item>
+        <item name="colorOnSurfaceVariant">@color/nav_tab</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowContentTransitions">true</item>
@@ -40,5 +42,7 @@
     <style name="Theme.Saikou.Exoplayer" parent="@style/Theme.AppCompat.NoActionBar">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowActionBar">false</item>
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
     </style>
 </resources>

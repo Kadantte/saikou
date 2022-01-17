@@ -97,7 +97,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         val speeds: IntArray = resources.getIntArray(R.array.exo_speed_multiplied_by_100)
         var curSpeed = 3
         var speed: Float
-        val speedDialog = AlertDialog.Builder(this,R.style.ThemeOverlay_MaterialComponents_Dialog_Alert).setTitle("Speed")
+        val speedDialog = AlertDialog.Builder(this,R.style.Theme_Saikou).setTitle("Speed")
 
         exoSpeed.setOnClickListener{
             speedDialog.setSingleChoiceItems(speedsName,curSpeed) { dialog, i ->
@@ -225,6 +225,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         }
 
         val trackSelectionDialogBuilder = TrackSelectionDialogBuilder(this, "Available Qualities", trackSelector, videoRenderer)
+        trackSelectionDialogBuilder.setTheme(R.style.Theme_Saikou)
         trackSelectionDialogBuilder.setTrackNameProvider{ it.height.toString()+"p" }
         trackDialog = trackSelectionDialogBuilder.build()
         trackDialog!!.setOnDismissListener {

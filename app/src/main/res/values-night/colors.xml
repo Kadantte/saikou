@@ -7,6 +7,6 @@
     <color name="nav_tab">#40ffffff</color>
     <color name="nav_tab_disabled">#40ffffff</color>
     <color name="status">#801F1F1F</color>
-    <color name="nav_status">#54000000</color>
+    <color name="nav_status">#80000000</color>
     <color name="filler">#17FF6B08</color>
 </resources>

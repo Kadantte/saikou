@@ -38,6 +38,8 @@
             android:name=".anime.ExoplayerView"
             android:configChanges="orientation|screenSize|layoutDirection"
             android:keepScreenOn="true"
+            android:exported="true"
+            android:theme="@style/Theme.Saikou.Exoplayer"
              />
         <activity
             android:name=".anilist.Login"

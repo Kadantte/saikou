@@ -34,7 +34,7 @@ class MediaDetailsViewModel:ViewModel() {
 
     private val kitsuEpisodes: MutableLiveData<MutableMap<String,Episode>> = MutableLiveData<MutableMap<String,Episode>>(null)
     fun getKitsuEpisodes() : LiveData<MutableMap<String,Episode>> = kitsuEpisodes
-    fun loadKitsuEpisodes(s:String){ if (kitsuEpisodes.value==null) kitsuEpisodes.postValue(Kitsu.getKitsuEpisodesDetails(s))}
+    fun loadKitsuEpisodes(s:Media){ if (kitsuEpisodes.value==null) kitsuEpisodes.postValue(Kitsu.getKitsuEpisodesDetails(s))}
 
     private val episodes: MutableLiveData<MutableMap<Int,MutableMap<String,Episode>>> = MutableLiveData<MutableMap<Int,MutableMap<String,Episode>>>(null)
     private val epsLoaded = mutableMapOf<Int,MutableMap<String,Episode>>()

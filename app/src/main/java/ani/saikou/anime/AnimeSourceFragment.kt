@@ -159,7 +159,7 @@ class AnimeSourceFragment : Fragment() {
                     binding.animeSourceTitle.text = j
                 })
                 scope.launch{
-                    model.loadKitsuEpisodes(media.nameRomaji)
+                    model.loadKitsuEpisodes(media)
                     model.loadEpisodes(media,media.selected!!.source)
                 }
             }

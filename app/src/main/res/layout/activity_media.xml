@@ -254,6 +254,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="@color/nav_bg"
+        app:itemActiveIndicatorStyle="@style/Widget.Material3.BottomNavigationView.ActiveIndicator"
         app:itemTextAppearanceActive="@style/NavBarText"
         app:itemTextAppearanceInactive="@style/NavBarText"
         app:menu="@menu/anime_menu_detail" />
