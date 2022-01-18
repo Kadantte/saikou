@@ -36,11 +36,13 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
     private var makeDefault = false
     private val scope = CoroutineScope(Dispatchers.Default)
     private var selected:String?=null
+    private var launch:Boolean?=null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
             selected = it.getString("server")
+            launch = it.getBoolean("launch",true)
         }
     }
 
@@ -69,11 +71,10 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
             media = m
             if (media!=null){
                 episode = media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!
-                val server = media!!.selected!!.stream
-                if(server!=null) {
+                if(selected!=null) {
                     binding.selectorListContainer.visibility = View.GONE
                     binding.selectorAutoListContainer.visibility = View.VISIBLE
-                    binding.selectorAutoText.text = server
+                    binding.selectorAutoText.text = selected
                     binding.selectorCancel.setOnClickListener {
                         media!!.selected!!.stream = null
                         model.saveSelected(media!!.id,media!!.selected!!,requireActivity())
@@ -84,9 +85,9 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
                         binding.selectorCancel.performClick()
                     }
                     fun load(){
-                        if(episode.streamLinks.containsKey(server)){
-                            if(episode.streamLinks[server]!!.quality.size >= media!!.selected!!.quality){
-                                media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedStream = server
+                        if(episode.streamLinks.containsKey(selected)){
+                            if(episode.streamLinks[selected]!!.quality.size >= media!!.selected!!.quality){
+                                media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedStream = selected
                                 media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedQuality = media!!.selected!!.quality
                                 dismiss()
                                 startExoplayer(media!!)
@@ -96,14 +97,14 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
                         else fail()
                     }
                     if(episode.streamLinks.isEmpty()) {
-                        model.getStreams().observe(this,{
+                        model.getEpisode().observe(this,{
                             if (it!=null){
                                 episode = it
                                 load()
                             }
                         })
                         scope.launch {
-                            if (!model.loadStream(episode, media!!.selected!!)) fail()
+                            if (!model.loadEpisodeStream(episode, media!!.selected!!)) fail()
                         }
                     }
                     else load()
@@ -122,15 +123,15 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
                         binding.selectorRecyclerView.layoutManager = LinearLayoutManager(requireActivity(),LinearLayoutManager.VERTICAL,false)
                         binding.selectorRecyclerView.adapter = StreamAdapter()
                     }
-                    if(episode.streamLinks.isEmpty()) {
-                        model.getStreams().observe(this,{
+                    if(episode.streamLinks.size <= 1) {
+                        model.getEpisode().observe(this,{
                             if (it!=null){
                                 episode = it
                                 load()
                             }
                         })
                         scope.launch {
-                            model.loadStreams(episode, media!!.selected!!.source)
+                            model.loadEpisodeStreams(episode, media!!.selected!!.source)
                         }
                     }
                     else load()
@@ -142,10 +143,16 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
     }
 
     fun startExoplayer(media: Media){
-        val intent = Intent(activity, ExoplayerView::class.java).apply {
-            putExtra("ep", media.anime!!.episodes!![media.anime.selectedEpisode!!])
+        if (launch!!) {
+            val intent = Intent(activity, ExoplayerView::class.java).apply {
+                putExtra("media", media)
+            }
+            startActivity(intent)
         }
-        startActivity(intent)
+        else{
+            model.setEpisode(media.anime!!.episodes!![media.anime.selectedEpisode!!]!!)
+            dismiss()
+        }
     }
 
     private inner class StreamAdapter : RecyclerView.Adapter<StreamAdapter.StreamViewHolder>() {
@@ -198,10 +205,11 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
     }
 
     companion object {
-        fun newInstance(server:String?=null): SelectorDialogFragment =
+        fun newInstance(server:String?=null,la:Boolean=true): SelectorDialogFragment =
             SelectorDialogFragment().apply {
                 arguments = Bundle().apply {
-                    putString(server,"server")
+                    putString("server",server)
+                    putBoolean("launch",la)
                 }
             }
     }

@@ -2,6 +2,7 @@
 <resources>
     <color name="pink_200">#FF5DAE</color>
     <color name="pink_500">#FF007F</color>
+    <color name="pink_500_25">#40FF007F</color>
     <color name="pink_700">#C50053</color>
     <color name="violet_400">#91A6FF</color>
     <color name="violet_700">#3358FF</color>

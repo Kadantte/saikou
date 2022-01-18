@@ -8,10 +8,8 @@ import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.databinding.ItemEpisodeCompactBinding
 import ani.saikou.databinding.ItemEpisodeGridBinding
 import ani.saikou.databinding.ItemEpisodeListBinding
-import ani.saikou.loadImage
 import ani.saikou.media.Media
 import com.squareup.picasso.Picasso
-
 
 fun episodeAdapter(media:Media,fragment: AnimeSourceFragment,style:Int,reversed:Boolean=false,start:Int=0,e:Int?=null): RecyclerView.Adapter<*> {
     val end = e?:(media.anime!!.episodes!!.size-1)

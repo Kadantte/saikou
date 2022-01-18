@@ -1,11 +1,13 @@
 package ani.saikou.media
 
 import android.app.Activity
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import ani.saikou.anilist.Anilist
 import ani.saikou.anime.Episode
+import ani.saikou.anime.SelectorDialogFragment
 import ani.saikou.anime.source.AnimeSources
 import ani.saikou.kitsu.Kitsu
 import ani.saikou.loadData
@@ -25,6 +27,7 @@ class MediaDetailsViewModel:ViewModel() {
     private val media: MutableLiveData<Media> = MutableLiveData<Media>(null)
     fun getMedia(): LiveData<Media> = media
     fun loadMedia(m:Media) { if (media.value==null) media.postValue(Anilist.query.mediaDetails(m)) }
+    fun setMedia(m:Media) = media.postValue(m)
 
     val sources = MutableLiveData<ArrayList<Source>?>(null)
 
@@ -51,18 +54,32 @@ class MediaDetailsViewModel:ViewModel() {
         epsLoaded[i] = AnimeSources[i]!!.getSlugEpisodes(source.link)
         episodes.postValue(epsLoaded)
     }
-    private var streams: MutableLiveData<Episode> = MutableLiveData<Episode>(null)
-    fun getStreams() : LiveData<Episode> = streams
-    fun loadStreams(episode: Episode,i:Int){
-        streams.postValue(AnimeSources[i]?.getStreams(episode)?:episode)
-        streams = MutableLiveData<Episode>(null)
+
+    private var episode: MutableLiveData<Episode> = MutableLiveData<Episode>(null)
+    fun getEpisode() : LiveData<Episode> = episode
+    fun loadEpisodeStreams(ep: Episode,i:Int){
+        episode.postValue(AnimeSources[i]?.getStreams(ep)?:ep)
+        episode = MutableLiveData<Episode>(null)
     }
-    fun loadStream(episode: Episode,selected: Selected):Boolean{
+    fun loadEpisodeStream(ep: Episode,selected: Selected):Boolean{
         return if(selected.stream!=null) {
-            streams.postValue(AnimeSources[selected.source]?.getStream(episode, selected.stream!!))
-            streams = MutableLiveData<Episode>(null)
+            episode.postValue(AnimeSources[selected.source]?.getStream(ep, selected.stream!!))
+            episode = MutableLiveData<Episode>(null)
             true
         } else false
+    }
+    fun setEpisode(ep: Episode){
+        episode.postValue(ep)
+    }
+
+    fun onEpisodeClick(media: Media, i:String,manager:FragmentManager,launch:Boolean=true){
+        if (media.anime?.episodes?.get(i)!=null)
+            media.anime.selectedEpisode = i
+        media.selected = this.loadSelected(media.id)
+        if(media.selected!!.stream!=null)
+            SelectorDialogFragment.newInstance(media.selected!!.stream,launch).show(manager,"dialog")
+        else
+            SelectorDialogFragment.newInstance(la=launch).show(manager,"dialog")
     }
 
     private val mangaChapters: MutableLiveData<MutableMap<Int,MutableMap<String,MangaChapter>>> = MutableLiveData<MutableMap<Int,MutableMap<String,MangaChapter>>>(null)

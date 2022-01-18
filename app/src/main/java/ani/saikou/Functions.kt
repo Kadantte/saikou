@@ -10,9 +10,13 @@ import android.content.res.Resources.getSystem
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.InputFilter
 import android.text.Spanned
 import android.util.AttributeSet
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewAnimationUtils
 import android.widget.AutoCompleteTextView
@@ -384,4 +388,50 @@ class FTActivityLifecycleCallbacks: Application.ActivityLifecycleCallbacks {
     override fun onActivityStopped(p0: Activity) {}
     override fun onActivitySaveInstanceState(p0: Activity, p1: Bundle) {}
     override fun onActivityDestroyed(p0: Activity) {}
+}
+
+abstract class DoubleClickListener : GestureDetector.SimpleOnGestureListener() {
+    private var timer: Timer? = null //at class level;
+    private val delay:Long = 400
+
+    override fun onSingleTapUp(e: MotionEvent?): Boolean {
+        processSingleClickEvent()
+        return super.onSingleTapUp(e)
+    }
+
+    override fun onDoubleTap(e: MotionEvent?): Boolean {
+        processDoubleClickEvent()
+        return super.onDoubleTap(e)
+    }
+
+    override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
+        onScrollYClick(distanceY)
+        return super.onScroll(e1, e2, distanceX, distanceY)
+    }
+
+    private fun processSingleClickEvent() {
+        val handler = Handler(Looper.getMainLooper())
+        val mRunnable = Runnable {
+            onSingleClick() //Do what ever u want on single click
+        }
+        val timerTask: TimerTask = object : TimerTask() {
+            override fun run() {
+                handler.post(mRunnable)
+            }
+        }
+        timer = Timer()
+        timer!!.schedule(timerTask, delay)
+    }
+
+    private fun processDoubleClickEvent() {
+        if (timer != null) {
+            timer!!.cancel() //Cancels Running Tasks or Waiting Tasks.
+            timer!!.purge() //Frees Memory by erasing cancelled Tasks.
+        }
+        onDoubleClick() //Do what ever u want on Double Click
+    }
+
+    abstract fun onSingleClick()
+    abstract fun onDoubleClick()
+    abstract fun onScrollYClick(y:Float)
 }

@@ -196,13 +196,7 @@ class AnimeSourceFragment : Fragment() {
         }
     }
     fun onEpisodeClick(media: Media, i:String){
-        if (media.anime?.episodes?.get(i)!=null)
-            media.anime.selectedEpisode = i
-            model.loadSelected(media.id)
-            if(media.selected!!.stream!=null)
-                SelectorDialogFragment.newInstance(media.selected!!.stream).show(requireActivity().supportFragmentManager,"dialog")
-            else
-                SelectorDialogFragment.newInstance().show(requireActivity().supportFragmentManager,"dialog")
+        model.onEpisodeClick(media,i,requireActivity().supportFragmentManager)
     }
 
     private fun addPageChips(media: Media, total: Int){

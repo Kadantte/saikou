@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
     <View
         android:id="@+id/view"
-        android:background="#000"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:background="#000" />
 
     <com.google.android.exoplayer2.ui.AspectRatioFrameLayout android:id="@id/exo_content_frame"
         android:layout_width="match_parent"
@@ -27,10 +28,31 @@
             android:scaleType="fitXY"
             tools:ignore="ContentDescription,ImageContrastCheck" />
 
-        <com.google.android.exoplayer2.ui.SubtitleView android:id="@id/exo_subtitles"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            tools:visibility="gone">
 
+            <View
+                android:id="@+id/exo_fast_rewind"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="false" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5" />
+
+            <View
+                android:id="@+id/exo_fast_forward"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="false" />
+        </LinearLayout>
 
         <TextView
             android:id="@id/exo_error_message"
@@ -44,14 +66,109 @@
 
     </com.google.android.exoplayer2.ui.AspectRatioFrameLayout>
 
+    <com.google.android.exoplayer2.ui.SubtitleView
+        android:id="@id/exo_subtitles"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="8dp" />
+
     <View android:id="@id/exo_controller_placeholder"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-    <ProgressBar
-        android:id="@id/exo_buffering"
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/exo_brightness_cont"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|end"
+        android:layout_margin="8dp"
+        android:clipChildren="true"
+        android:visibility="gone"
+        app:cardBackgroundColor="#000"
+        app:cardCornerRadius="24dp"
+        app:contentPadding="4dp">
+
+        <LinearLayout
+            android:layout_width="32dp"
+            android:layout_height="236dp"
+            android:orientation="vertical">
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/exo_brightness"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="76dp"
+                android:layout_marginBottom="-20dp"
+                android:rotation="270"
+                android:value="2"
+                android:valueFrom="0"
+                android:valueTo="10"
+                app:labelBehavior="gone"
+                app:thumbElevation="0dp"
+                app:trackColorInactive="@color/pink_500_25"
+                app:trackHeight="24dp" />
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="100dp"
+                app:srcCompat="@drawable/ic_round_brightness_medium_24"
+                tools:ignore="ContentDescription" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/exo_volume_cont"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_margin="8dp"
+        android:clipChildren="true"
+        android:visibility="gone"
+        app:cardBackgroundColor="#000"
+        app:cardCornerRadius="24dp"
+        app:contentPadding="4dp">
+
+        <LinearLayout
+            android:layout_width="32dp"
+            android:layout_height="236dp"
+            android:orientation="vertical">
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/exo_volume"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="76dp"
+                android:layout_marginBottom="-20dp"
+                android:rotation="270"
+                android:value="2"
+                android:valueFrom="0"
+                android:valueTo="10"
+                app:labelBehavior="gone"
+                app:thumbElevation="0dp"
+                app:trackColorInactive="@color/pink_500_25"
+                app:trackHeight="24dp" />
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="100dp"
+                app:srcCompat="@drawable/ic_round_volume_up_24"
+                tools:ignore="ContentDescription" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@id/exo_buffering"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
         android:layout_gravity="center"
         android:indeterminate="true"
-        android:indeterminateTint="@color/violet_400" />
+        android:indeterminateBehavior="repeat"
+        app:indicatorColor="?attr/colorSecondary"
+        app:indicatorSize="56dp"
+        app:trackCornerRadius="4dp"
+        app:trackThickness="4dp" />
 </merge>

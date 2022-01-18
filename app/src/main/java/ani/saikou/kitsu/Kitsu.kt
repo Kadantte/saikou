@@ -25,7 +25,7 @@ object Kitsu {
     }
 
     fun getKitsuEpisodesDetails(media:Media): MutableMap<String,Episode>? {
-        val print = true
+        val print = false
         logger("Kitsu : title=${media.getMangaName()}",print)
         try{
             val query = """{"query":"query{searchAnimeByTitle(first:5,title:\"${media.getMangaName()}\"){nodes{id season startDate titles{localized}episodes(first:2000){nodes{number titles{canonical}description thumbnail{original{url}}}}}}}"}"""
