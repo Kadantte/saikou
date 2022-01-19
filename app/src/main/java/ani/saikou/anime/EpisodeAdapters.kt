@@ -72,7 +72,7 @@ class EpisodeGridAdapter(
     override fun onBindViewHolder(holder: EpisodeGridViewHolder, position: Int) {
         val binding = holder.binding
         val ep = arr[position]
-        Picasso.get().load(ep.thumb?:media.cover).resize(0,300).into(binding.itemEpisodeImage)
+        Picasso.get().load(ep.thumb?:media.cover).resize(0,96).into(binding.itemEpisodeImage)
         binding.itemEpisodeNumber.text = ep.number
         binding.itemEpisodeTitle.text = ep.title?:media.name
         if(ep.filler){
@@ -109,7 +109,7 @@ class EpisodeListAdapter(
     override fun onBindViewHolder(holder: EpisodeListViewHolder, position: Int) {
         val binding = holder.binding
         val ep = arr[position]
-        Picasso.get().load(ep.thumb?:media.cover).resize(0,300).into(binding.itemEpisodeImage)
+        Picasso.get().load(ep.thumb?:media.cover).resize(0,96).into(binding.itemEpisodeImage)
         binding.itemEpisodeNumber.text = ep.number
         if(ep.filler){
             binding.itemEpisodeFiller.visibility = View.VISIBLE

@@ -28,32 +28,6 @@
             android:scaleType="fitXY"
             tools:ignore="ContentDescription,ImageContrastCheck" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            tools:visibility="gone">
-
-            <View
-                android:id="@+id/exo_fast_rewind"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="false" />
-
-            <View
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0.5" />
-
-            <View
-                android:id="@+id/exo_fast_forward"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="false" />
-        </LinearLayout>
-
         <TextView
             android:id="@id/exo_error_message"
             android:layout_width="match_parent"
@@ -65,6 +39,47 @@
             android:visibility="gone" />
 
     </com.google.android.exoplayer2.ui.AspectRatioFrameLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/exo_fast_rewind"
+            android:layout_width="1000dp"
+            android:layout_height="1000dp"
+            android:clickable="true"
+            android:alpha="0"
+            android:focusable="true"
+            app:cardBackgroundColor="#80000000"
+            app:cardCornerRadius="500dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/middle"
+            app:layout_constraintTop_toTopOf="parent"
+            app:strokeWidth="0dp" />
+
+        <View
+            android:id="@+id/middle"
+            android:layout_width="128dp"
+            android:layout_height="match_parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/exo_fast_forward"
+            android:layout_width="1000dp"
+            app:cardCornerRadius="500dp"
+            android:layout_height="1000dp"
+            android:alpha="0"
+            android:clickable="true"
+            android:focusable="true"
+            app:cardBackgroundColor="#80000000"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/middle"
+            app:layout_constraintTop_toTopOf="parent"
+            app:strokeWidth="0dp"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.exoplayer2.ui.SubtitleView
         android:id="@id/exo_subtitles"
@@ -83,7 +98,7 @@
         android:layout_gravity="center_vertical|end"
         android:layout_margin="8dp"
         android:clipChildren="true"
-        android:visibility="gone"
+        android:translationX="80dp"
         app:cardBackgroundColor="#000"
         app:cardCornerRadius="24dp"
         app:contentPadding="4dp">
@@ -125,7 +140,7 @@
         android:layout_gravity="center_vertical"
         android:layout_margin="8dp"
         android:clipChildren="true"
-        android:visibility="gone"
+        android:translationX="-80dp"
         app:cardBackgroundColor="#000"
         app:cardCornerRadius="24dp"
         app:contentPadding="4dp">
@@ -171,4 +186,5 @@
         app:indicatorSize="56dp"
         app:trackCornerRadius="4dp"
         app:trackThickness="4dp" />
+
 </merge>

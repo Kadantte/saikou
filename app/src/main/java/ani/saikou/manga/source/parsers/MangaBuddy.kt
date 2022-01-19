@@ -40,15 +40,19 @@ class MangaBuddy(override val name: String="mangabuddy.com") : MangaParser() {
 
     override fun getChapter(chapter: MangaChapter): MangaChapter {
         chapter.images = arrayListOf()
-        val res = Jsoup.connect(chapter.link!!).get().toString()
-        val cdn = res.findBetween("var mainServer = \"","\";")
-        val arr = res.findBetween("var chapImages = ","\n")?.trim('\'')?.split(",")
-        arr?.forEach {
-            val link = "https:$cdn$it"
-            chapter.images!!.add(link)
-        }
+        try {
+            val res = Jsoup.connect(chapter.link!!).get().toString()
+            val cdn = res.findBetween("var mainServer = \"", "\";")
+            val arr = res.findBetween("var chapImages = ", "\n")?.trim('\'')?.split(",")
+            arr?.forEach {
+                val link = "https:$cdn$it"
+                chapter.images!!.add(link)
+            }
 //        println("${chapter.images}")
-        chapter.referer = "https://mangabuddy.com/"
+            chapter.referer = "https://mangabuddy.com/"
+        }catch (e:Exception){
+            toastString(e.toString())
+        }
         return chapter
     }
 

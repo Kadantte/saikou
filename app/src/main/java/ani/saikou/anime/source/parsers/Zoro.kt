@@ -124,6 +124,7 @@ class Zoro(override val name: String = "Zoro") : AnimeParser() {
 
     override fun getSlugEpisodes(slug: String): MutableMap<String, Episode> {
         val responseArray = mutableMapOf<String,Episode>()
+        try{
         val res = Jsoup.connect("$host/ajax/v2/episode/list/$slug").ignoreContentType(true).execute().body().replace("\\n","\n").replace("\\\"","\"")
         val element = Jsoup.parse(res.findBetween("""{"status":true,"html":"""","""","totalItems"""")?:return responseArray)
         element.select(".detail-infor-content > div > a").forEach {
@@ -133,6 +134,8 @@ class Zoro(override val name: String = "Zoro") : AnimeParser() {
             val filler = it.attr("class").contains("ssl-item-filler")
 
             responseArray[num] = Episode(number = num,link = id, title = title, filler = filler)
+        } }catch (e:Exception){
+            toastString(e.toString())
         }
         return responseArray
     }

@@ -465,7 +465,7 @@ query (${"$"}page: Int = 1, ${"$"}id: Int, ${"$"}type: MediaType, ${"$"}isAdult:
             ${if (search != null) """,\"search\":\"$search\"""" else ""}
             ${if (sort != null) """,\"sort\":\"$sort\"""" else ""}
             ${if (format != null) """,\"format\":\"$format\"""" else ""}
-            ${if (genres != null && genres.isNotEmpty()) """,\"genres\":\"${genres[0]}\"""" else ""}
+            ${if (genres?.isNotEmpty() == true) """,\"genres\":\"${genres[0]}\"""" else ""}
             }""".replace("\n", " ").replace("""  """, "")
 //        println(variables)
         val response = executeQuery(query, variables, true)!!

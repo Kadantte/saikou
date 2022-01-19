@@ -22,6 +22,7 @@ class MangaDex(override val name: String="mangadex.org") :MangaParser() {
     override fun getLinkChapters(link: String): MutableMap<String, MangaChapter> {
         live.postValue("Getting Chapters...")
         val arr = mutableMapOf<String, MangaChapter>()
+        try{
         val totalChapters = Regex("(?<=\"total\":)\\d+").find(
             Jsoup.connect("$host/manga/$link/feed?limit=0").ignoreContentType(true).get().text()
         )!!.value.toInt()
@@ -39,6 +40,8 @@ class MangaDex(override val name: String="mangadex.org") :MangaParser() {
             var a = (index.toFloat() / totalChapters * 100)
             try { a = a.roundToInt().toFloat() }catch (e:Exception){}
             live.postValue("Chapter Parsing : ${100-a}%...")
+        }}catch (e:Exception){
+            toastString(e.toString())
         }
         return arr
     }
@@ -83,8 +86,8 @@ class MangaDex(override val name: String="mangadex.org") :MangaParser() {
     }
 
     override fun search(string: String): ArrayList<Source> {
-
         val arr = arrayListOf<Source>()
+        try{
         val jsonResponse = Jsoup.connect("$host/manga?limit=$limit&title=$string&order[relevance]=desc&includes[]=cover_art").ignoreContentType(true).get().text()
         Json.decodeFromString<JsonObject>(jsonResponse)["data"]!!.jsonArray.forEach{
             val id = it.jsonObject["id"].toString().trim('"') // id
@@ -92,6 +95,8 @@ class MangaDex(override val name: String="mangadex.org") :MangaParser() {
             val coverName = Regex("(?<=\"fileName\":\").+?(?=\")").find(it.jsonObject["relationships"]!!.jsonArray.toString())?.value // cover image
             val coverURL = "https://uploads.mangadex.org/covers/$id/$coverName.256.jpg"
             arr.add(Source(id,title,coverURL))
+        }}catch (e:Exception){
+            toastString(e.toString())
         }
         return arr
     }

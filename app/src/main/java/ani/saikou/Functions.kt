@@ -27,24 +27,27 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.DialogFragment
-import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import ani.saikou.media.Media
 import ani.saikou.media.Source
+import com.google.android.exoplayer2.database.StandaloneDatabaseProvider
+import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor
+import com.google.android.exoplayer2.upstream.cache.SimpleCache
+import com.squareup.picasso.OkHttp3Downloader
 import com.squareup.picasso.Picasso
 import nl.joery.animatedbottombar.AnimatedBottomBar
+import okhttp3.Cache
+import okhttp3.OkHttpClient
+import org.jsoup.Connection
 import org.jsoup.Jsoup
 import java.io.*
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
-import com.squareup.picasso.OkHttp3Downloader
-import okhttp3.Cache
-import okhttp3.OkHttpClient
-import org.jsoup.Connection
+
 
 const val STATE_RESUME_WINDOW = "resumeWindow"
 const val STATE_RESUME_POSITION = "resumePosition"
@@ -230,9 +233,7 @@ class ZoomOutPageTransformer(private val bottom:Boolean=false) : ViewPager2.Page
         if (position == 0.0f) {
             var cy = 0
             if (bottom) cy = view.height
-            val a = ViewAnimationUtils.createCircularReveal(view, view.width / 2, cy, 0f, max(view.height, view.width).toFloat())
-            a.interpolator = LinearOutSlowInInterpolator()
-            a.setDuration(400).start()
+            ViewAnimationUtils.createCircularReveal(view, view.width / 2, cy, 0f, max(view.height, view.width).toFloat()).setDuration(400).start()
         }
     }
 }
@@ -395,12 +396,12 @@ abstract class DoubleClickListener : GestureDetector.SimpleOnGestureListener() {
     private val delay:Long = 400
 
     override fun onSingleTapUp(e: MotionEvent?): Boolean {
-        processSingleClickEvent()
+        processSingleClickEvent(e)
         return super.onSingleTapUp(e)
     }
 
     override fun onDoubleTap(e: MotionEvent?): Boolean {
-        processDoubleClickEvent()
+        processDoubleClickEvent(e)
         return super.onDoubleTap(e)
     }
 
@@ -409,10 +410,10 @@ abstract class DoubleClickListener : GestureDetector.SimpleOnGestureListener() {
         return super.onScroll(e1, e2, distanceX, distanceY)
     }
 
-    private fun processSingleClickEvent() {
+    private fun processSingleClickEvent(e:MotionEvent?) {
         val handler = Handler(Looper.getMainLooper())
         val mRunnable = Runnable {
-            onSingleClick() //Do what ever u want on single click
+            onSingleClick(e) //Do what ever u want on single click
         }
         val timerTask: TimerTask = object : TimerTask() {
             override fun run() {
@@ -423,15 +424,33 @@ abstract class DoubleClickListener : GestureDetector.SimpleOnGestureListener() {
         timer!!.schedule(timerTask, delay)
     }
 
-    private fun processDoubleClickEvent() {
+    private fun processDoubleClickEvent(e: MotionEvent?) {
         if (timer != null) {
             timer!!.cancel() //Cancels Running Tasks or Waiting Tasks.
             timer!!.purge() //Frees Memory by erasing cancelled Tasks.
         }
-        onDoubleClick() //Do what ever u want on Double Click
+        onDoubleClick(e) //Do what ever u want on Double Click
     }
 
-    abstract fun onSingleClick()
-    abstract fun onDoubleClick()
+    abstract fun onSingleClick(event: MotionEvent?)
+    abstract fun onDoubleClick(event: MotionEvent?)
     abstract fun onScrollYClick(y:Float)
+}
+
+fun View.circularReveal(x: Int, y: Int,time:Long) {
+    ViewAnimationUtils.createCircularReveal(this, x, y, 0f, max(height, width).toFloat()).setDuration(time).start()
+}
+
+object VideoCache {
+    private var simpleCache: SimpleCache? = null
+    fun getInstance(context: Context): SimpleCache {
+        val databaseProvider = StandaloneDatabaseProvider(context)
+        if (simpleCache==null)
+            simpleCache = SimpleCache(
+                File(context.cacheDir, "exoplayer").also { it.deleteOnExit() }, // Ensures always fresh file
+                LeastRecentlyUsedCacheEvictor(300L * 1024L * 1024L),
+                databaseProvider
+            )
+        return simpleCache as SimpleCache
+    }
 }

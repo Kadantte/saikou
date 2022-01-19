@@ -9,13 +9,13 @@ import ani.saikou.media.Source
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.*
 import org.jsoup.Jsoup
-import java.lang.Exception
 import java.security.MessageDigest
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 import java.nio.charset.StandardCharsets
 import java.util.*
+import kotlin.Exception
 import kotlin.collections.ArrayList
 
 class Twist(override val name: String="twist.moe") :AnimeParser() {
@@ -64,6 +64,7 @@ class Twist(override val name: String="twist.moe") :AnimeParser() {
     }
 
     override fun getStreams(episode: Episode): Episode {
+        try {
         val url = Json.decodeFromString<JsonArray>(
             Jsoup.connect(episode.link!!).ignoreContentType(true).get().body().text()
         )[episode.number.toInt()-1].jsonObject["source"].toString().trim('"')
@@ -79,14 +80,16 @@ class Twist(override val name: String="twist.moe") :AnimeParser() {
                 ),
                 "https://twist.moe/"
             )
-        )
+        )}catch (e:Exception){
+            toastString(e.toString())
+        }
         return episode
     }
 
     override fun getEpisodes(media: Media): MutableMap<String, Episode> {
         val load : Source? = loadData("twist_${media.id}")
         if (load!=null) return getSlugEpisodes(load.link)
-        try{
+
         val animeJson = Jsoup.connect("https://api.twist.moe/api/anime").ignoreContentType(true).get().body().text()
         if (media.idMAL!=null) {
             val slug = Regex(""""mal_id": ${media.idMAL},(.|\n)+?"slug": "(.+?)"""").find(animeJson)?.destructured?.component2()
@@ -95,30 +98,36 @@ class Twist(override val name: String="twist.moe") :AnimeParser() {
                 live.postValue("Selected : ${media.userPreferredName}")
                 return getSlugEpisodes(slug)
             }
-        }}catch (e:Exception){
-            toastString(e.toString())
         }
         return mutableMapOf()
     }
 
     override fun search(string: String): ArrayList<Source> {
         val arr = arrayListOf<Source>()
-        Json.decodeFromString<JsonArray>(Jsoup.connect("https://api.twist.moe/api/anime").ignoreContentType(true).get().body().text()).forEach {
-            arr.add(Source(it.jsonObject["slug"]!!.jsonObject["slug"].toString().trim('"'),it.jsonObject["title"].toString().trim('"'),"https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/default.jpg"))
+        try{
+            Json.decodeFromString<JsonArray>(Jsoup.connect("https://api.twist.moe/api/anime").ignoreContentType(true).get().body().text()).forEach {
+                arr.add(Source(it.jsonObject["slug"]!!.jsonObject["slug"].toString().trim('"'),it.jsonObject["title"].toString().trim('"'),"https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/default.jpg"))
+            }
+            arr.sortByTitle(string)
+        }catch (e:Exception){
+            toastString(e.toString())
         }
-        arr.sortByTitle(string)
         return arr
     }
 
     override fun getSlugEpisodes(slug: String): MutableMap<String, Episode> {
         val responseList = mutableMapOf<String,Episode>()
-        val slugURL = "https://api.twist.moe/api/anime/$slug/sources"
-        (1..Json.decodeFromString<JsonArray>(
-            Jsoup.connect(slugURL).ignoreContentType(true).get().body().text()
-        ).size).forEach {
-            responseList[it.toString()] = Episode(number = it.toString(), link = slugURL)
+        try {
+            val slugURL = "https://api.twist.moe/api/anime/$slug/sources"
+            (1..Json.decodeFromString<JsonArray>(
+                Jsoup.connect(slugURL).ignoreContentType(true).get().body().text()
+            ).size).forEach {
+                responseList[it.toString()] = Episode(number = it.toString(), link = slugURL)
+            }
+            logger("Twist Response Episodes : $responseList")
+        }catch (e:Exception){
+            toastString(e.toString())
         }
-        logger("Twist Response Episodes : $responseList")
         return responseList
     }
 
