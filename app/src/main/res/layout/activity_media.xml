@@ -112,7 +112,7 @@
                     android:layout_marginTop="-8dp"
                     android:gravity="center_horizontal|center_vertical"
                     android:paddingStart="32dp"
-                    android:paddingEnd="32dp">
+                    android:paddingEnd="16dp">
 
                     <Button
                         android:id="@+id/mediaAddToList"
@@ -199,7 +199,7 @@
                         android:layout_height="48dp"
                         android:layout_marginStart="-16dp"
                         android:padding="8dp"
-                        app:srcCompat="@drawable/ic_round_notifications_none_24"
+                        app:srcCompat="@drawable/ic_round_share_24"
                         app:tint="@color/nav_tab"
                         app:tintMode="src_atop"
                         tools:ignore="ContentDescription,ImageContrastCheck" />
@@ -216,29 +216,6 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:orientation="vertical"
         android:layout_height="match_parent">
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/mediaCountdownContainer"
-            android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:layout_marginBottom="-16dp"
-            android:visibility="gone"
-            app:cardBackgroundColor="?attr/colorPrimary"
-            app:cardCornerRadius="0dp"
-            tools:visibility="visible">
-
-            <TextView
-                android:id="@+id/mediaCountdown"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_margin="8dp"
-                android:fontFamily="@font/poppins_bold"
-                android:textAlignment="center"
-                android:textAllCaps="true"
-                android:textColor="?attr/colorOnPrimary"
-                tools:text="Next Episode will be released in \n00:00:00" />
-        </androidx.cardview.widget.CardView>
 
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/mediaViewPager"

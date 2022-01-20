@@ -1,5 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Theme.Base" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Base" parent="Theme.Material3.DayNight">
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:statusBarColor">@color/status</item>
 
@@ -12,6 +12,7 @@
         <item name="colorSecondaryContainer">?attr/colorSecondary</item>
         <item name="colorOnSecondaryContainer">?attr/colorOnSecondary</item>
         <item name="colorOnSurfaceVariant">@color/nav_tab</item>
+        <item name="elevationOverlayEnabled">false</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowContentTransitions">true</item>
@@ -42,4 +43,13 @@
 <!--        <item name="android:statusBarColor">@android:color/black</item>-->
 <!--        <item name="android:navigationBarColor">@android:color/black</item>-->
     </style>
+
+    <style name="DialogTheme" parent="Theme.Saikou">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:windowNoTitle">false</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="background">@drawable/shape_corner_16dp</item>
+    </style>
+
 </resources>

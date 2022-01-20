@@ -351,7 +351,7 @@ fun getSize(url: String,referer: String=""):Double?{
             .method(Connection.Method.HEAD)
             .execute().header("Content-Length")?.toDouble()?.div(1048576)
     } catch (e:Exception){
-        logger(e)
+//        logger(e)
         null
     }
 }
@@ -439,18 +439,4 @@ abstract class DoubleClickListener : GestureDetector.SimpleOnGestureListener() {
 
 fun View.circularReveal(x: Int, y: Int,time:Long) {
     ViewAnimationUtils.createCircularReveal(this, x, y, 0f, max(height, width).toFloat()).setDuration(time).start()
-}
-
-object VideoCache {
-    private var simpleCache: SimpleCache? = null
-    fun getInstance(context: Context): SimpleCache {
-        val databaseProvider = StandaloneDatabaseProvider(context)
-        if (simpleCache==null)
-            simpleCache = SimpleCache(
-                File(context.cacheDir, "exoplayer").also { it.deleteOnExit() }, // Ensures always fresh file
-                LeastRecentlyUsedCacheEvictor(300L * 1024L * 1024L),
-                databaseProvider
-            )
-        return simpleCache as SimpleCache
-    }
 }

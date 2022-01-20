@@ -12,6 +12,12 @@
         <item name="android:textSize">14sp</item>
         <item name="android:layout_gravity">center</item>
     </style>
+
+    <style name="ModalBottomSheetDialog" parent="Widget.MaterialComponents.BottomSheet.Modal">
+        <item name="backgroundTint">@color/nav_bg</item>
+        <item name="shapeAppearance">@style/ShapeAppearanceOverlay.Demo</item>
+    </style>
+
     <style name="ShapeAppearanceOverlay.Demo" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="cornerSize">20dp</item>
         <item name="background">@id/bg</item>

@@ -4,7 +4,6 @@ import android.util.Base64
 import ani.saikou.anime.Episode
 import ani.saikou.anime.source.Extractor
 import ani.saikou.getSize
-import ani.saikou.logger
 import ani.saikou.toastString
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -18,7 +17,6 @@ import javax.crypto.spec.SecretKeySpec
 
 class GogoCDN(private val getSize:Boolean): Extractor() {
     override fun getStreamLinks(name: String, url: String): Episode.StreamLinks {
-        println(url)
         val list = arrayListOf<Episode.Quality>()
         try {
             val response = Jsoup.connect(url)
@@ -53,8 +51,6 @@ class GogoCDN(private val getSize:Boolean): Extractor() {
                     )
                 }
             }
-
-            logger(jsonResponse)
         }catch (e:Exception){
             toastString(e.toString())
         }

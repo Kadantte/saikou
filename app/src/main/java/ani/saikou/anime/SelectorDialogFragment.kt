@@ -71,6 +71,7 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
             media = m
             if (media!=null){
                 episode = media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!
+                println("Current EP: $episode")
                 if(selected!=null) {
                     binding.selectorListContainer.visibility = View.GONE
                     binding.selectorAutoListContainer.visibility = View.VISIBLE
@@ -143,6 +144,7 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
     }
 
     fun startExoplayer(media: Media){
+        model.epChanged.postValue(true)
         if (launch!!) {
             val intent = Intent(activity, ExoplayerView::class.java).apply {
                 putExtra("media", media)
@@ -150,8 +152,8 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
             startActivity(intent)
         }
         else{
+            model.setEpisode(null)
             model.setEpisode(media.anime!!.episodes!![media.anime.selectedEpisode!!]!!)
-            dismiss()
         }
     }
 

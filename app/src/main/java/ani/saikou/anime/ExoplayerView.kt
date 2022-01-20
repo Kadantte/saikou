@@ -8,6 +8,7 @@ import android.app.Dialog
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.graphics.Color
+import android.graphics.drawable.AnimatedVectorDrawable
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
@@ -19,6 +20,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
@@ -45,11 +47,19 @@ import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.material.slider.Slider
 import java.util.*
 import kotlin.math.roundToInt
+import ani.saikou.anilist.Anilist
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import com.google.android.exoplayer2.ExoPlayer
 
 class ExoplayerView : AppCompatActivity(), Player.Listener {
     private lateinit var binding : ActivityExoplayerBinding
     private lateinit var exoPlayer: ExoPlayer
     private lateinit var trackSelector: DefaultTrackSelector
+    private lateinit var playbackParameters: PlaybackParameters
+    private lateinit var mediaItem : MediaItem
 
     private lateinit var playerView: PlayerView
     private lateinit var exoSource: ImageButton
@@ -63,16 +73,21 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     private lateinit var animeTitle : TextView
     private lateinit var episodeTitle : TextView
 
-    private lateinit var mediaItem : MediaItem
-
     private lateinit var media: Media
+    private lateinit var episodeArr: List<String>
+    private var currentEpisodeIndex = 0
+    private var epChanging = false
+    private var progressDialog : AlertDialog.Builder?=null
+    private var dontAskProgressDialog = false
 
     private var currentWindow = 0
     private var playbackPosition: Long = 0
+    private var episodeLength: Float = 0f
     private var isFullscreen = false
     private var isInitialized = false
     private var isPlayerPlaying = true
 
+    val handler = Handler(Looper.getMainLooper())
     private val model: MediaDetailsViewModel by viewModels()
 
     override fun onDestroy() {
@@ -103,7 +118,6 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         animeTitle = playerView.findViewById(R.id.exo_anime_title)
         episodeTitle = playerView.findViewById(R.id.exo_ep_title)
 
-        val handler = Handler(Looper.getMainLooper())
         playerView.controllerShowTimeoutMs = 5000
         val audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
@@ -117,42 +131,14 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             isPlayerPlaying = savedInstanceState.getBoolean(STATE_PLAYER_PLAYING)
         }
 
-        //Speed
-        val speedsName:Array<String> = arrayOf("0.25x","0.33x","0.5x","0.66x","0.75x","1x","1.25x","1.33x","1.5x","1.66x","1.75x","2x")
-        val speeds: Array<Float>     = arrayOf( 0.25f , 0.33f , 0.5f , 0.66f , 0.75f , 1f , 1.25f , 1.33f , 1.5f , 1.66f , 1.75f , 2f )
-        var curSpeed = 5
-        var speed: Float
-        val speedDialog = AlertDialog.Builder(this,R.style.Theme_Saikou).setTitle("Speed")
-        exoSpeed.setOnClickListener{
-            speedDialog.setSingleChoiceItems(speedsName,curSpeed) { dialog, i ->
-                speed = speeds[i]
-                curSpeed = i
-                exoPlayer.playbackParameters = PlaybackParameters(speed)
-                dialog.dismiss()
-                hideSystemBars()
-            }.show()
-        }
-        speedDialog.setOnCancelListener { hideSystemBars() }
-
-        //FullScreen
-        exoScreen.setOnClickListener {
-            if(!isFullscreen) {
-                playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                isFullscreen = true
-            }
-            else {
-                playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                isFullscreen = false
-            }
-        }
-
         //BackButton
         playerView.findViewById<ImageButton>(R.id.exo_back).setOnClickListener{
             onBackPressed()
         }
 
         //SliderLock
-        var sliderLocked = false
+        var sliderLocked = loadData<Boolean>("sliderLock",this)?:false
+        playerView.findViewById<ImageButton>(R.id.exo_slider_lock).setImageDrawable(AppCompatResources.getDrawable(this,if(sliderLocked) R.drawable.ic_round_piano_off_24 else R.drawable.ic_round_piano_24))
         playerView.findViewById<ImageButton>(R.id.exo_slider_lock).setOnClickListener {
             sliderLocked = if(sliderLocked){
                 (it as ImageButton).setImageDrawable(AppCompatResources.getDrawable(this,R.drawable.ic_round_piano_24))
@@ -161,6 +147,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                 (it as ImageButton).setImageDrawable(AppCompatResources.getDrawable(this,R.drawable.ic_round_piano_off_24))
                 true
             }
+            saveData("sliderLock",sliderLocked,this)
         }
 
         //LockButton
@@ -200,7 +187,6 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                 volumeRunnable.run()
             }
         }
-
         fun handleController(){
             if(playerView.isControllerVisible){
                 playerView.hideController()
@@ -239,7 +225,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             override fun onDoubleClick(event: MotionEvent?) {
                 if(!locked) {
                     exoPlayer.seekTo(exoPlayer.currentPosition - 10000)
-                    viewDoubleTapped(fastRewindCard,event)
+                    viewDoubleTapped(fastRewindCard,event,playerView.findViewById(R.id.exo_fast_rewind_anim))
                 }
             }
 
@@ -286,7 +272,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             override fun onDoubleClick(event: MotionEvent?) {
                 if(!locked) {
                     exoPlayer.seekTo(exoPlayer.currentPosition + 10000)
-                    viewDoubleTapped(fastForwardCard,event)
+                    viewDoubleTapped(fastForwardCard,event,playerView.findViewById(R.id.exo_fast_forward_anim))
                 }
             }
             override fun onScrollYClick(y: Float) {
@@ -308,25 +294,119 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         media = intent.getSerializableExtra("media")!! as Media
         model.setMedia(media)
 
-        model.getEpisode().observe(this,{
-            if(it!=null) {
-                media.selected = model.loadSelected(media.id)
-                model.setMedia(media)
-                if (isInitialized) releasePlayer()
-                initPlayer(it)
-            }
+        model.epChanged.observe(this,{
+            epChanging = !it
         })
+        val episodeObserverRunnable = Runnable {
+            model.getEpisode().observe(this,{
+                if(it!=null && !epChanging) {
+                    media.selected = model.loadSelected(media.id)
+                    model.setMedia(media)
+                    currentEpisodeIndex = episodeArr.indexOf(it.number)
+                    if (isInitialized) releasePlayer()
+                    initPlayer(it)
+                }
+            })
+        }
+        episodeObserverRunnable.run()
         //Anime Title
         animeTitle.text = media.userPreferredName
 
         //Set Episode, to invoke getEpisode() at Start
         model.setEpisode(media.anime!!.episodes!![media.anime!!.selectedEpisode!!]!!)
+
+        episodeArr = media.anime!!.episodes!!.keys.toList()
+        currentEpisodeIndex = episodeArr.indexOf(media.anime!!.selectedEpisode!!)
+
+        //Next Episode
+        fun change(index:Int){
+            media.anime!!.selectedEpisode = episodeArr[index]
+            model.setMedia(media)
+            model.epChanged.postValue(false)
+            model.setEpisode(media.anime!!.episodes!![media.anime!!.selectedEpisode!!]!!)
+            model.onEpisodeClick(media, media.anime!!.selectedEpisode!!,this.supportFragmentManager,false)
+        }
+        playerView.findViewById<ImageButton>(R.id.exo_next_ep).setOnClickListener {
+            if(episodeArr.size>currentEpisodeIndex+1) {
+                if(exoPlayer.currentPosition/episodeLength>0.8f) {
+                    if(progressDialog!=null) {
+                        progressDialog?.setCancelable(false)
+                            ?.setPositiveButton("Yes") { dialog, _ ->
+                                updateAnilistProgress()
+                                dialog.dismiss()
+                                change(currentEpisodeIndex + 1)
+                            }
+                            ?.setNegativeButton("No") { dialog, _ ->
+                                dialog.dismiss()
+                                change(currentEpisodeIndex + 1)
+                            }
+                        progressDialog?.show()
+                    }else{
+                        updateAnilistProgress()
+                        change(currentEpisodeIndex + 1)
+                    }
+                } else change(currentEpisodeIndex + 1)
+            }
+            else
+                toastString("No next Episode Found!")
+        }
+        //Prev Episode
+        playerView.findViewById<ImageButton>(R.id.exo_prev_ep).setOnClickListener {
+            if(currentEpisodeIndex>0) {
+                change(currentEpisodeIndex - 1)
+            }
+            else
+                toastString("This is the 1st Episode!")
+        }
+
+        //FullScreen
+        isFullscreen = loadData("${media.id}_fullscreen",this)?:isFullscreen
+        playerView.resizeMode = if(isFullscreen) AspectRatioFrameLayout.RESIZE_MODE_ZOOM else AspectRatioFrameLayout.RESIZE_MODE_FIT
+            exoScreen.setOnClickListener {
+            if(!isFullscreen) {
+                playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                isFullscreen = true
+            }
+            else {
+                playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                isFullscreen = false
+            }
+            saveData("${media.id}_fullscreen",isFullscreen,this)
+        }
+
+        //Speed
+        val speedsName:Array<String> = arrayOf("0.25x","0.33x","0.5x","0.66x","0.75x","1x","1.25x","1.33x","1.5x","1.66x","1.75x","2x")
+        val speeds: Array<Float>     = arrayOf( 0.25f , 0.33f , 0.5f , 0.66f , 0.75f , 1f , 1.25f , 1.33f , 1.5f , 1.66f , 1.75f , 2f )
+        var curSpeed = loadData("${media.id}_speed",this)?:5
+        playbackParameters = PlaybackParameters(speeds[curSpeed])
+        var speed: Float
+        val speedDialog = AlertDialog.Builder(this,R.style.DialogTheme).setTitle("Speed")
+        exoSpeed.setOnClickListener{
+            speedDialog.setSingleChoiceItems(speedsName,curSpeed) { dialog, i ->
+                speed = speeds[i]
+                curSpeed = i
+                playbackParameters = PlaybackParameters(speed)
+                exoPlayer.playbackParameters = playbackParameters
+                dialog.dismiss()
+                hideSystemBars()
+            }.show()
+        }
+        speedDialog.setOnCancelListener { hideSystemBars() }
+
+        dontAskProgressDialog = loadData<Boolean>("${media.id}_progress") != true
+        progressDialog = if(dontAskProgressDialog) AlertDialog.Builder(this, R.style.DialogTheme).setTitle("Update progress on anilist?").apply {
+            setMultiChoiceItems(arrayOf("Don't ask again"), booleanArrayOf(false)) { _, _, isChecked ->
+                if (isChecked) saveData("${media.id}_progress", isChecked)
+                dontAskProgressDialog = isChecked
+            }
+            setOnCancelListener { hideSystemBars() }
+        } else null
     }
 
     @SuppressLint("SetTextI18n")
     private fun initPlayer(episode: Episode){
         //Title
-        episodeTitle.text = "Episode ${episode.number}${if(episode.title!="" || episode.title!=null) " : "+episode.title else ""}${if(episode.filler) "\n[Filler]" else ""}"
+        episodeTitle.text = "Episode ${episode.number}${if(episode.title!="" && episode.title!=null && episode.title!="null") " : "+episode.title else ""}${if(episode.filler) "\n[Filler]" else ""}"
 
         val simpleCache = VideoCache.getInstance(this)
         val dataSourceFactory = DataSource.Factory {
@@ -370,6 +450,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             .setTrackSelector(trackSelector)
             .build().apply {
                 playWhenReady = isPlayerPlaying
+                playbackParameters = playbackParameters
                 setMediaItem(mediaItem)
                 prepare()
         }
@@ -426,6 +507,48 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         }
     }
 
+    override fun onPlaybackStateChanged(playbackState: Int) {
+        if (playbackState == ExoPlayer.STATE_READY && episodeLength==0f) {
+            episodeLength = exoPlayer.duration.toFloat()
+        }
+        super.onPlaybackStateChanged(playbackState)
+    }
+
+    override fun onBackPressed() {
+        println("${loadData<Boolean>("${media.id}_progress")}")
+        if (exoPlayer.currentPosition/episodeLength>0.8f) {
+            if(dontAskProgressDialog) {
+                progressDialog?.setCancelable(false)
+                    ?.setPositiveButton("Yes") { dialog, _ ->
+                        updateAnilistProgress()
+                        dialog.dismiss()
+                        super.onBackPressed()
+                    }
+                    ?.setNegativeButton("No") { dialog, _ ->
+                        dialog.dismiss()
+                        super.onBackPressed()
+                    }
+                progressDialog?.show()
+            }
+            else{
+                updateAnilistProgress()
+                super.onBackPressed()
+            }
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+    private fun updateAnilistProgress(){
+        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+            val a = media.anime!!.selectedEpisode!!.toFloatOrNull()?.roundToInt()
+            Anilist.mutation.editList(media.id,a)
+            this@ExoplayerView.runOnUiThread {
+                Toast.makeText(this@ExoplayerView, "Setting progress to $a", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     private fun hideSystemBars() {
         @Suppress("DEPRECATION")
         window.decorView.systemUiVisibility = (
@@ -452,7 +575,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                 videoRenderer = i
 
         val trackSelectionDialogBuilder = TrackSelectionDialogBuilder(this, "Available Qualities", trackSelector, videoRenderer?:return null)
-        trackSelectionDialogBuilder.setTheme(R.style.Theme_Saikou)
+        trackSelectionDialogBuilder.setTheme(R.style.DialogTheme)
         trackSelectionDialogBuilder.setTrackNameProvider{
             if(it.frameRate>0f) it.height.toString()+"p" else it.height.toString()+"p (fps : N/A)"
         }
@@ -462,13 +585,44 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         return trackDialog
     }
 
-    private fun viewDoubleTapped(v:View,event:MotionEvent?){
+    //Double Tap Animation
+    private var t1=Timer()
+    private var t2=Timer()
+    private fun hideLayer(v:View,text:View){
+        val timerTask = object : TimerTask() {
+            override fun run() {
+                handler.post {
+                    ObjectAnimator.ofFloat(v, "alpha", 1f, 0f).setDuration(150).start()
+                    ObjectAnimator.ofFloat(text, "alpha", 1f, 0f).setDuration(150).start()
+                }
+            }
+        }
+        if(v.id==R.id.exo_fast_forward) {
+            t1.cancel()
+            t1.purge()
+            t1 = Timer()
+            t1.schedule(timerTask, 450)
+        }
+        else {
+            t2.cancel()
+            t2.purge()
+            t2 = Timer()
+            t2.schedule(timerTask, 450)
+        }
+    }
+    private fun viewDoubleTapped(v:View,event:MotionEvent?,text:TextView){
+        playerView.hideController()
         if(event!=null) v.circularReveal(event.x.toInt(), event.y.toInt(), 300)
-        v.alpha=1f
+
+        ObjectAnimator.ofFloat(v,"alpha",1f,1f).setDuration(600).start()
         ObjectAnimator.ofFloat(v,"alpha",0f,1f).setDuration(300).start()
+        ObjectAnimator.ofFloat(text,"alpha",1f,1f).setDuration(600).start()
+        ObjectAnimator.ofFloat(text,"alpha",0f,1f).setDuration(150).start()
+
+        val a = (text.compoundDrawables[1] as AnimatedVectorDrawable)
+        if(!a.isRunning) a.start()
         v.postDelayed({
-            v.alpha=0f
-            ObjectAnimator.ofFloat(v,"alpha",1f,0f).setDuration(150).start()
+            hideLayer(v,text)
         },450)
     }
 }

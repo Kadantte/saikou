@@ -29,13 +29,16 @@ import com.google.android.material.appbar.AppBarLayout
 import kotlinx.coroutines.*
 import kotlin.math.abs
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import android.content.Intent
+
+
+
 
 class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedListener {
 
     private lateinit var binding: ActivityMediaBinding
     private val scope = CoroutineScope(Dispatchers.Default)
     private val model: MediaDetailsViewModel by viewModels()
-    private var timer: CountDownTimer? = null
     private lateinit var tabLayout : BottomNavigationView
     var selected = 0
     var anime = true
@@ -92,8 +95,8 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         }
 
         //Notify Button
-        if (media.notify) binding.mediaNotify.setImageDrawable(AppCompatResources.getDrawable(this,R.drawable.ic_round_notifications_active_24))
-        val notifyButton = PopImageButton(scope,this,binding.mediaNotify,media, R.drawable.ic_round_notifications_active_24, R.drawable.ic_round_notifications_none_24,R.color.nav_tab, R.color.violet_400,false)
+        if (media.notify) binding.mediaNotify.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_round_share_24))
+        val notifyButton = PopImageButton(scope,this,binding.mediaNotify,media, R.drawable.ic_round_share_24, R.drawable.ic_round_share_24,R.color.nav_tab, R.color.violet_400,false)
         binding.mediaNotify.setOnClickListener { notifyButton.clicked() }
 
         model.userStatus.value = media.userStatus
@@ -133,24 +136,6 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
             anime = false
         }
 
-        model.getMedia().observe(this,{
-            if(it!=null) {
-                if (media.anime?.nextAiringEpisodeTime != null && (media.anime.nextAiringEpisodeTime!! - System.currentTimeMillis() / 1000) <= 86400 * 7.toLong()) {
-                    binding.mediaCountdownContainer.visibility = View.VISIBLE
-                    timer = object : CountDownTimer((media.anime.nextAiringEpisodeTime!! + 10000) * 1000 - System.currentTimeMillis(), 1000) {
-                        override fun onTick(millisUntilFinished: Long) {
-                            val a = millisUntilFinished / 1000
-                            binding.mediaCountdown.text =
-                                "Next Episode will be released in \n ${a / 86400} days ${a % 86400 / 3600} hrs ${a % 86400 % 3600 / 60} mins ${a % 86400 % 3600 % 60} secs"
-                        }
-                        override fun onFinish() {
-                            binding.mediaCountdownContainer.visibility = View.GONE
-                        }
-                    }
-                    timer?.start()
-                }
-            }
-        })
 
         selected = media.selected!!.window
         binding.mediaTitle.translationX = -screenWidth
@@ -194,7 +179,6 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
 
     override fun onDestroy() {
         scope.cancel()
-        timer?.cancel()
         super.onDestroy()
     }
 
@@ -274,6 +258,10 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
                     else {
                         media.notify = !media.notify
                         clicked = media.notify
+                        val i = Intent(Intent.ACTION_SEND)
+                        i.type = "text/plain"
+                        i.putExtra(Intent.EXTRA_TEXT, media.shareLink)
+                        startActivity(Intent.createChooser(i, media.userPreferredName))
                     }
                 }
                 else clicked = !clicked

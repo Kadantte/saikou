@@ -36,7 +36,7 @@ class ChapterCompactAdapter(
         val ep = arr[position]
         binding.itemEpisodeNumber.text = ep.number
         if (media.userProgress!=null) {
-            if (ep.number.toIntOrNull()?:9999<=media.userProgress!!) binding.root.alpha = 0.66f
+            if (ep.number.toFloatOrNull()?:9999f<=media.userProgress!!.toFloat()) binding.root.alpha = 0.66f
         }
     }
 
@@ -68,7 +68,7 @@ class ChapterListAdapter(
         binding.itemChapterNumber.text = ep.number
         binding.itemChapterTitle.text = ep.title
         if (media.userProgress!=null) {
-            if (ep.number.toIntOrNull()?:9999<=media.userProgress!!) binding.root.alpha = 0.66f
+            if (ep.number.toFloatOrNull()?:9999f<=media.userProgress!!.toFloat()) binding.root.alpha = 0.66f
         }
     }
 

@@ -15,6 +15,7 @@ import ani.saikou.logger
 import ani.saikou.manga.MangaChapter
 import ani.saikou.manga.source.MangaSources
 import ani.saikou.saveData
+import kotlinx.coroutines.*
 
 class MediaDetailsViewModel:ViewModel() {
     fun saveSelected(id:Int,data:Selected,activity: Activity){
@@ -55,26 +56,39 @@ class MediaDetailsViewModel:ViewModel() {
         episodes.postValue(epsLoaded)
     }
 
-    private var episode: MutableLiveData<Episode> = MutableLiveData<Episode>(null)
-    fun getEpisode() : LiveData<Episode> = episode
+    private var episode: MutableLiveData<Episode?> = MutableLiveData<Episode?>(null)
+    fun getEpisode() : LiveData<Episode?> = episode
     fun loadEpisodeStreams(ep: Episode,i:Int){
         episode.postValue(AnimeSources[i]?.getStreams(ep)?:ep)
-        episode = MutableLiveData<Episode>(null)
+        MainScope().launch(Dispatchers.Main) {
+            episode.value = null
+        }
     }
     fun loadEpisodeStream(ep: Episode,selected: Selected):Boolean{
         return if(selected.stream!=null) {
             episode.postValue(AnimeSources[selected.source]?.getStream(ep, selected.stream!!))
-            episode = MutableLiveData<Episode>(null)
+            MainScope().launch(Dispatchers.Main) {
+                episode.value = null
+            }
             true
         } else false
     }
-    fun setEpisode(ep: Episode){
+    fun setEpisode(ep: Episode?){
+        println("Setting EP : ${ep?.number}")
         episode.postValue(ep)
+        MainScope().launch(Dispatchers.Main) {
+            episode.value = null
+        }
     }
 
+    val epChanged = MutableLiveData(true)
     fun onEpisodeClick(media: Media, i:String,manager:FragmentManager,launch:Boolean=true){
         if (media.anime?.episodes?.get(i)!=null)
             media.anime.selectedEpisode = i
+        else {
+            logger("Couldn't find episode : $i")
+            return
+        }
         media.selected = this.loadSelected(media.id)
         if(media.selected!!.stream!=null)
             SelectorDialogFragment.newInstance(media.selected!!.stream,launch).show(manager,"dialog")

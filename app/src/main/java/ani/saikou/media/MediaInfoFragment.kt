@@ -3,6 +3,7 @@ package ani.saikou.media
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +19,7 @@ import ani.saikou.databinding.FragmentMediaInfoBinding
 class MediaInfoFragment : Fragment() {
     private var _binding: FragmentMediaInfoBinding? = null
     private val binding get() = _binding!!
+    private var timer: CountDownTimer? = null
     private var loaded = false
     private var type = "ANIME"
 
@@ -88,6 +90,21 @@ class MediaInfoFragment : Fragment() {
 
                 binding.mediaInfoRecommendedRecyclerView.adapter = MediaAdaptor(media.recommendations!!,requireActivity())
                 binding.mediaInfoRecommendedRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+
+                if (media.anime?.nextAiringEpisodeTime != null && (media.anime.nextAiringEpisodeTime!! - System.currentTimeMillis() / 1000) <= 86400 * 7.toLong()) {
+                    binding.mediaCountdownContainer.visibility = View.VISIBLE
+                    timer = object : CountDownTimer((media.anime.nextAiringEpisodeTime!! + 10000) * 1000 - System.currentTimeMillis(), 1000) {
+                        override fun onTick(millisUntilFinished: Long) {
+                            val a = millisUntilFinished / 1000
+                            binding.mediaCountdown.text =
+                                "Next Episode will be released in \n ${a / 86400} days ${a % 86400 / 3600} hrs ${a % 86400 % 3600 / 60} mins ${a % 86400 % 3600 % 60} secs"
+                        }
+                        override fun onFinish() {
+                            binding.mediaCountdownContainer.visibility = View.GONE
+                        }
+                    }
+                    timer?.start()
+                }
             }
         })
         super.onViewCreated(view, null)
@@ -96,5 +113,10 @@ class MediaInfoFragment : Fragment() {
     override fun onResume() {
         binding.mediaInfoProgressBar.visibility = if (!loaded) View.VISIBLE else View.GONE
         super.onResume()
+    }
+
+    override fun onDestroy() {
+        timer?.cancel()
+        super.onDestroy()
     }
 }

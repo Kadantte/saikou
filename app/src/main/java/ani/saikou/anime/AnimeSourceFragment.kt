@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -32,7 +33,7 @@ class AnimeSourceFragment : Fragment() {
     private val binding get() = _binding!!
     private val scope = CoroutineScope(Dispatchers.Default)
     private var screenWidth:Float =0f
-
+    private var timer: CountDownTimer? = null
     private var selected:ImageView?=null
     private var selectedChip:Chip?= null
     private var start = 0
@@ -53,14 +54,30 @@ class AnimeSourceFragment : Fragment() {
         binding.animeSourceContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin += navBarHeight }
         binding.animeSourceTitle.isSelected = true
         super.onViewCreated(view, savedInstanceState)
-        val a : MediaDetailsViewModel by activityViewModels()
-        model = a
+        val m: MediaDetailsViewModel by activityViewModels()
+        model = m
         model.getMedia().observe(viewLifecycleOwner,{
             val media = it
             if (media?.anime != null) {
                 binding.animeSourceContainer.visibility = View.VISIBLE
                 binding.mediaLoadProgressBar.visibility = View.GONE
                 progress = View.GONE
+
+                if (media.anime.nextAiringEpisodeTime != null && (media.anime.nextAiringEpisodeTime!! - System.currentTimeMillis() / 1000) <= 86400 * 7.toLong()) {
+                    binding.mediaCountdownContainer.visibility = View.VISIBLE
+                    timer = object : CountDownTimer((media.anime.nextAiringEpisodeTime!! + 10000) * 1000 - System.currentTimeMillis(), 1000) {
+                        override fun onTick(millisUntilFinished: Long) {
+                            val a = millisUntilFinished / 1000
+                            binding.mediaCountdown.text =
+                                "Next Episode will be released in \n ${a / 86400} days ${a % 86400 / 3600} hrs ${a % 86400 % 3600 / 60} mins ${a % 86400 % 3600 % 60} secs"
+                        }
+                        override fun onFinish() {
+                            binding.mediaCountdownContainer.visibility = View.GONE
+                        }
+                    }
+                    timer?.start()
+                }
+
                 if (media.anime.youtube!=null) {
                     binding.animeSourceYT.visibility = View.VISIBLE
                     binding.animeSourceYT.setOnClickListener {
@@ -173,6 +190,7 @@ class AnimeSourceFragment : Fragment() {
 
     override fun onDestroy() {
         AnimeSources.flushLive()
+        timer?.cancel()
         super.onDestroy()
     }
 

@@ -43,7 +43,7 @@ class EpisodeCompactAdapter(
         binding.itemEpisodeNumber.text = ep.number
         if (ep.filler) binding.itemEpisodeFillerView.visibility = View.VISIBLE
         if (media.userProgress!=null) {
-            if (ep.number.toIntOrNull()?:9999<=media.userProgress!!) binding.root.alpha = 0.66f
+            if (ep.number.toFloatOrNull()?:9999f<=media.userProgress!!.toFloat()) binding.root.alpha = 0.66f
         }
     }
 
@@ -72,7 +72,7 @@ class EpisodeGridAdapter(
     override fun onBindViewHolder(holder: EpisodeGridViewHolder, position: Int) {
         val binding = holder.binding
         val ep = arr[position]
-        Picasso.get().load(ep.thumb?:media.cover).resize(0,96).into(binding.itemEpisodeImage)
+        Picasso.get().load(ep.thumb?:media.cover).resize(200,0).into(binding.itemEpisodeImage)
         binding.itemEpisodeNumber.text = ep.number
         binding.itemEpisodeTitle.text = ep.title?:media.name
         if(ep.filler){
@@ -80,7 +80,7 @@ class EpisodeGridAdapter(
             binding.itemEpisodeFillerView.visibility = View.VISIBLE
         }
         if (media.userProgress!=null) {
-            if (ep.number.toIntOrNull()?:9999<=media.userProgress!!) binding.root.alpha = 0.66f
+            if (ep.number.toFloatOrNull()?:9999f<=media.userProgress!!.toFloat()) binding.root.alpha = 0.66f
         }
     }
 
@@ -109,7 +109,7 @@ class EpisodeListAdapter(
     override fun onBindViewHolder(holder: EpisodeListViewHolder, position: Int) {
         val binding = holder.binding
         val ep = arr[position]
-        Picasso.get().load(ep.thumb?:media.cover).resize(0,96).into(binding.itemEpisodeImage)
+        Picasso.get().load(ep.thumb?:media.cover).resize(200,0).into(binding.itemEpisodeImage)
         binding.itemEpisodeNumber.text = ep.number
         if(ep.filler){
             binding.itemEpisodeFiller.visibility = View.VISIBLE
@@ -119,7 +119,7 @@ class EpisodeListAdapter(
         binding.itemEpisodeDesc.text = ep.desc?:""
         binding.itemEpisodeTitle.text = ep.title?:media.userPreferredName
         if (media.userProgress!=null) {
-            if (ep.number.toIntOrNull()?:9999<=media.userProgress!!) binding.root.alpha = 0.66f
+            if (ep.number.toFloatOrNull()?:9999f<=media.userProgress!!.toFloat()) binding.root.alpha = 0.66f
         }
     }
 

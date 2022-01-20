@@ -30,6 +30,7 @@ data class Media(
     var userUpdatedAt: Date?=null,
     var userStartedAt : FuzzyDate = FuzzyDate(),
     var userCompletedAt : FuzzyDate=FuzzyDate(),
+    var userFavOrder:Int?=null,
 
     val status : String? = null,
     var format:String?=null,
@@ -46,6 +47,7 @@ data class Media(
     var recommendations: ArrayList<Media>?=null,
 
     var nameMAL:String?=null,
+    var shareLink:String?=null,
     var selected: Selected?=null,
 ) : Serializable{
     fun getMainName() = if (name!="null") name else nameRomaji

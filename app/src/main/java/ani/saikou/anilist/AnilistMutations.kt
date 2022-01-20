@@ -10,11 +10,11 @@ class AnilistMutations {
 
     fun editList(
         mediaID:Int,
-        progress:Int?,
-        score: Int?,
-        status: String?,
-        startedAt:Long?,
-        completedAt:Long?
+        progress:Int?=null,
+        score: Int?=null,
+        status: String?=null,
+        startedAt:Long?=null,
+        completedAt:Long?=null
     ){
         val query = """
             mutation ( ${"$"}mediaID: Int, ${"$"}progress: Int, ${"$"}scoreRaw:Int, ${"$"}status:MediaListStatus, ${"$"}start:FuzzyDateInput, ${"$"}completed:FuzzyDateInput ) {
