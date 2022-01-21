@@ -4,7 +4,6 @@ import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -94,10 +93,14 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
             favButton.clicked()
         }
 
-        //Notify Button
-        if (media.notify) binding.mediaNotify.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_round_share_24))
-        val notifyButton = PopImageButton(scope,this,binding.mediaNotify,media, R.drawable.ic_round_share_24, R.drawable.ic_round_share_24,R.color.nav_tab, R.color.violet_400,false)
-        binding.mediaNotify.setOnClickListener { notifyButton.clicked() }
+        //Share Button
+        model.getMedia().observe(this,{
+            if(it!=null) {
+                if (it.notify) binding.mediaNotify.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_round_share_24))
+                val notifyButton = PopImageButton(scope, this, binding.mediaNotify, it, R.drawable.ic_round_share_24, R.drawable.ic_round_share_24, R.color.nav_tab, R.color.violet_400, false)
+                binding.mediaNotify.setOnClickListener { notifyButton.clicked() }
+            }
+        })
 
         model.userStatus.value = media.userStatus
         model.userScore.value = media.userScore.toDouble()

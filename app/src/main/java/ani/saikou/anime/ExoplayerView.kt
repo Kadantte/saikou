@@ -53,11 +53,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import com.google.android.exoplayer2.ExoPlayer
+import java.util.concurrent.TimeUnit
 
 class ExoplayerView : AppCompatActivity(), Player.Listener {
     private lateinit var binding : ActivityExoplayerBinding
     private lateinit var exoPlayer: ExoPlayer
     private lateinit var trackSelector: DefaultTrackSelector
+    private lateinit var cacheFactory : CacheDataSource.Factory
     private lateinit var playbackParameters: PlaybackParameters
     private lateinit var mediaItem : MediaItem
 
@@ -86,6 +88,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     private var isFullscreen = false
     private var isInitialized = false
     private var isPlayerPlaying = true
+    private var changingServer = false
 
     val handler = Handler(Looper.getMainLooper())
     private val model: MediaDetailsViewModel by viewModels()
@@ -304,6 +307,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                     model.setMedia(media)
                     currentEpisodeIndex = episodeArr.indexOf(it.number)
                     if (isInitialized) releasePlayer()
+                    playbackPosition = loadData("${media.id}_${it.number}",this)?:0
                     initPlayer(it)
                 }
             })
@@ -320,6 +324,8 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
         //Next Episode
         fun change(index:Int){
+            changingServer = false
+            saveData("${media.id}_${media.anime!!.selectedEpisode}",exoPlayer.currentPosition,this)
             media.anime!!.selectedEpisode = episodeArr[index]
             model.setMedia(media)
             model.epChanged.postValue(false)
@@ -375,9 +381,10 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         }
 
         //Speed
-        val speedsName:Array<String> = arrayOf("0.25x","0.33x","0.5x","0.66x","0.75x","1x","1.25x","1.33x","1.5x","1.66x","1.75x","2x")
-        val speeds: Array<Float>     = arrayOf( 0.25f , 0.33f , 0.5f , 0.66f , 0.75f , 1f , 1.25f , 1.33f , 1.5f , 1.66f , 1.75f , 2f )
-        var curSpeed = loadData("${media.id}_speed",this)?:5
+        val speeds     = arrayOf( 0.25f , 0.33f , 0.5f , 0.66f , 0.75f , 1f , 1.25f , 1.33f , 1.5f , 1.66f , 1.75f , 2f )
+        val speedsName = speeds.map { "${it}x" }.toTypedArray()
+        var curSpeed   = loadData("${media.id}_speed",this)?:5
+
         playbackParameters = PlaybackParameters(speeds[curSpeed])
         var speed: Float
         val speedDialog = AlertDialog.Builder(this,R.style.DialogTheme).setTitle("Speed")
@@ -416,7 +423,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                 dataSource.setRequestProperty("referer", episode.streamLinks[episode.selectedStream]!!.referer!!)
             dataSource
         }
-        val cacheFactory = CacheDataSource.Factory().apply {
+        cacheFactory = CacheDataSource.Factory().apply {
             setCache(simpleCache)
             setUpstreamDataSourceFactory(dataSourceFactory)
         }
@@ -435,6 +442,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
         //Source
         exoSource.setOnClickListener {
+            changingServer = true
             media.selected!!.stream = null
             model.saveSelected(media.id,media.selected!!,this)
             model.onEpisodeClick(media,episode.number,this.supportFragmentManager,false)
@@ -444,7 +452,29 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         trackSelector = DefaultTrackSelector(this)
         trackSelector.setParameters(trackSelector.buildUponParameters().setMaxVideoSize(MAX_WIDTH, MAX_HEIGHT))
 
+        if(playbackPosition!=0L && !changingServer) {
+            val time = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(playbackPosition),
+                TimeUnit.MILLISECONDS.toMinutes(playbackPosition) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(playbackPosition)),
+                TimeUnit.MILLISECONDS.toSeconds(playbackPosition) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(playbackPosition)))
+            AlertDialog.Builder(this, R.style.DialogTheme).setTitle("Continue from ${time}?").apply {
+                setCancelable(false)
+                setPositiveButton("Yes"){d, _ ->
+                    buildExoplayer()
+                    d.dismiss()
+                }
+                setNegativeButton("No"){d,_ ->
+                    playbackPosition=0L
+                    buildExoplayer()
+                    d.dismiss()
+                }
+            }.show()
+        }
+        else buildExoplayer()
+    }
+
+    private fun buildExoplayer(){
         //Player
+        hideSystemBars()
         exoPlayer = ExoPlayer.Builder(this)
             .setMediaSourceFactory(DefaultMediaSourceFactory(cacheFactory))
             .setTrackSelector(trackSelector)
@@ -453,10 +483,10 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                 playbackParameters = playbackParameters
                 setMediaItem(mediaItem)
                 prepare()
-        }
+                seekTo(playbackPosition)
+            }
         playerView.player = exoPlayer
         exoPlayer.addListener(this)
-
         isInitialized = true
     }
 
@@ -477,10 +507,12 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     override fun onPause() {
         super.onPause()
         playerView.player?.pause()
+        saveData("${media.id}_${media.anime!!.selectedEpisode}",exoPlayer.currentPosition,this)
     }
 
     override fun onResume() {
         super.onResume()
+        hideSystemBars()
         if(isInitialized) {
             playerView.onResume()
             playerView.useController = true
@@ -488,8 +520,8 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     }
 
     override fun onStop() {
-        super.onStop()
         playerView.player?.pause()
+        super.onStop()
     }
 
     override fun onIsPlayingChanged(isPlaying: Boolean) {

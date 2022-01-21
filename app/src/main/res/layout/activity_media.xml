@@ -25,9 +25,11 @@
             android:id="@+id/mediaCollapsing"
             android:layout_width="match_parent"
             android:layout_height="192dp"
+            app:contentScrim="@color/nav_bg"
             app:expandedTitleMarginEnd="64dp"
             app:expandedTitleMarginStart="48dp"
-            app:layout_scrollFlags="scroll|snap">
+            app:layout_scrollFlags="scroll|snap"
+            app:titleCollapseMode="fade">
 
             <ImageView
                 android:id="@+id/mediaBanner"
