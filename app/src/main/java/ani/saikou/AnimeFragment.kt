@@ -160,15 +160,21 @@ class AnimeFragment : Fragment() {
                                         scope.launch {
                                             loading = true
                                             val get = popularModel.loadNextPage(it)
-                                            val a = it.results.size
-                                            it.results.addAll(get.results)
-                                            requireActivity().runOnUiThread {
-                                                adapter.notifyItemRangeInserted(a,get.results.size)
-                                                binding.animePopularProgress.visibility = View.GONE
+                                            if(get!=null) {
+                                                val a = it.results.size
+                                                it.results.addAll(get.results)
+                                                requireActivity().runOnUiThread {
+                                                    adapter.notifyItemRangeInserted(
+                                                        a,
+                                                        get.results.size
+                                                    )
+                                                    binding.animePopularProgress.visibility =
+                                                        View.GONE
+                                                }
+                                                it.page = get.page
+                                                it.hasNextPage = get.hasNextPage
+                                                loading = false
                                             }
-                                            it.page = get.page
-                                            it.hasNextPage = get.hasNextPage
-                                            loading = false
                                         }
                                 }
                                 else binding.animePopularProgress.visibility = View.GONE

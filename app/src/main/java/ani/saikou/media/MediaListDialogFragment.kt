@@ -118,18 +118,18 @@ class MediaListDialogFragment : BottomSheetDialogFragment(){
                     scope.launch {
                         Anilist.mutation.editList(
                         media!!.id,
-                        if (binding.mediaListProgress.text.toString()!="") binding.mediaListProgress.text.toString().toInt() else null,
-                        if (binding.mediaListScore.text.toString()!="") (binding.mediaListScore.text.toString().toDouble()*10).toInt() else null,
-                        if (binding.mediaListStatus.text.toString()!="") binding.mediaListStatus.text.toString() else null,
+                        if (_binding?.mediaListProgress?.text.toString()!="") _binding?.mediaListProgress?.text.toString().toInt() else null,
+                        if (_binding?.mediaListScore?.text.toString()!="") (_binding?.mediaListScore?.text.toString().toDouble()*10).toInt() else null,
+                        if (_binding?.mediaListStatus?.text.toString()!="") _binding?.mediaListStatus?.text.toString() else null,
                         if (start.date.year!=null) start.date.getEpoch() else null,
                         if (end.date.year!=null) end.date.getEpoch() else null,
                         )
                         activity?.runOnUiThread {
                             val m : AnilistHomeViewModel by activityViewModels()
                             m.homeRefresh.postValue(true)
-                            if (binding.mediaListScore.text.toString()!="") model.userScore.postValue(binding.mediaListScore.text.toString().toDouble()*10)
-                            if (binding.mediaListProgress.text.toString()!="") model.userProgress.postValue(binding.mediaListProgress.text.toString().toInt())
-                            model.userStatus.postValue(binding.mediaListStatus.text.toString())
+                            if (_binding?.mediaListScore?.text.toString()!="") model.userScore.postValue(_binding?.mediaListScore?.text.toString().toDouble()*10)
+                            if (_binding?.mediaListProgress?.text.toString()!="") model.userProgress.postValue(_binding?.mediaListProgress?.text.toString().toInt())
+                            model.userStatus.postValue(_binding?.mediaListStatus?.text.toString())
                             dismiss()
                         }
                     }

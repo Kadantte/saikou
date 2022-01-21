@@ -17,6 +17,7 @@ import android.os.Looper
 import android.provider.Settings.System
 import android.view.GestureDetector
 import android.view.MotionEvent
+import android.view.OrientationEventListener
 import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
@@ -54,6 +55,10 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import com.google.android.exoplayer2.ExoPlayer
 import java.util.concurrent.TimeUnit
+import android.hardware.SensorManager
+
+
+
 
 class ExoplayerView : AppCompatActivity(), Player.Listener {
     private lateinit var binding : ActivityExoplayerBinding
@@ -65,6 +70,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
     private lateinit var playerView: PlayerView
     private lateinit var exoSource: ImageButton
+    private lateinit var exoRotate: ImageButton
     private lateinit var exoQuality: ImageButton
     private lateinit var exoSpeed: ImageButton
     private lateinit var exoScreen: ImageButton
@@ -74,6 +80,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     private lateinit var exoVolumeCont: View
     private lateinit var animeTitle : TextView
     private lateinit var episodeTitle : TextView
+    private var orientationListener : OrientationEventListener? =null
 
     private lateinit var media: Media
     private lateinit var episodeArr: List<String>
@@ -106,12 +113,12 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
         //Initialize
         initActivity(this)
-        if (System.getInt(contentResolver, System.ACCELEROMETER_ROTATION, 0) != 1) requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         hideSystemBars()
 
         playerView = findViewById(R.id.player_view)
         exoQuality = playerView.findViewById(R.id.exo_quality)
         exoSource = playerView.findViewById(R.id.exo_source)
+        exoRotate = playerView.findViewById(R.id.exo_rotate)
         exoSpeed = playerView.findViewById(R.id.exo_playback_speed)
         exoScreen = playerView.findViewById(R.id.exo_screen)
         exoBrightness = playerView.findViewById(R.id.exo_brightness)
@@ -121,11 +128,33 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         animeTitle = playerView.findViewById(R.id.exo_anime_title)
         episodeTitle = playerView.findViewById(R.id.exo_ep_title)
 
+        val screenWidth = resources.displayMetrics.run { widthPixels / density }
         playerView.controllerShowTimeoutMs = 5000
         val audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        if (System.getInt(contentResolver, System.ACCELEROMETER_ROTATION, 0) != 1) {
+            var rotation = 0
+            requestedOrientation = rotation
+            exoRotate.setOnClickListener {
+                requestedOrientation = rotation
+                it.visibility = View.GONE
+            }
+            orientationListener =
+                object : OrientationEventListener(this, SensorManager.SENSOR_DELAY_UI) {
+                    override fun onOrientationChanged(orientation: Int) {
+                        if (orientation in 45..135) {
+                            if(rotation != ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE) exoRotate.visibility = View.VISIBLE
+                            rotation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+                        } else if (orientation in 225..315) {
+                            if(rotation != ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) exoRotate.visibility = View.VISIBLE
+                            rotation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                        }
+                    }
+                }
+            orientationListener?.enable()
+        }
 
         playerView.subtitleView?.setStyle(CaptionStyleCompat(Color.WHITE,Color.TRANSPARENT,Color.TRANSPARENT,EDGE_TYPE_OUTLINE,Color.BLACK,
-            ResourcesCompat.getFont(currActivity()!!, R.font.poppins)))
+            ResourcesCompat.getFont(this, R.font.poppins)))
 
         if (savedInstanceState != null) {
             currentWindow = savedInstanceState.getInt(STATE_RESUME_WINDOW)
@@ -145,9 +174,11 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         playerView.findViewById<ImageButton>(R.id.exo_slider_lock).setOnClickListener {
             sliderLocked = if(sliderLocked){
                 (it as ImageButton).setImageDrawable(AppCompatResources.getDrawable(this,R.drawable.ic_round_piano_24))
+                toastString("Turned On Volume & Brightness gestures.")
                 false
             } else{
                 (it as ImageButton).setImageDrawable(AppCompatResources.getDrawable(this,R.drawable.ic_round_piano_off_24))
+                toastString("Turned Off Volume & Brightness gestures.")
                 true
             }
             saveData("sliderLock",sliderLocked,this)
@@ -179,13 +210,14 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
         //Player UI Visibility Handler
         val brightnessRunnable = Runnable {
-            if(exoBrightnessCont.translationX==0f) ObjectAnimator.ofFloat(exoBrightnessCont,"translationX",0f,120f).setDuration(150).start()
+            if(exoBrightnessCont.translationX==0f) ObjectAnimator.ofFloat(exoBrightnessCont,"translationX",0f,screenWidth).setDuration(300).start()
         }
         val volumeRunnable = Runnable {
-            if(exoVolumeCont.translationX==0f) ObjectAnimator.ofFloat(exoVolumeCont,"translationX",0f,-120f).setDuration(150).start()
+            if(exoVolumeCont.translationX==0f) ObjectAnimator.ofFloat(exoVolumeCont,"translationX",0f, -screenWidth).setDuration(300).start()
         }
         playerView.setControllerVisibilityListener {
             if(it==View.GONE) {
+                hideSystemBars()
                 brightnessRunnable.run()
                 volumeRunnable.run()
             }
@@ -201,7 +233,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
         //Brightness
         var brightnessTimer = Timer()
-        exoBrightnessCont.translationX = 120f
+        exoBrightnessCont.translationX = screenWidth
 
         fun brightnessHide(){
             brightnessTimer.cancel()
@@ -235,7 +267,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             override fun onScrollYClick(y: Float) {
                 if(!sliderLocked) {
                     exoBrightness.value = clamp(exoBrightness.value + y / 50, 0f, 10f)
-                    if (exoBrightnessCont.translationX == 120f) ObjectAnimator.ofFloat(exoBrightnessCont, "translationX", 120f, 0f).setDuration(150).start()
+                    if (exoBrightnessCont.translationX == screenWidth) ObjectAnimator.ofFloat(exoBrightnessCont, "translationX", 0f, 0f).setDuration(0).start()
                 }
             }
             override fun onSingleClick(event: MotionEvent?) = handleController()
@@ -249,7 +281,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
         //Volume
         var volumeTimer = Timer()
-        exoVolumeCont.translationX = -120f
+        exoVolumeCont.translationX = -screenWidth
         val volumeMax = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         exoVolume.value = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()/volumeMax*10
         fun volumeHide(){
@@ -281,7 +313,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             override fun onScrollYClick(y: Float) {
                 if(!sliderLocked) {
                     exoVolume.value = clamp(exoVolume.value+y/50,0f,10f)
-                    if (exoVolumeCont.translationX == -120f) ObjectAnimator.ofFloat(exoVolumeCont,"translationX",-120f,0f).setDuration(150).start()
+                    if (exoVolumeCont.translationX == -screenWidth) ObjectAnimator.ofFloat(exoVolumeCont,"translationX", 0f,0f).setDuration(0).start()
                 }
             }
 
@@ -302,6 +334,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         })
         val episodeObserverRunnable = Runnable {
             model.getEpisode().observe(this,{
+                hideSystemBars()
                 if(it!=null && !epChanging) {
                     media.selected = model.loadSelected(media.id)
                     model.setMedia(media)
@@ -506,12 +539,14 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
     override fun onPause() {
         super.onPause()
+        orientationListener?.disable()
         playerView.player?.pause()
         saveData("${media.id}_${media.anime!!.selectedEpisode}",exoPlayer.currentPosition,this)
     }
 
     override fun onResume() {
         super.onResume()
+        orientationListener?.enable()
         hideSystemBars()
         if(isInitialized) {
             playerView.onResume()

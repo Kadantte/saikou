@@ -44,6 +44,7 @@ class Gogo(private val dub:Boolean=false, override val name: String = "gogoanime
     override fun getStream(episode: Episode, server: String): Episode {
         episode.streamLinks = runBlocking {
             val linkForVideos = mutableMapOf<String,Episode.StreamLinks?>()
+            try{
             withContext(Dispatchers.Default) {
                 Jsoup.connect(episode.link!!).ignoreHttpErrors(true).get().select("div.anime_muti_link > ul > li:not(li.anime)").forEach {
                     val name = it.select("a").text().replace("Choose this server", "")
@@ -57,6 +58,8 @@ class Gogo(private val dub:Boolean=false, override val name: String = "gogoanime
                             if(directLinks != null){linkForVideos[name] = directLinks}
                         }
                 }
+            }}catch (e:Exception){
+                toastString(e.toString())
             }
             return@runBlocking (linkForVideos)
         }

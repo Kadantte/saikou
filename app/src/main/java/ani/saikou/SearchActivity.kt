@@ -86,15 +86,20 @@ class SearchActivity : AppCompatActivity() {
                                         if (!loading) {
                                             loading = true
                                             val get = model.loadNextPage(search!!)
-                                            val a = search!!.results.size
-                                            search!!.results.addAll(get.results)
-                                            runOnUiThread {
-                                                adapter.notifyItemRangeInserted(a, get.results.size)
-                                                binding.searchProgress.visibility = View.GONE
+                                            if(get!=null) {
+                                                val a = search!!.results.size
+                                                search!!.results.addAll(get.results)
+                                                runOnUiThread {
+                                                    adapter.notifyItemRangeInserted(
+                                                        a,
+                                                        get.results.size
+                                                    )
+                                                    binding.searchProgress.visibility = View.GONE
+                                                }
+                                                search!!.page = get.page
+                                                search!!.hasNextPage = get.hasNextPage
+                                                loading = false
                                             }
-                                            search!!.page = get.page
-                                            search!!.hasNextPage = get.hasNextPage
-                                            loading = false
                                         }
                                     }
                                 } else binding.searchProgress.visibility = View.GONE

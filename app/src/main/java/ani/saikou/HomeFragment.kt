@@ -45,7 +45,7 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val model: AnilistHomeViewModel by viewModels()
         fun load(){
-            currActivity()?.runOnUiThread {
+            requireActivity().runOnUiThread {
                 binding.homeUserName.text = Anilist.username
                 binding.homeUserEpisodesWatched.text = Anilist.episodesWatched.toString()
                 binding.homeUserChaptersRead.text = Anilist.chapterRead.toString()

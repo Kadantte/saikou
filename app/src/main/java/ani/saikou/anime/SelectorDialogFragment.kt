@@ -152,7 +152,6 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
             startActivity(intent)
         }
         else{
-            model.setEpisode(null)
             model.setEpisode(media.anime!!.episodes!![media.anime.selectedEpisode!!]!!)
         }
     }
@@ -218,6 +217,16 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
 
     override fun onDismiss(dialog: DialogInterface) {
         scope.cancel()
+        if(launch == false){
+            @Suppress("DEPRECATION")
+            activity?.window?.decorView?.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            )
+        }
         super.onDismiss(dialog)
     }
 

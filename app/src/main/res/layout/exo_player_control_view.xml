@@ -38,13 +38,6 @@
                         app:cardCornerRadius="16dp"
                         app:cardElevation="0dp">
 
-                        <ImageButton
-                            android:id="@+id/exo_slider_lock"
-                            android:layout_width="wrap_content"
-                            android:layout_height="48dp"
-                            android:backgroundTint="#00FFFFFF"
-                            app:srcCompat="@drawable/ic_round_piano_24"
-                            tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
                     </androidx.cardview.widget.CardView>
 
                     <androidx.cardview.widget.CardView
@@ -54,13 +47,6 @@
                         app:cardCornerRadius="16dp"
                         app:cardElevation="0dp">
 
-                        <ImageButton
-                            android:id="@+id/exo_lock"
-                            android:layout_width="wrap_content"
-                            android:layout_height="48dp"
-                            android:backgroundTint="#00FFFFFF"
-                            app:srcCompat="@drawable/ic_round_lock_open_24"
-                            tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
                     </androidx.cardview.widget.CardView>
                 </LinearLayout>
 
@@ -309,7 +295,7 @@
 
             <ImageButton
                 android:id="@+id/exo_source"
-                android:layout_width="64dp"
+                android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:backgroundTint="#00FFFFFF"
                 android:src="@drawable/ic_round_source_24"
@@ -319,14 +305,46 @@
 
             <ImageButton
                 android:id="@+id/exo_quality"
-                android:layout_width="64dp"
+                android:layout_width="wrap_content"
                 android:layout_height="48dp"
                 android:backgroundTint="#00FFFFFF"
                 android:src="@drawable/ic_round_high_quality_24"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
+                tools:ignore="ContentDescription,SpeakableTextPresentCheck"
+                tools:visibility="visible" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <ImageButton
+                    android:id="@+id/exo_lock"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:backgroundTint="#00FFFFFF"
+                    app:srcCompat="@drawable/ic_round_lock_open_24"
+                    tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
+
+                <ImageButton
+                    android:id="@+id/exo_slider_lock"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:backgroundTint="#00FFFFFF"
+                    app:srcCompat="@drawable/ic_round_piano_24"
+                    tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
+
+                <ImageButton
+                    android:id="@+id/exo_rotate"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:backgroundTint="#00FFFFFF"
+                    android:visibility="gone"
+                    app:srcCompat="@drawable/ic_round_screen_rotation_alt_24"
+                    tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -335,16 +353,17 @@
     <androidx.cardview.widget.CardView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_margin="8dp"
+        android:layout_gravity="end"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="8dp"
         app:cardBackgroundColor="#A8000000"
         app:cardCornerRadius="16dp"
         app:cardElevation="0dp">
 
         <ImageButton
             android:id="@+id/exo_unlock"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:backgroundTint="#00FFFFFF"
             android:visibility="gone"
             app:srcCompat="@drawable/ic_round_lock_24"

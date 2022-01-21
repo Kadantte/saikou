@@ -14,6 +14,7 @@ class MangaSee(override val name: String="MangaSee") : MangaParser() {
 
     override fun getLinkChapters(link: String): MutableMap<String, MangaChapter> {
         val responseArray = mutableMapOf<String, MangaChapter>()
+        try{
         val a = Jsoup.connect("$host/manga/$link").maxBodySize(0).get().select("script").lastOrNull()
         val json = (a?:return responseArray).toString().findBetween("vm.Chapters = ",";")?:return responseArray
 
@@ -22,6 +23,8 @@ class MangaSee(override val name: String="MangaSee") : MangaParser() {
             val name = if(it.jsonObject["ChapterName"]!=JsonNull) it.jsonObject["ChapterName"].toString().trim('"') else null
             val num = chapChop(chap,3)
             responseArray[num] = MangaChapter(num,name,host+"/read-online/"+ link + "-chapter-" + chapChop(chap,1) + chapChop(chap,2) + chapChop(chap,0) + ".html")
+        }}catch (e:Exception){
+            toastString(e.toString())
         }
         return responseArray
     }
@@ -37,16 +40,24 @@ class MangaSee(override val name: String="MangaSee") : MangaParser() {
     override fun getChapter(chapter: MangaChapter): MangaChapter {
         chapter.images = arrayListOf()
         println(chapter)
-        val a = Jsoup.connect(chapter.link?:return chapter).maxBodySize(0).get().select("script").lastOrNull()
-        val str = (a?:return chapter).toString()
-        val server = (str.findBetween("vm.CurPathName = ",";")?:return chapter).trim('"')
-        val slug = (str.findBetween("vm.IndexName = ",";")?:return chapter).trim('"')
-        val chapJson = Json.decodeFromString<JsonObject>(str.findBetween("vm.CurChapter = ",";")?:return chapter)
-        val id = chapJson["Chapter"].toString().trim('"')
-        val chap = chapChop(id,1) + chapChop(id,2) + chapChop(id,0)
-        val pages = chapJson["Page"].toString().trim('"').toIntOrNull()?:return chapter
-        for(i in 1..pages)
-            chapter.images!!.add("https://$server/manga/$slug/$chap-${"000$i".takeLast(3)}.png")
+        try {
+            val a =
+                Jsoup.connect(chapter.link ?: return chapter).maxBodySize(0).get().select("script")
+                    .lastOrNull()
+            val str = (a ?: return chapter).toString()
+            val server = (str.findBetween("vm.CurPathName = ", ";") ?: return chapter).trim('"')
+            val slug = (str.findBetween("vm.IndexName = ", ";") ?: return chapter).trim('"')
+            val chapJson = Json.decodeFromString<JsonObject>(
+                str.findBetween("vm.CurChapter = ", ";") ?: return chapter
+            )
+            val id = chapJson["Chapter"].toString().trim('"')
+            val chap = chapChop(id, 1) + chapChop(id, 2) + chapChop(id, 0)
+            val pages = chapJson["Page"].toString().trim('"').toIntOrNull() ?: return chapter
+            for (i in 1..pages)
+                chapter.images!!.add("https://$server/manga/$slug/$chap-${"000$i".takeLast(3)}.png")
+        }catch (e:Exception){
+            toastString(e.toString())
+        }
         return chapter
     }
 
