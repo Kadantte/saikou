@@ -57,9 +57,6 @@ import com.google.android.exoplayer2.ExoPlayer
 import java.util.concurrent.TimeUnit
 import android.hardware.SensorManager
 
-
-
-
 class ExoplayerView : AppCompatActivity(), Player.Listener {
     private lateinit var binding : ActivityExoplayerBinding
     private lateinit var exoPlayer: ExoPlayer
@@ -367,7 +364,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         }
         playerView.findViewById<ImageButton>(R.id.exo_next_ep).setOnClickListener {
             if(episodeArr.size>currentEpisodeIndex+1) {
-                if(exoPlayer.currentPosition/episodeLength>0.8f) {
+                if(exoPlayer.currentPosition/episodeLength>0.8f && Anilist.userid!=null) {
                     if(progressDialog!=null) {
                         progressDialog?.setCancelable(false)
                             ?.setPositiveButton("Yes") { dialog, _ ->
@@ -434,7 +431,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         speedDialog.setOnCancelListener { hideSystemBars() }
 
         dontAskProgressDialog = loadData<Boolean>("${media.id}_progress") != true
-        progressDialog = if(dontAskProgressDialog) AlertDialog.Builder(this, R.style.DialogTheme).setTitle("Update progress on anilist?").apply {
+        progressDialog = if(dontAskProgressDialog && Anilist.userid!=null) AlertDialog.Builder(this, R.style.DialogTheme).setTitle("Update progress on anilist?").apply {
             setMultiChoiceItems(arrayOf("Don't ask again"), booleanArrayOf(false)) { _, _, isChecked ->
                 if (isChecked) saveData("${media.id}_progress", isChecked)
                 dontAskProgressDialog = isChecked
@@ -448,12 +445,14 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         //Title
         episodeTitle.text = "Episode ${episode.number}${if(episode.title!="" && episode.title!=null && episode.title!="null") " : "+episode.title else ""}${if(episode.filler) "\n[Filler]" else ""}"
 
+        val stream = episode.streamLinks[episode.selectedStream]?: return
+
         val simpleCache = VideoCache.getInstance(this)
         val dataSourceFactory = DataSource.Factory {
             val dataSource: HttpDataSource = DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true).createDataSource()
             dataSource.setRequestProperty("User-Agent","Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36")
-            if (episode.streamLinks[episode.selectedStream]!!.referer!=null)
-                dataSource.setRequestProperty("referer", episode.streamLinks[episode.selectedStream]!!.referer!!)
+            if (stream.referer!=null)
+                dataSource.setRequestProperty("referer", stream.referer)
             dataSource
         }
         cacheFactory = CacheDataSource.Factory().apply {
@@ -462,14 +461,14 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         }
 
         //Subtitles
-        val a = episode.streamLinks[episode.selectedStream]!!.subtitles
+        val a = stream.subtitles
         val subtitle: MediaItem.SubtitleConfiguration? = if (a!=null && a.contains("English"))
             MediaItem.SubtitleConfiguration.Builder(Uri.parse(a["English"]))
                 .setMimeType(MimeTypes.TEXT_VTT).setSelectionFlags(C.SELECTION_FLAG_FORCED)
                 .build()
         else null
 
-        val builder =  MediaItem.Builder().setUri(episode.streamLinks[episode.selectedStream]!!.quality[episode.selectedQuality].url)
+        val builder =  MediaItem.Builder().setUri(if(stream.quality.size>=episode.selectedQuality) stream.quality[episode.selectedQuality].url else return)
         if(subtitle!=null) builder.setSubtitleConfigurations(mutableListOf(subtitle))
         mediaItem = builder.build()
 
@@ -483,7 +482,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
         //Quality Track
         trackSelector = DefaultTrackSelector(this)
-        trackSelector.setParameters(trackSelector.buildUponParameters().setMaxVideoSize(MAX_WIDTH, MAX_HEIGHT))
+        trackSelector.setParameters(trackSelector.buildUponParameters().setMaxVideoSize(loadData("maxWidth",this)?:900, loadData("maxHeight",this)?:500))
 
         if(playbackPosition!=0L && !changingServer) {
             val time = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(playbackPosition),
@@ -563,10 +562,15 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         playerView.keepScreenOn = isPlaying
     }
 
+    override fun onRenderedFirstFrame() {
+        super.onRenderedFirstFrame()
+        saveData("maxHeight",(exoPlayer.videoFormat?:return).height)
+        saveData("maxWidth",(exoPlayer.videoFormat?:return).width)
+    }
+
     override fun onTracksInfoChanged(tracksInfo: TracksInfo) {
         if(tracksInfo.trackGroupInfos.size<=2) exoQuality.visibility = View.GONE
         else {
-            trackSelector.buildUponParameters().setMinVideoFrameRate(1)
             exoQuality.visibility = View.VISIBLE
             exoQuality.setOnClickListener {
                 initPopupQuality(trackSelector)?.show()
@@ -583,7 +587,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
     override fun onBackPressed() {
         println("${loadData<Boolean>("${media.id}_progress")}")
-        if (exoPlayer.currentPosition/episodeLength>0.8f) {
+        if (exoPlayer.currentPosition/episodeLength>0.8f && Anilist.userid!=null) {
             if(dontAskProgressDialog) {
                 progressDialog?.setCancelable(false)
                     ?.setPositiveButton("Yes") { dialog, _ ->
@@ -647,7 +651,6 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             if(it.frameRate>0f) it.height.toString()+"p" else it.height.toString()+"p (fps : N/A)"
         }
         val trackDialog = trackSelectionDialogBuilder.build()
-
         trackDialog.setOnDismissListener { hideSystemBars() }
         return trackDialog
     }

@@ -555,7 +555,7 @@ query (${"$"}page: Int = 1, ${"$"}id: Int, ${"$"}type: MediaType, ${"$"}isAdult:
         return null
     }
 
-    fun recentlyUpdated():ArrayList<Media>{
+    fun recentlyUpdated(): ArrayList<Media>? {
         val query="""{
 Page(page:1,perPage:50) {
     pageInfo {
@@ -593,8 +593,8 @@ Page(page:1,perPage:50) {
     }
 }
         }""".replace("\n", " ").replace("""  """, "")
-        val response = executeQuery(query, force = true)!!
-        val a = response["data"]!!.jsonObject["Page"]!!.jsonObject["airingSchedules"]!!
+        val response = executeQuery(query, force = true)?:return null
+        val a = ((response["data"]?:return null).jsonObject["Page"]?:return null).jsonObject["airingSchedules"]?:return null
         val responseArray = arrayListOf<Media>()
         a.jsonArray.forEach {
             val i = it.jsonObject["media"]!!

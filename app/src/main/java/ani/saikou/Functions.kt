@@ -53,8 +53,6 @@ const val STATE_RESUME_WINDOW = "resumeWindow"
 const val STATE_RESUME_POSITION = "resumePosition"
 const val STATE_PLAYER_FULLSCREEN = "playerFullscreen"
 const val STATE_PLAYER_PLAYING = "playerOnPlay"
-const val MAX_HEIGHT = 500
-const val MAX_WIDTH = 900
 const val buildDebug = true
 
 var statusBarHeight  = 0
@@ -93,6 +91,7 @@ fun saveData(fileName:String,data:Any,activity: Activity?=null){
 @Suppress("UNCHECKED_CAST")
 fun <T> loadData(fileName:String,activity: Activity?=null): T? {
     val a = activity?: currActivity()
+    try{
     if (a?.fileList() != null)
         if (fileName in a.fileList()){
             val fileIS: FileInputStream = a.openFileInput(fileName)
@@ -102,6 +101,9 @@ fun <T> loadData(fileName:String,activity: Activity?=null): T? {
             fileIS.close()
             return data
         }
+    }catch (e:Exception){
+        toastString("Error loading data $fileName")
+    }
     return null
 }
 

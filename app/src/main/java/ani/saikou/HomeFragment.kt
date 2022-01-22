@@ -45,7 +45,7 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val model: AnilistHomeViewModel by viewModels()
         fun load(){
-            requireActivity().runOnUiThread {
+            if(activity!=null) activity!!.runOnUiThread {
                 binding.homeUserName.text = Anilist.username
                 binding.homeUserEpisodesWatched.text = Anilist.episodesWatched.toString()
                 binding.homeUserChaptersRead.text = Anilist.chapterRead.toString()
@@ -53,6 +53,9 @@ class HomeFragment : Fragment() {
                 binding.homeUserAvatar.scaleType = ImageView.ScaleType.FIT_CENTER
                 binding.homeUserDataProgressBar.visibility = View.GONE
                 binding.homeUserDataContainer.visibility = View.VISIBLE
+            }
+            else{
+                toastString("Please Reload.")
             }
         }
 
@@ -193,9 +196,9 @@ class HomeFragment : Fragment() {
                     model.setRecommendation()
 
                     awaitAll(a, b, c)
-                    requireActivity().runOnUiThread {
+                    activity?.runOnUiThread {
                         model.homeRefresh.postValue(false)
-                        binding.homeRefresh.isRefreshing = false
+                        _binding?.homeRefresh?.isRefreshing = false
                     }
                 }
             }
