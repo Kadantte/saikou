@@ -12,6 +12,8 @@ data class Episode (
     var selectedStream : String?=null,
     var selectedQuality: Int = 0,
     var streamLinks : MutableMap<String,StreamLinks?> = mutableMapOf(),
+    var watched: Long?=null,
+    var maxLength: Long?=null,
 ):Serializable{
     data class Quality(
         val url: String,

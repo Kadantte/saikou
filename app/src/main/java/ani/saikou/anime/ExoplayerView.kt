@@ -8,7 +8,7 @@ import android.app.Dialog
 import android.content.Context
 import android.content.pm.ActivityInfo
 import android.graphics.Color
-import android.graphics.drawable.AnimatedVectorDrawable
+import android.graphics.drawable.Animatable
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
@@ -539,7 +539,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     override fun onPause() {
         super.onPause()
         orientationListener?.disable()
-        playerView.player?.pause()
+        if(isInitialized) playerView.player?.pause()
         saveData("${media.id}_${media.anime!!.selectedEpisode}",exoPlayer.currentPosition,this)
     }
 
@@ -558,12 +558,24 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         super.onStop()
     }
 
+    private var wasPlaying = false
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        if(isInitialized) wasPlaying = exoPlayer.isPlaying
+        if (hasFocus) {
+            if(isInitialized && wasPlaying) exoPlayer.play()
+        } else {
+            if(isInitialized) exoPlayer.pause()
+        }
+        super.onWindowFocusChanged(hasFocus)
+    }
+
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         playerView.keepScreenOn = isPlaying
     }
 
     override fun onRenderedFirstFrame() {
         super.onRenderedFirstFrame()
+        saveData("${media.id}_${media.anime!!.selectedEpisode}_max",exoPlayer.duration,this)
         saveData("maxHeight",(exoPlayer.videoFormat?:return).height)
         saveData("maxWidth",(exoPlayer.videoFormat?:return).width)
     }
@@ -689,7 +701,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         ObjectAnimator.ofFloat(text,"alpha",1f,1f).setDuration(600).start()
         ObjectAnimator.ofFloat(text,"alpha",0f,1f).setDuration(150).start()
 
-        val a = (text.compoundDrawables[1] as AnimatedVectorDrawable)
+        val a = (text.compoundDrawables[1] as Animatable)
         if(!a.isRunning) a.start()
         v.postDelayed({
             hideLayer(v,text)

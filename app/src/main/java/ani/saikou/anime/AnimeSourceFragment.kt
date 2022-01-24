@@ -24,6 +24,7 @@ import ani.saikou.navBarHeight
 import com.google.android.material.chip.Chip
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
 
@@ -151,6 +152,12 @@ class AnimeSourceFragment : Fragment() {
                         val episodes = loadedEpisodes[media.selected!!.source]
                         if (episodes != null) {
                             episodes.forEach { (i, episode) ->
+                                if(media.anime.fillerEpisodes!=null){
+                                    if (media.anime.fillerEpisodes!!.containsKey(i)) {
+                                        episode.title = media.anime.fillerEpisodes!![i]?.title
+                                        episode.filler = media.anime.fillerEpisodes!![i]?.filler?:false
+                                    }
+                                }
                                 if (media.anime.kitsuEpisodes != null) {
                                     if (media.anime.kitsuEpisodes!!.containsKey(i)) {
                                         episode.desc = media.anime.kitsuEpisodes!![i]?.desc
@@ -172,11 +179,19 @@ class AnimeSourceFragment : Fragment() {
                         media.anime.kitsuEpisodes = i
                     }
                 })
+                model.getFillerEpisodes().observe(viewLifecycleOwner,{ i->
+                    if (i!=null) {
+                        media.anime.fillerEpisodes = i
+                    }
+                })
                 AnimeSources[media.selected!!.source]!!.live.observe(viewLifecycleOwner,{ j->
                     binding.animeSourceTitle.text = j
                 })
                 scope.launch{
-                    model.loadKitsuEpisodes(media)
+                    val a = async { model.loadKitsuEpisodes(media) }
+                    val b = async { model.loadFillerEpisodes(media) }
+                    b.await()
+                    a.await()
                     model.loadEpisodes(media,media.selected!!.source)
                 }
             }
@@ -200,7 +215,7 @@ class AnimeSourceFragment : Fragment() {
             binding.animeEpisodesRecycler.adapter = episodeAdapter(media, this, media.selected!!.recyclerStyle, media.selected!!.recyclerReversed, start, end)
             val gridCount = when (media.selected!!.recyclerStyle){
                 0->1
-                1->(screenWidth/200f).toInt()
+                1->(screenWidth/155f).toInt()
                 2->(screenWidth/80f).toInt()
                 else->1
             }

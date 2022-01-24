@@ -75,7 +75,7 @@ class AnilistQueries{
                 nameRomaji = i.jsonObject["title"]!!.jsonObject["romaji"].toString().trim('"').replace("\\\"","\""),
                 userPreferredName = i.jsonObject["title"]!!.jsonObject["userPreferred"].toString().trim('"').replace("\\\"","\""),
                 cover = i.jsonObject["coverImage"]!!.jsonObject["large"].toString().trim('"'),
-                banner = i.jsonObject["bannerImage"].toString().trim('"'),
+                banner = if(i.jsonObject["bannerImage"]!=JsonNull) i.jsonObject["bannerImage"].toString().trim('"') else null,
                 status = i.jsonObject["status"].toString().trim('"'),
                 isFav = i.jsonObject["isFavourite"].toString() == "true",
                 userProgress = if (i.jsonObject["mediaListEntry"] != JsonNull) i.jsonObject["mediaListEntry"]!!.jsonObject["progress"].toString().toInt() else null,
@@ -90,7 +90,7 @@ class AnilistQueries{
     }
 
     fun mediaDetails(media:Media): Media? {
-        val query = """{Media(id:${media.id}){mediaListEntry{id status score(format:POINT_100) progress repeat updatedAt startedAt{year month day}completedAt{year month day}}isFavourite siteUrl idMal nextAiringEpisode{episode airingAt}source countryOfOrigin format duration season seasonYear startDate{year month day}endDate{year month day}genres studios(isMain:true){nodes{id name siteUrl}}description characters(sort:[ROLE,FAVOURITES_DESC],perPage:25,page:1){edges{role node{id image{medium}name{userPreferred}}}}relations{edges{relationType(version:2)node{id mediaListEntry{progress score(format:POINT_100) status} chapters episodes episodes chapters nextAiringEpisode{episode}meanScore isFavourite title{english romaji userPreferred}type status(version:2)bannerImage coverImage{large}}}}recommendations{nodes{mediaRecommendation{id mediaListEntry{progress score(format:POINT_100) status} chapters episodes chapters nextAiringEpisode{episode}meanScore isFavourite title{english romaji userPreferred}type status(version:2)bannerImage coverImage{large}}}}streamingEpisodes{title thumbnail}externalLinks{url}}}"""
+        val query = """{Media(id:${media.id}){mediaListEntry{id status score(format:POINT_100) progress repeat updatedAt startedAt{year month day}completedAt{year month day}}isFavourite siteUrl idMal nextAiringEpisode{episode airingAt}source countryOfOrigin format duration season seasonYear startDate{year month day}endDate{year month day}genres studios(isMain:true){nodes{id name siteUrl}}description characters(sort:[ROLE,FAVOURITES_DESC],perPage:25,page:1){edges{role node{id image{medium}name{userPreferred}}}}relations{edges{relationType(version:2)node{id mediaListEntry{progress score(format:POINT_100) status} chapters episodes episodes chapters nextAiringEpisode{episode}meanScore isFavourite title{english romaji userPreferred}type status(version:2)bannerImage coverImage{large}}}}recommendations{nodes{mediaRecommendation{id mediaListEntry{progress score(format:POINT_100) status} chapters episodes chapters nextAiringEpisode{episode}meanScore isFavourite title{english romaji userPreferred}type status(version:2)bannerImage coverImage{large}}}}streamingEpisodes{title thumbnail}externalLinks{url site}}}"""
         var response =  executeQuery(query, force = true)
         println("$response")
         if (response!=null){
@@ -140,7 +140,7 @@ class AnilistQueries{
                                 nameRomaji = i.jsonObject["node"]!!.jsonObject["title"]!!.jsonObject["romaji"].toString().trim('"').replace("\\\"","\""),
                                 userPreferredName = i.jsonObject["node"]!!.jsonObject["title"]!!.jsonObject["userPreferred"].toString().trim('"').replace("\\\"","\""),
                                 cover = i.jsonObject["node"]!!.jsonObject["coverImage"]!!.jsonObject["large"].toString().trim('"'),
-                                banner = i.jsonObject["node"]!!.jsonObject["bannerImage"].toString().trim('"'),
+                                banner = if(i.jsonObject["node"]!!.jsonObject["bannerImage"]!=JsonNull) i.jsonObject["node"]!!.jsonObject["bannerImage"].toString().trim('"') else null,
                                 status = i.jsonObject["node"]!!.jsonObject["status"].toString().trim('"'),
                                 isFav = i.jsonObject["node"]!!.jsonObject["isFavourite"].toString()=="true",
                                 userProgress = if (i.jsonObject["node"]!!.jsonObject["mediaListEntry"]!=JsonNull) i.jsonObject["node"]!!.jsonObject["mediaListEntry"]!!.jsonObject["progress"].toString().toInt() else null,
@@ -166,7 +166,7 @@ class AnilistQueries{
                                     userPreferredName = i.jsonObject["mediaRecommendation"]!!.jsonObject["title"]!!.jsonObject["userPreferred"].toString().trim('"').replace("\\\"","\""),
                                     status = i.jsonObject["mediaRecommendation"]!!.jsonObject["status"].toString().trim('"'),
                                     cover = i.jsonObject["mediaRecommendation"]!!.jsonObject["coverImage"]!!.jsonObject["large"].toString().trim('"'),
-                                    banner = i.jsonObject["mediaRecommendation"]!!.jsonObject["bannerImage"].toString().trim('"'),
+                                    banner = if(i.jsonObject["mediaRecommendation"]!!.jsonObject["bannerImage"]!=JsonNull) i.jsonObject["mediaRecommendation"]!!.jsonObject["bannerImage"].toString().trim('"') else null,
                                     meanScore = if (i.jsonObject["mediaRecommendation"]!!.jsonObject["meanScore"].toString().trim('"')!="null") i.jsonObject["mediaRecommendation"]!!.jsonObject["meanScore"].toString().toInt() else null,
                                     isFav = i.jsonObject["mediaRecommendation"]!!.jsonObject["isFavourite"].toString()=="true",
                                     userProgress = if (i.jsonObject["mediaRecommendation"]!!.jsonObject["mediaListEntry"]!=JsonNull) i.jsonObject["mediaRecommendation"]!!.jsonObject["mediaListEntry"]!!.jsonObject["progress"].toString().toInt() else null,
@@ -208,9 +208,8 @@ class AnilistQueries{
                     media.anime.nextAiringEpisodeTime = if(it.jsonObject["nextAiringEpisode"] != JsonNull) it.jsonObject["nextAiringEpisode"]!!.jsonObject["airingAt"].toString().toLong() else null
 
                     it.jsonObject["externalLinks"]!!.jsonArray.forEach{ i->
-                        val url = i.jsonObject["url"].toString().trim('"')
-                        if(url.startsWith("https://www.youtube.com") ){
-                            media.anime.youtube = url
+                        if(i.jsonObject["site"].toString().trim('"')=="Youtube"){
+                            media.anime.youtube = i.jsonObject["url"].toString().trim('"')
                         }
                     }
                 }
@@ -247,7 +246,7 @@ class AnilistQueries{
                         nameRomaji = it.jsonObject["media"]!!.jsonObject["title"]!!.jsonObject["romaji"].toString().trim('"').replace("\\\"","\""),
                         userPreferredName = it.jsonObject["media"]!!.jsonObject["title"]!!.jsonObject["userPreferred"].toString().trim('"').replace("\\\"","\""),
                         cover = it.jsonObject["media"]!!.jsonObject["coverImage"]!!.jsonObject["large"].toString().trim('"'),
-                        banner = it.jsonObject["media"]!!.jsonObject["bannerImage"].toString().trim('"'),
+                        banner = if(it.jsonObject["media"]!!.jsonObject["bannerImage"]!=JsonNull) it.jsonObject["media"]!!.jsonObject["bannerImage"].toString().trim('"') else null,
                         status = it.jsonObject["media"]!!.jsonObject["status"].toString().trim('"'),
                         meanScore = if(it.jsonObject["media"]!!.jsonObject["meanScore"]!=JsonNull) it.jsonObject["media"]!!.jsonObject["meanScore"].toString().toInt() else null,
                         isFav = it.jsonObject["media"]!!.jsonObject["isFavourite"].toString() == "true",
@@ -281,7 +280,7 @@ class AnilistQueries{
                             userPreferredName = json.jsonObject["title"]!!.jsonObject["userPreferred"].toString().trim('"').replace("\\\"","\""),
                             status = json.jsonObject["status"].toString().trim('"'),
                             cover = json.jsonObject["coverImage"]!!.jsonObject["large"].toString().trim('"'),
-                            banner = json.jsonObject["bannerImage"].toString().trim('"'),
+                            banner = if(json.jsonObject["bannerImage"]!=JsonNull) json.jsonObject["bannerImage"].toString().trim('"') else null,
                             meanScore = if(json.jsonObject["meanScore"]!=JsonNull) json.jsonObject["meanScore"].toString().toInt() else null,
                             isFav = json.jsonObject["isFavourite"].toString()=="true",
                             userProgress = if (json.jsonObject["mediaListEntry"]!=JsonNull) json.jsonObject["mediaListEntry"]!!.jsonObject["progress"].toString().toInt() else null,
@@ -330,7 +329,7 @@ class AnilistQueries{
                     nameRomaji = it.jsonObject["media"]!!.jsonObject["title"]!!.jsonObject["romaji"].toString().trim('"'),
                     userPreferredName = it.jsonObject["media"]!!.jsonObject["title"]!!.jsonObject["userPreferred"].toString().trim('"'),
                     cover = it.jsonObject["media"]!!.jsonObject["coverImage"]!!.jsonObject["large"].toString().trim('"'),
-                    banner = it.jsonObject["media"]!!.jsonObject["bannerImage"].toString().trim('"'),
+                    banner = if(it.jsonObject["media"]!!.jsonObject["bannerImage"]!=JsonNull) it.jsonObject["media"]!!.jsonObject["bannerImage"].toString().trim('"') else null,
                     status = it.jsonObject["media"]!!.jsonObject["status"].toString().trim('"'),
                     meanScore = if(it.jsonObject["media"]!!.jsonObject["meanScore"] != JsonNull) it.jsonObject["media"]!!.jsonObject["meanScore"].toString().toInt() else null,
                     isFav = it.jsonObject["media"]!!.jsonObject["isFavourite"].toString()=="true",
@@ -347,7 +346,7 @@ class AnilistQueries{
         sorted["All"] = all
         val favResponse = executeQuery("""{User(id:$userId){favourites{${if(anime) "anime" else "manga"}(page:0){edges{favouriteOrder node{id mediaListEntry{progress score(format:POINT_100)status}chapters isFavourite episodes nextAiringEpisode{episode}meanScore isFavourite title{english romaji userPreferred}type status(version:2)bannerImage coverImage{large}}}}}}}""")
         sorted["Favourites"] = arrayListOf()
-        favResponse!!.jsonObject["data"]!!.jsonObject["User"]!!.jsonObject["favourites"]!!.jsonObject[if(anime) "anime" else "manga"]!!.jsonObject["edges"]!!.jsonArray.forEach {
+        favResponse?.jsonObject?.get("data")!!.jsonObject["User"]!!.jsonObject["favourites"]!!.jsonObject[if(anime) "anime" else "manga"]!!.jsonObject["edges"]!!.jsonArray.forEach {
             val json = it.jsonObject["node"]!!
             sorted["Favourites"]!!.add(
                 Media(
@@ -357,7 +356,7 @@ class AnilistQueries{
                     userPreferredName = json.jsonObject["title"]!!.jsonObject["userPreferred"].toString().trim('"').replace("\\\"","\""),
                     status = json.jsonObject["status"].toString().trim('"'),
                     cover = json.jsonObject["coverImage"]!!.jsonObject["large"].toString().trim('"'),
-                    banner = json.jsonObject["bannerImage"].toString().trim('"'),
+                    banner = if(json.jsonObject["bannerImage"]!=JsonNull) json.jsonObject["bannerImage"].toString().trim('"') else null,
                     meanScore = if(json.jsonObject["meanScore"]!=JsonNull) json.jsonObject["meanScore"].toString().toInt() else null,
                     isFav = json.jsonObject["isFavourite"].toString()=="true",
                     userProgress = if (json.jsonObject["mediaListEntry"]!=JsonNull) json.jsonObject["mediaListEntry"]!!.jsonObject["progress"].toString().toInt() else null,
@@ -527,7 +526,7 @@ query (${"$"}page: Int = 1, ${"$"}id: Int, ${"$"}type: MediaType, ${"$"}isAdult:
                         nameRomaji = i.jsonObject["title"]!!.jsonObject["romaji"].toString().trim('"').replace("\\\"","\""),
                         userPreferredName = i.jsonObject["title"]!!.jsonObject["userPreferred"].toString().trim('"').replace("\\\"","\""),
                         cover = i.jsonObject["coverImage"]!!.jsonObject["large"].toString().trim('"'),
-                        banner = i.jsonObject["bannerImage"].toString().trim('"'),
+                        banner = if(i.jsonObject["bannerImage"]!=JsonNull) i.jsonObject["bannerImage"].toString().trim('"') else null,
                         status = i.jsonObject["status"].toString().trim('"'),
                         isFav = i.jsonObject["isFavourite"].toString() == "true",
                         userProgress = if (i.jsonObject["mediaListEntry"] != JsonNull) i.jsonObject["mediaListEntry"]!!.jsonObject["progress"].toString().toInt() else null,
@@ -606,7 +605,7 @@ Page(page:1,perPage:50) {
                     nameRomaji = i.jsonObject["title"]!!.jsonObject["romaji"].toString().trim('"').replace("\\\"","\""),
                     userPreferredName = i.jsonObject["title"]!!.jsonObject["userPreferred"].toString().trim('"').replace("\\\"","\""),
                     cover = i.jsonObject["coverImage"]!!.jsonObject["large"].toString().trim('"'),
-                    banner = i.jsonObject["bannerImage"].toString().trim('"'),
+                    banner = if(i.jsonObject["bannerImage"]!=JsonNull) i.jsonObject["bannerImage"].toString().trim('"') else null,
                     status = i.jsonObject["status"].toString().trim('"'),
                     isFav = i.jsonObject["isFavourite"].toString() == "true",
                     userProgress = if (i.jsonObject["mediaListEntry"] != JsonNull) i.jsonObject["mediaListEntry"]!!.jsonObject["progress"].toString().toInt() else null,

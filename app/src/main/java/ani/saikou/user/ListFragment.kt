@@ -45,7 +45,7 @@ class ListFragment : Fragment() {
 
         model.getLists().observe(viewLifecycleOwner,{
             if(it!=null){
-                list = it.values.toList()[pos!!]
+                list = it.values.toList().getOrNull(pos!!)
                 update()
             }
         })

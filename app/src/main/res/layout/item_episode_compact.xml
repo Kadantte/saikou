@@ -6,6 +6,28 @@
     android:layout_margin="8dp"
     app:cardCornerRadius="16dp">
 
+    <LinearLayout
+        android:id="@+id/itemEpisodeProgressCont"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/itemEpisodeProgress"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0"
+            android:background="@color/pink_500" />
+
+        <View
+            android:id="@+id/itemEpisodeProgressEmpty"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
     <View
         android:id="@+id/itemEpisodeFillerView"
         android:layout_width="wrap_content"
@@ -19,4 +41,5 @@
         android:layout_gravity="center"
         android:fontFamily="@font/poppins_bold"
         android:textSize="16sp" />
+
 </androidx.cardview.widget.CardView>

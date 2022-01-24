@@ -73,6 +73,7 @@
             android:textSize="12sp"
             android:textStyle="italic"
             android:transitionName="mediaTitle"
+            tools:ignore="TextContrastCheck"
             tools:text="SOURCE " />
 
     </LinearLayout>

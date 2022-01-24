@@ -81,7 +81,7 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         val media: Media = intent.getSerializableExtra("media") as Media
         media.selected = model.loadSelected(media.id)
         loadImage(media.cover,binding.mediaCoverImage)
-        loadImage(media.banner,binding.mediaBanner)
+        loadImage(media.banner?:media.cover,binding.mediaBanner)
         loadImage(media.banner,binding.mediaBannerStatus)
         binding.mediaTitle.text=media.userPreferredName
         binding.mediaTitleCollapse.text=media.userPreferredName

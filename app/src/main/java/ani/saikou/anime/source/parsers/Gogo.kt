@@ -114,8 +114,8 @@ class Gogo(private val dub:Boolean=false, override val name: String = "gogoanime
         }
         else{
             live.postValue("Selected : ${slug.name}")
+            return getSlugEpisodes(slug.link)
         }
-        if (slug!=null) return getSlugEpisodes(slug.link)
         }catch (e:Exception){
             toastString("$e")
         }

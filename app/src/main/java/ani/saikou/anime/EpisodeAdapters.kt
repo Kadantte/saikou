@@ -8,8 +8,10 @@ import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.databinding.ItemEpisodeCompactBinding
 import ani.saikou.databinding.ItemEpisodeGridBinding
 import ani.saikou.databinding.ItemEpisodeListBinding
+import ani.saikou.loadData
 import ani.saikou.media.Media
 import com.squareup.picasso.Picasso
+import android.widget.LinearLayout
 
 fun episodeAdapter(media:Media,fragment: AnimeSourceFragment,style:Int,reversed:Boolean=false,start:Int=0,e:Int?=null): RecyclerView.Adapter<*> {
     val end = e?:(media.anime!!.episodes!!.size-1)
@@ -22,6 +24,21 @@ fun episodeAdapter(media:Media,fragment: AnimeSourceFragment,style:Int,reversed:
         1 -> EpisodeGridAdapter(media, fragment,arr)
         2 -> EpisodeCompactAdapter(media, fragment,arr)
         else -> EpisodeGridAdapter(media, fragment,arr)
+    }
+}
+
+fun handleProgress(cont:LinearLayout,bar:View,empty:View,mediaId:Int,ep:String){
+    val curr = loadData<Long>("${mediaId}_${ep}")
+    val max = loadData<Long>("${mediaId}_${ep}_max")
+    if(curr!=null && max!=null){
+        cont.visibility=View.VISIBLE
+        val div = curr.toFloat()/max
+        val barParams = bar.layoutParams as LinearLayout.LayoutParams
+        barParams.weight = div
+        bar.layoutParams = barParams
+        val params = empty.layoutParams as LinearLayout.LayoutParams
+        params.weight = 1-div
+        empty.layoutParams = params
     }
 }
 
@@ -45,6 +62,7 @@ class EpisodeCompactAdapter(
         if (media.userProgress!=null) {
             if (ep.number.toFloatOrNull()?:9999f<=media.userProgress!!.toFloat()) binding.root.alpha = 0.66f
         }
+        handleProgress(binding.itemEpisodeProgressCont,binding.itemEpisodeProgress,binding.itemEpisodeProgressEmpty,media.id,ep.number)
     }
 
     override fun getItemCount(): Int = arr.size
@@ -72,7 +90,7 @@ class EpisodeGridAdapter(
     override fun onBindViewHolder(holder: EpisodeGridViewHolder, position: Int) {
         val binding = holder.binding
         val ep = arr[position]
-        Picasso.get().load(ep.thumb?:media.cover).resize(200,0).into(binding.itemEpisodeImage)
+        Picasso.get().load(ep.thumb?:media.cover).resize(400,0).into(binding.itemEpisodeImage)
         binding.itemEpisodeNumber.text = ep.number
         binding.itemEpisodeTitle.text = ep.title?:media.name
         if(ep.filler){
@@ -82,6 +100,7 @@ class EpisodeGridAdapter(
         if (media.userProgress!=null) {
             if (ep.number.toFloatOrNull()?:9999f<=media.userProgress!!.toFloat()) binding.root.alpha = 0.66f
         }
+        handleProgress(binding.itemEpisodeProgressCont,binding.itemEpisodeProgress,binding.itemEpisodeProgressEmpty,media.id,ep.number)
     }
 
     override fun getItemCount(): Int = arr.size
@@ -109,7 +128,7 @@ class EpisodeListAdapter(
     override fun onBindViewHolder(holder: EpisodeListViewHolder, position: Int) {
         val binding = holder.binding
         val ep = arr[position]
-        Picasso.get().load(ep.thumb?:media.cover).resize(200,0).into(binding.itemEpisodeImage)
+        Picasso.get().load(ep.thumb?:media.cover).resize(400,0).into(binding.itemEpisodeImage)
         binding.itemEpisodeNumber.text = ep.number
         if(ep.filler){
             binding.itemEpisodeFiller.visibility = View.VISIBLE
@@ -121,6 +140,7 @@ class EpisodeListAdapter(
         if (media.userProgress!=null) {
             if (ep.number.toFloatOrNull()?:9999f<=media.userProgress!!.toFloat()) binding.root.alpha = 0.66f
         }
+        handleProgress(binding.itemEpisodeProgressCont,binding.itemEpisodeProgress,binding.itemEpisodeProgressEmpty,media.id,ep.number)
     }
 
     override fun getItemCount(): Int = arr.size

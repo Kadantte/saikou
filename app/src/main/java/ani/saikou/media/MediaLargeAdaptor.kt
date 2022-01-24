@@ -32,7 +32,7 @@ class MediaLargeAdaptor(
         val b = holder.binding
         val media = mediaList[position]
         loadImage(media.cover,b.itemCompactImage)
-        loadImage(media.banner,b.itemCompactBanner)
+        loadImage(media.banner?:media.cover,b.itemCompactBanner)
         b.itemCompactOngoing.visibility = if (media.status=="RELEASING")  View.VISIBLE else View.GONE
         b.itemCompactTitle.text = media.userPreferredName
         b.itemCompactScore.text = ((if(media.userScore==0) (media.meanScore?:0) else media.userScore)/10.0).toString()

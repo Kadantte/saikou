@@ -33,9 +33,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import ani.saikou.media.Media
 import ani.saikou.media.Source
-import com.google.android.exoplayer2.database.StandaloneDatabaseProvider
-import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor
-import com.google.android.exoplayer2.upstream.cache.SimpleCache
 import com.squareup.picasso.OkHttp3Downloader
 import com.squareup.picasso.Picasso
 import nl.joery.animatedbottombar.AnimatedBottomBar
@@ -47,7 +44,6 @@ import java.io.*
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
-
 
 const val STATE_RESUME_WINDOW = "resumeWindow"
 const val STATE_RESUME_POSITION = "resumePosition"
@@ -304,7 +300,12 @@ fun ArrayList<Source>.sortByTitle(string: String){
     for (i in 0 until this.size){
         temp[i] = levenshtein(string.lowercase(),this[i].name.lowercase())
     }
-    val a = temp.toList().sortedBy{ (_, value) -> value}.toMap().keys.toList().subList(0,min(this.size,25))
+    val c = temp.toList().sortedBy{ (_, value) -> value}.toMap()
+    val a = c.keys.toList().subList(0,min(this.size,25)) as MutableList
+    val b = c.values.toList().subList(0,min(this.size,25))
+    for( i in b.indices.reversed()){
+        if(b[i]>20) a.removeAt(i)
+    }
     val temp2 = arrayListOf<Source>()
     temp2.addAll(this)
     this.clear()

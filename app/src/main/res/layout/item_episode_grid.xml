@@ -79,4 +79,25 @@
 
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/itemEpisodeProgressCont"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/itemEpisodeProgress"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_weight="0"
+            android:background="@color/pink_500" />
+
+        <View
+            android:id="@+id/itemEpisodeProgressEmpty"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
 </androidx.cardview.widget.CardView>

@@ -9,11 +9,12 @@ import ani.saikou.anilist.Anilist
 import ani.saikou.anime.Episode
 import ani.saikou.anime.SelectorDialogFragment
 import ani.saikou.anime.source.AnimeSources
-import ani.saikou.kitsu.Kitsu
+import ani.saikou.others.Kitsu
 import ani.saikou.loadData
 import ani.saikou.logger
 import ani.saikou.manga.MangaChapter
 import ani.saikou.manga.source.MangaSources
+import ani.saikou.others.AnimeFillerList
 import ani.saikou.saveData
 import kotlinx.coroutines.*
 
@@ -39,6 +40,10 @@ class MediaDetailsViewModel:ViewModel() {
     private val kitsuEpisodes: MutableLiveData<MutableMap<String,Episode>> = MutableLiveData<MutableMap<String,Episode>>(null)
     fun getKitsuEpisodes() : LiveData<MutableMap<String,Episode>> = kitsuEpisodes
     fun loadKitsuEpisodes(s:Media){ if (kitsuEpisodes.value==null) kitsuEpisodes.postValue(Kitsu.getKitsuEpisodesDetails(s))}
+
+    private val fillerEpisodes: MutableLiveData<MutableMap<String,Episode>> = MutableLiveData<MutableMap<String,Episode>>(null)
+    fun getFillerEpisodes() : LiveData<MutableMap<String,Episode>> = fillerEpisodes
+    fun loadFillerEpisodes(s:Media){ if (fillerEpisodes.value==null) fillerEpisodes.postValue(AnimeFillerList.getFillers(s.idMAL?:return))}
 
     private val episodes: MutableLiveData<MutableMap<Int,MutableMap<String,Episode>>> = MutableLiveData<MutableMap<Int,MutableMap<String,Episode>>>(null)
     private val epsLoaded = mutableMapOf<Int,MutableMap<String,Episode>>()

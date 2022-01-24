@@ -1,4 +1,4 @@
-package ani.saikou.kitsu
+package ani.saikou.others
 
 import ani.saikou.anime.Episode
 import ani.saikou.logger
