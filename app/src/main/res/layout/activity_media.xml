@@ -11,7 +11,6 @@
         android:layout_height="192dp"
         android:background="@color/nav_bg"
         android:scaleType="centerCrop"
-        android:translationZ="4dp"
         tools:ignore="ContentDescription,ImageContrastCheck"
         tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
@@ -230,13 +229,16 @@
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/mediaTab"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="96dp"
         android:layout_gravity="bottom"
         android:background="@color/nav_bg"
-        app:itemActiveIndicatorStyle="@style/Widget.Material3.BottomNavigationView.ActiveIndicator"
+        app:itemActiveIndicatorStyle="@style/BottomNavBar"
+        app:itemIconTint="@color/tab_layout_icon"
+        app:itemTextColor="@color/tab_layout_text"
+        app:itemRippleColor="?attr/colorSecondary"
         app:itemTextAppearanceActive="@style/NavBarText"
         app:itemTextAppearanceInactive="@style/NavBarText"
-        app:menu="@menu/anime_menu_detail" />
+        app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/mediaClose"

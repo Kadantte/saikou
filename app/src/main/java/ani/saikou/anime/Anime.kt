@@ -1,5 +1,6 @@
 package ani.saikou.anime
 
+import ani.saikou.media.Studio
 import java.io.Serializable
 
 data class Anime(
@@ -9,8 +10,7 @@ data class Anime(
     var season: String? = null,
     var seasonYear: Int? = null,
 
-    var mainStudioID: Int? = null,
-    var mainStudioName: String? =null,
+    var mainStudio:Studio?=null,
 
     var youtube: String?=null,
     var nextAiringEpisode: Int? = null,

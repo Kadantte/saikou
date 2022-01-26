@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_marginStart="-12dp"
-    android:layout_marginTop="-12dp"
     android:layout_marginEnd="-12dp"
     android:clipToPadding="false"
-    android:gravity="center"
+    android:gravity="center_horizontal"
     android:orientation="vertical">
 
     <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="-12dp"
+        android:layout_marginBottom="-16dp"
         android:clipToPadding="false"
         android:padding="24dp">
 
@@ -75,7 +76,6 @@
             android:layout_width="16dp"
             android:layout_height="16dp"
             android:layout_gravity="bottom"
-            android:alpha="0.8"
             android:translationZ="8dp"
             app:cardCornerRadius="8dp"
             app:cardElevation="4dp">
@@ -88,44 +88,62 @@
     </FrameLayout>
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:id="@+id/itemCompactType"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="8dp"
-        android:orientation="vertical">
+        android:layout_gravity="end"
+        android:layout_marginBottom="4dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        tools:ignore="UseCompoundDrawables">
 
-        <View
-            android:layout_width="108dp"
-            android:layout_height="160dp"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:id="@+id/itemCompactTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ellipsize="marquee"
-            android:maxLines="1"
-            android:singleLine="true"
-            android:transitionName="mediaTitle" />
+        <ImageView
+            android:id="@+id/itemCompactTypeImage"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:alpha="0.58"
+            app:srcCompat="@drawable/ic_round_movie_filter_24"
+            tools:ignore="ContentDescription" />
 
         <TextView
             android:id="@+id/itemCompactRelation"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:alpha="0.58"
-            android:ellipsize="marquee"
-            android:includeFontPadding="false"
+            android:ellipsize="end"
             android:maxLines="1"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
             android:singleLine="true"
             android:textAlignment="textEnd"
             android:textAllCaps="true"
             android:textSize="12sp"
             android:textStyle="italic"
             android:transitionName="mediaTitle"
-            android:visibility="gone"
-            tools:text="SOURCE " />
+            tools:ignore="TextContrastCheck"
+            tools:text="Relation  " />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/itemCompactTitle"
+            android:layout_width="108dp"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:lineSpacingExtra="-4sp"
+            android:maxLines="2"
+            android:transitionName="mediaTitle"
+            tools:text="@string/get_recommendations" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -145,9 +163,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:alpha="0.58"
+                tools:ignore="TextContrastCheck"
                 tools:text="/??" />
         </LinearLayout>
 
     </LinearLayout>
 
-</RelativeLayout>
+</LinearLayout>

@@ -2,18 +2,24 @@ package ani.saikou.media
 
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import ani.saikou.R
 import ani.saikou.databinding.FragmentMediaInfoBinding
+import ani.saikou.navBarHeight
+import ani.saikou.px
+import java.io.Serializable
 
 @SuppressLint("SetTextI18n")
 class MediaInfoFragment : Fragment() {
@@ -36,6 +42,7 @@ class MediaInfoFragment : Fragment() {
         val screenWidth = resources.displayMetrics.run { widthPixels / density }
         binding.mediaInfoProgressBar.visibility = if (!loaded) View.VISIBLE else View.GONE
         binding.mediaInfoContainer.visibility = if (loaded) View.VISIBLE else View.GONE
+        binding.mediaInfoContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin += 128f.px + navBarHeight }
 
         val model : MediaDetailsViewModel by activityViewModels()
         model.getMedia().observe(viewLifecycleOwner,{
@@ -59,8 +66,17 @@ class MediaInfoFragment : Fragment() {
                     binding.mediaInfoDurationContainer.visibility = View.VISIBLE
                     binding.mediaInfoSeasonContainer.visibility = View.VISIBLE
                     binding.mediaInfoSeason.text = media.anime.season?:"??" +" "+ media.anime.seasonYear
-                    binding.mediaInfoStudioContainer.visibility = View.VISIBLE
-                    binding.mediaInfoStudio.text = media.anime.mainStudioName?:"??"
+                    if(media.anime.mainStudio!=null) {
+                        binding.mediaInfoStudioContainer.visibility = View.VISIBLE
+                        binding.mediaInfoStudio.text = media.anime.mainStudio!!.name
+                        binding.mediaInfoStudioContainer.setOnClickListener{
+                            ContextCompat.startActivity(
+                                requireActivity(),
+                                Intent(activity, StudioActivity::class.java).putExtra("studio",media.anime.mainStudio!! as Serializable),
+                                null
+                            )
+                        }
+                    }
                     binding.mediaInfoTotalTitle.setText(R.string.total_eps)
                     binding.mediaInfoTotal.text = if (media.anime.nextAiringEpisode!=null) (media.anime.nextAiringEpisode.toString()+" | "+(media.anime.totalEpisodes?:"~").toString()) else (media.anime.totalEpisodes?:"~").toString()
                 }
@@ -85,7 +101,7 @@ class MediaInfoFragment : Fragment() {
                 binding.mediaInfoGenresRecyclerView.adapter = GenreAdapter(media.genres!!,type,requireActivity())
                 binding.mediaInfoGenresRecyclerView.layoutManager = GridLayoutManager(requireContext(), (screenWidth/156f).toInt())
 
-                binding.mediaInfoCharacterRecyclerView.adapter = CharacterAdapter(media.characters!!)
+                binding.mediaInfoCharacterRecyclerView.adapter = CharacterAdapter(media.characters!!,requireActivity())
                 binding.mediaInfoCharacterRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
 
                 binding.mediaInfoRecommendedRecyclerView.adapter = MediaAdaptor(media.recommendations!!,requireActivity())

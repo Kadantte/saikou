@@ -1,14 +1,22 @@
 package ani.saikou.media
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.app.ActivityOptionsCompat
+import androidx.core.content.ContextCompat
+import androidx.core.util.Pair
+import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.databinding.ItemCharacterBinding
 import ani.saikou.loadImage
+import java.io.Serializable
 
 class CharacterAdapter(
-    private val characterList: ArrayList<Character>
+    private val characterList: ArrayList<Character>,
+    private val activity: Activity
 ): RecyclerView.Adapter<CharacterAdapter.CharacterViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CharacterViewHolder {
         val binding = ItemCharacterBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -19,7 +27,7 @@ class CharacterAdapter(
     override fun onBindViewHolder(holder: CharacterViewHolder, position: Int) {
         val binding = holder.binding
         val character = characterList[position]
-        binding.itemCompactRelation.text = character.role+"\t"
+        binding.itemCompactRelation.text = character.role+"  "
         loadImage(character.image,binding.itemCompactImage)
         binding.itemCompactTitle.text = character.name
     }
@@ -28,7 +36,14 @@ class CharacterAdapter(
     inner class CharacterViewHolder(val binding: ItemCharacterBinding) : RecyclerView.ViewHolder(binding.root) {
         init {
             itemView.setOnClickListener {
-                println(characterList[bindingAdapterPosition].toString())
+                val char = characterList[bindingAdapterPosition]
+                ContextCompat.startActivity(
+                    activity,
+                    Intent(activity, CharacterDetailsActivity::class.java).putExtra("character",char as Serializable),
+                    ActivityOptionsCompat.makeSceneTransitionAnimation(activity,
+                        Pair.create(binding.itemCompactImage, ViewCompat.getTransitionName(binding.itemCompactImage)!!),
+                    ).toBundle()
+                )
             }
         }
     }

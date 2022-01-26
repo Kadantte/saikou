@@ -32,4 +32,5 @@
         <item name="android:layout_marginRight">16dp</item>
         <item name="android:background">@drawable/round_corner</item>
     </style>
+    <style name="BottomNavBar" parent="Widget.Material3.BottomNavigationView.ActiveIndicator"/>
 </resources>

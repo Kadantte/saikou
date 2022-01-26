@@ -58,5 +58,6 @@ dependencies {
 //    UI
     implementation 'nl.joery.animatedbottombar:library:1.1.0'
     implementation 'com.alexvasilkov:gesture-views:2.8.3'
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation "io.noties.markwon:core:4.6.2"
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 }

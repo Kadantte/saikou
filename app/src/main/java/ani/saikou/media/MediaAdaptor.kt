@@ -6,6 +6,7 @@ import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.content.res.AppCompatResources
 
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
@@ -39,13 +40,15 @@ class MediaAdaptor(
         b.itemCompactScoreBG.background = ContextCompat.getDrawable(b.root.context,(if (media.userScore!=0) R.drawable.item_user_score else R.drawable.item_score))
         b.itemCompactUserProgress.text = (media.userProgress?:"~").toString()
         if (media.relation!=null){
-            b.itemCompactRelation.text =  "${media.relation} "
-            b.itemCompactRelation.visibility = View.VISIBLE
+            b.itemCompactRelation.text =  "${media.relation}  "
+            b.itemCompactType.visibility = View.VISIBLE
         }
         if (media.anime!=null){
+            if (media.relation!=null) b.itemCompactTypeImage.setImageDrawable(AppCompatResources.getDrawable(activity,R.drawable.ic_round_movie_filter_24))
             b.itemCompactTotal.text = " | ${if (media.anime.nextAiringEpisode!=null) (media.anime.nextAiringEpisode.toString()+" | "+(media.anime.totalEpisodes?:"~").toString()) else (media.anime.totalEpisodes?:"~").toString()}"
         }
         else if(media.manga!=null){
+            if (media.relation!=null) b.itemCompactTypeImage.setImageDrawable(AppCompatResources.getDrawable(activity,R.drawable.ic_round_import_contacts_24))
             b.itemCompactTotal.text = " | ${media.manga.totalChapters?:"~"}"
         }
     }

@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.res.Resources.getSystem
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -23,6 +24,7 @@ import android.widget.AutoCompleteTextView
 import android.widget.DatePicker
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -41,9 +43,16 @@ import okhttp3.OkHttpClient
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import java.io.*
+import java.text.DateFormatSymbols
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.ceil
+import androidx.core.content.ContextCompat.startActivity
+
+
+
+
 
 const val STATE_RESUME_WINDOW = "resumeWindow"
 const val STATE_RESUME_POSITION = "resumePosition"
@@ -152,7 +161,8 @@ data class FuzzyDate(
     val day: Int?=null,
 ): Serializable{
     override fun toString():String{
-        return (if (day!=null) "$day / " else "")+(if (month!=null) "$month / " else "")+(year?.toString() ?: "")
+        val a = if (month!=null) DateFormatSymbols().months[month - 1] else ""
+        return (if (day!=null) "$day " else "")+ a +(if (year!=null) ", $year" else "")
     }
     fun getToday():FuzzyDate{
         val cal = Calendar.getInstance()
@@ -231,7 +241,7 @@ class ZoomOutPageTransformer(private val bottom:Boolean=false) : ViewPager2.Page
         if (position == 0.0f) {
             var cy = 0
             if (bottom) cy = view.height
-            ViewAnimationUtils.createCircularReveal(view, view.width / 2, cy, 0f, max(view.height, view.width).toFloat()).setDuration(400).start()
+            ViewAnimationUtils.createCircularReveal(view, view.width / 2, cy, 0f, max(view.height, view.width)*1.5f).setDuration(400).start()
         }
     }
 }
@@ -442,4 +452,9 @@ abstract class DoubleClickListener : GestureDetector.SimpleOnGestureListener() {
 
 fun View.circularReveal(x: Int, y: Int,time:Long) {
     ViewAnimationUtils.createCircularReveal(this, x, y, 0f, max(height, width).toFloat()).setDuration(time).start()
+}
+
+fun openImage(link:String?){
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
+    currActivity()?.startActivity(intent)
 }

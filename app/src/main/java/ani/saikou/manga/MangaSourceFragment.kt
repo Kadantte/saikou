@@ -20,6 +20,7 @@ import ani.saikou.media.Media
 import ani.saikou.media.MediaDetailsViewModel
 import ani.saikou.media.SourceSearchDialogFragment
 import ani.saikou.navBarHeight
+import ani.saikou.px
 import com.google.android.material.chip.Chip
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +52,7 @@ class MangaSourceFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         screenWidth = resources.displayMetrics.run { widthPixels / density }
-        binding.mangaSourceContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin += navBarHeight }
+        binding.mangaSourceContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin += 128f.px+navBarHeight }
         binding.mangaSourceTitle.isSelected = true
         super.onViewCreated(view, savedInstanceState)
         val a : MediaDetailsViewModel by activityViewModels()

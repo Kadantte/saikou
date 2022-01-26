@@ -18,6 +18,9 @@
         android:usesCleartextTraffic="true"
         tools:ignore="AllowBackup">
         <activity
+            android:name=".media.StudioActivity"
+            android:exported="false" />
+        <activity
             android:name=".user.ListActivity"
             android:exported="false" />
         <activity
@@ -33,15 +36,17 @@
             android:name=".media.MediaDetailsActivity"
             android:exported="true" />
         <activity
+            android:name=".media.CharacterDetailsActivity"
+            android:exported="true" />
+        <activity
             android:name=".NoInternet"
             android:exported="true" />
         <activity
             android:name=".anime.ExoplayerView"
             android:configChanges="orientation|screenSize|layoutDirection"
-            android:keepScreenOn="true"
             android:exported="true"
-            android:theme="@style/Theme.Saikou.Exoplayer"
-             />
+            android:keepScreenOn="true"
+            android:theme="@style/Theme.Saikou.Exoplayer" />
         <activity
             android:name=".anilist.Login"
             android:exported="true">
@@ -89,6 +94,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

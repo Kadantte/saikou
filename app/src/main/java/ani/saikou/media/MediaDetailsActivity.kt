@@ -30,9 +30,6 @@ import kotlin.math.abs
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import android.content.Intent
 
-
-
-
 class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedListener {
 
     private lateinit var binding: ActivityMediaBinding
@@ -59,7 +56,6 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         binding.mediaClose.updateLayoutParams<ViewGroup.MarginLayoutParams> { topMargin += statusBarHeight }
         binding.mediaAppBar.updateLayoutParams<ViewGroup.MarginLayoutParams> { topMargin += statusBarHeight }
         binding.mediaCover.updateLayoutParams<ViewGroup.MarginLayoutParams> { topMargin += statusBarHeight }
-        binding.mediaViewPager.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin += 64f.px + navBarHeight }
         binding.mediaTab.updatePadding(bottom = navBarHeight)
 
         binding.mediaTitle.isSelected = true
@@ -81,8 +77,10 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         val media: Media = intent.getSerializableExtra("media") as Media
         media.selected = model.loadSelected(media.id)
         loadImage(media.cover,binding.mediaCoverImage)
+        binding.mediaCoverImage.setOnClickListener{ openImage(media.cover) }
         loadImage(media.banner?:media.cover,binding.mediaBanner)
-        loadImage(media.banner,binding.mediaBannerStatus)
+        binding.mediaBanner.setOnClickListener{ openImage(media.banner?:media.cover) }
+        loadImage(media.banner?:media.cover,binding.mediaBannerStatus)
         binding.mediaTitle.text=media.userPreferredName
         binding.mediaTitleCollapse.text=media.userPreferredName
 

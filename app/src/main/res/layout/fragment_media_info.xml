@@ -29,7 +29,6 @@
             android:id="@+id/mediaInfoContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="64dp"
             android:orientation="vertical"
             android:visibility="gone"
             tools:visibility="visible">
@@ -108,6 +107,7 @@
                         android:fontFamily="@font/poppins_bold"
                         android:textAlignment="textEnd" />
                 </LinearLayout>
+
                 <TableRow
                     android:layout_width="match_parent"
                     android:layout_height="24dp"
