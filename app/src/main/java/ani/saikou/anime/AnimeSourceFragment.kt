@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import ani.saikou.R
 import ani.saikou.anime.source.AnimeSources
 import ani.saikou.databinding.FragmentAnimeSourceBinding
+import ani.saikou.loadData
 import ani.saikou.media.Media
 import ani.saikou.media.MediaDetailsViewModel
 import ani.saikou.media.SourceSearchDialogFragment
@@ -84,6 +85,14 @@ class AnimeSourceFragment : Fragment() {
                     timer?.start()
                 }
 
+                fun reset(){
+                    binding.animeEpisodesRecycler.adapter = null
+                    binding.animeSourceChipGroup.removeAllViews()
+                    loading = true
+                    binding.animeSourceProgressBar.visibility = View.VISIBLE
+                    binding.animeSourceContinue.visibility = View.GONE
+                }
+
                 if (media.anime.youtube != null) {
                     binding.animeSourceYT.visibility = View.VISIBLE
                     binding.animeSourceYT.setOnClickListener {
@@ -101,10 +110,7 @@ class AnimeSourceFragment : Fragment() {
                     )
                 )
                 binding.animeSource.setOnItemClickListener { _, _, i, _ ->
-                    binding.animeEpisodesRecycler.adapter = null
-                    binding.animeSourceChipGroup.removeAllViews()
-                    loading = true
-                    binding.animeSourceProgressBar.visibility = View.VISIBLE
+                    reset()
                     media.selected!!.source = i
                     model.saveSelected(media.id, media.selected!!, requireActivity())
                     AnimeSources[i]!!.live.observe(viewLifecycleOwner) { j ->
@@ -161,10 +167,7 @@ class AnimeSourceFragment : Fragment() {
 
                 model.getEpisodes().observe(viewLifecycleOwner) { loadedEpisodes ->
                     if (loadedEpisodes != null) {
-                        binding.animeEpisodesRecycler.adapter = null
-                        binding.animeSourceChipGroup.removeAllViews()
-                        loading = true
-                        binding.animeSourceProgressBar.visibility = View.VISIBLE
+                        reset()
                         val episodes = loadedEpisodes[media.selected!!.source]
                         if (episodes != null) {
                             episodes.forEach { (i, episode) ->
@@ -229,6 +232,15 @@ class AnimeSourceFragment : Fragment() {
     private fun updateRecycler(media: Media){
         model.saveSelected(media.id,media.selected!!,requireActivity())
         if(media.anime?.episodes!=null) {
+            val continueEp = loadData<String>("${media.id}_current_ep",requireActivity())
+            if(continueEp!=null){
+                if(media.anime.episodes!!.containsKey(continueEp)) {
+                    binding.animeSourceContinue.visibility = View.VISIBLE
+                    binding.animeSourceContinue.setOnClickListener {
+                        onEpisodeClick(media, continueEp)
+                    }
+                }
+            }
             binding.animeEpisodesRecycler.adapter = episodeAdapter(media, this, media.selected!!.recyclerStyle, media.selected!!.recyclerReversed, start, end)
             val gridCount = when (media.selected!!.recyclerStyle){
                 0->1

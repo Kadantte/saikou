@@ -61,6 +61,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginBottom="-24dp"
+                android:clipToPadding="false"
                 android:orientation="vertical"
                 android:padding="32dp">
 
@@ -86,10 +87,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:hint="@string/source"
-                    app:boxCornerRadiusBottomEnd="16dp"
-                    app:boxCornerRadiusBottomStart="16dp"
-                    app:boxCornerRadiusTopEnd="16dp"
-                    app:boxCornerRadiusTopStart="16dp"
+                    app:boxCornerRadiusBottomEnd="8dp"
+                    app:boxCornerRadiusBottomStart="8dp"
+                    app:boxCornerRadiusTopEnd="8dp"
+                    app:boxCornerRadiusTopStart="8dp"
                     app:hintAnimationEnabled="true"
                     app:startIconDrawable="@drawable/ic_round_playlist_play_24">
 
@@ -133,7 +134,8 @@
                     android:padding="12dp"
                     android:text="@string/wrong"
                     android:textAlignment="textEnd"
-                    android:textColor="?attr/colorSecondary" />
+                    android:textColor="?attr/colorSecondary"
+                    tools:ignore="TextContrastCheck" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -190,6 +192,24 @@
                         app:tint="@color/bg_opp"
                         tools:ignore="ContentDescription,ImageContrastCheck" />
                 </LinearLayout>
+
+                <Button
+                    android:id="@+id/animeSourceContinue"
+                    style="@style/Widget.Material3.ExtendedFloatingActionButton.Icon.Secondary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="@string/continue_watching"
+                    android:textColor="@color/bg_white"
+                    android:visibility="gone"
+                    app:cornerRadius="12dp"
+                    app:icon="@drawable/ic_round_play_arrow_24"
+                    app:iconTint="@color/bg_white"
+                    tools:ignore="TextContrastCheck"
+                    tools:visibility="visible" />
 
             </LinearLayout>
 

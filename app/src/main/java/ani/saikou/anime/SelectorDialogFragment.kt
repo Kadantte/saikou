@@ -186,7 +186,7 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
             binding.urlSize.visibility = if(url.size!=null) View.VISIBLE else View.GONE
 
             binding.urlSize.text = DecimalFormat("#.##").format(url.size?:0).toString()+" MB"
-            if(".mp4" in urls[position].url) {
+            if(url.quality!="Multi Quality") {
                 binding.urlDownload.visibility = View.VISIBLE
                 binding.urlDownload.setOnClickListener {
                     media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedStream = stream

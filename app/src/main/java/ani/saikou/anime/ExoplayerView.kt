@@ -47,6 +47,10 @@ import com.google.android.exoplayer2.upstream.HttpDataSource
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource
 import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.material.slider.Slider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
@@ -439,7 +443,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     private fun initPlayer(episode: Episode){
         //Title
         episodeTitle.text = "Episode ${episode.number}${if(episode.title!="" && episode.title!=null && episode.title!="null") " : "+episode.title else ""}${if(episode.filler) "\n[Filler]" else ""}"
-
+        saveData("${media.id}_current_ep",media.anime!!.selectedEpisode!!,this)
         val stream = episode.streamLinks[episode.selectedStream]?: return
 
         val simpleCache = VideoCache.getInstance(this)
@@ -463,16 +467,16 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                 .build()
         else null
 
-        val url = if(stream.quality.size>=episode.selectedQuality) stream.quality[episode.selectedQuality].url else return
+        val url = if(stream.quality.size>=episode.selectedQuality) stream.quality[episode.selectedQuality] else return
         val but = playerView.findViewById<ImageButton>(R.id.exo_download)
-        if(".mp4" in url) {
+        if(url.quality!="Multi Quality") {
             but.visibility = View.VISIBLE
             but.setOnClickListener {
                 download(this,episode,animeTitle.text.toString())
             }
         }else but.visibility = View.GONE
 
-        val builder =  MediaItem.Builder().setUri(url)
+        val builder =  MediaItem.Builder().setUri(url.url)
         if(subtitle!=null) builder.setSubtitleConfigurations(mutableListOf(subtitle))
         mediaItem = builder.build()
 
@@ -622,6 +626,11 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             }
         } else {
             super.onBackPressed()
+        }
+        MainScope().launch(Dispatchers.Main) {
+            Refresh.media.postValue(true)
+            delay(100)
+            Refresh.media.postValue(false)
         }
     }
 

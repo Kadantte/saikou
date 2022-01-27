@@ -372,6 +372,7 @@ fun getSize(url: String,referer: String=""):Double?{
         Jsoup.connect(url)
             .ignoreContentType(true)
             .ignoreHttpErrors(true).timeout(750)
+            .followRedirects(true)
             .header("referer",referer)
             .method(Connection.Method.HEAD)
             .execute().header("Content-Length")?.toDouble()?.div(1048576)
@@ -485,7 +486,7 @@ fun download(activity: Activity, episode:Episode, animeTitle:String){
 
     val title = "Episode ${episode.number} ${if(episode.title!=null) " - ${episode.title}" else ""}"
 
-    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "/Saikou/${animeTitle}/$title (${stream.quality[episode.selectedQuality].quality}).mp4")
+    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "/Saikou/${animeTitle}/$title (${stream.quality[episode.selectedQuality].quality})")
     request.setTitle("$title : $animeTitle")
     manager.enqueue(request)
     toastString("Started Downloading\n$title : $animeTitle")
