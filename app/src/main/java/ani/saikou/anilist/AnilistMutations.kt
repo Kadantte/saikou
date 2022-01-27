@@ -32,4 +32,10 @@ class AnilistMutations {
             }""".replace("\n","").replace("""    ""","")
         executeQuery(query,variables)
     }
+
+    fun deleteList(listId:Int){
+        val query = "mutation(${"$"}id:Int){DeleteMediaListEntry(id:${"$"}id){deleted}}"
+        val variables = """{\"id\":\"$listId\"}"""
+        executeQuery(query,variables)
+    }
 }

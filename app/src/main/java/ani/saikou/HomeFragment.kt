@@ -45,7 +45,7 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val model: AnilistHomeViewModel by viewModels()
         fun load(){
-            if(activity!=null) activity!!.runOnUiThread {
+            if(activity!=null) requireActivity().runOnUiThread {
                 binding.homeUserName.text = Anilist.username
                 binding.homeUserEpisodesWatched.text = Anilist.episodesWatched.toString()
                 binding.homeUserChaptersRead.text = Anilist.chapterRead.toString()
@@ -82,7 +82,7 @@ class HomeFragment : Fragment() {
         binding.homeRefresh.setSlingshotDistance(statusBarHeight+128)
         binding.homeRefresh.setProgressViewEndTarget(false, statusBarHeight+128)
         binding.homeRefresh.setOnRefreshListener {
-            model.homeRefresh.postValue(true)
+            Refresh.home.postValue(true)
         }
 
         //UserData
@@ -92,30 +92,28 @@ class HomeFragment : Fragment() {
             load()
         }
         //List Images
-        model.getListImages().observe(viewLifecycleOwner, {
+        model.getListImages().observe(viewLifecycleOwner) {
             if (it.isNotEmpty()) {
-                loadImage(it[0] ?: "https://bit.ly/31bsIHq",binding.homeAnimeListImage)
-                loadImage(it[1] ?: "https://bit.ly/2ZGfcuG",binding.homeMangaListImage)
+                loadImage(it[0] ?: "https://bit.ly/31bsIHq", binding.homeAnimeListImage)
+                loadImage(it[1] ?: "https://bit.ly/2ZGfcuG", binding.homeMangaListImage)
             }
             binding.homeAnimeList.setOnClickListener {
                 ContextCompat.startActivity(
                     requireActivity(), Intent(requireActivity(), ListActivity::class.java)
-                        .putExtra("anime",true)
-                        .putExtra("userId",Anilist.userid)
-                        .putExtra("username",Anilist.username)
-                    ,null
+                        .putExtra("anime", true)
+                        .putExtra("userId", Anilist.userid)
+                        .putExtra("username", Anilist.username), null
                 )
             }
             binding.homeMangaList.setOnClickListener {
                 ContextCompat.startActivity(
                     requireActivity(), Intent(requireActivity(), ListActivity::class.java)
-                        .putExtra("anime",false)
-                        .putExtra("userId",Anilist.userid)
-                        .putExtra("username",Anilist.username)
-                    ,null
+                        .putExtra("anime", false)
+                        .putExtra("userId", Anilist.userid)
+                        .putExtra("username", Anilist.username), null
                 )
             }
-        })
+        }
 
         //Function For Recycler Views
         fun initRecyclerView(mode: Int, recyclerView: RecyclerView, progress: View, empty: View,emptyButton:Button?=null) {
@@ -128,12 +126,12 @@ class HomeFragment : Fragment() {
             recyclerView.visibility = View.GONE
             empty.visibility = View.GONE
 
-            modelFunc.observe(viewLifecycleOwner, {
+            modelFunc.observe(viewLifecycleOwner) {
                 recyclerView.visibility = View.GONE
                 empty.visibility = View.GONE
                 if (it != null) {
                     if (it.isNotEmpty()) {
-                        recyclerView.adapter = MediaAdaptor(it,requireActivity())
+                        recyclerView.adapter = MediaAdaptor(it, requireActivity())
                         recyclerView.layoutManager = LinearLayoutManager(
                             requireContext(),
                             LinearLayoutManager.HORIZONTAL,
@@ -142,16 +140,16 @@ class HomeFragment : Fragment() {
                         recyclerView.visibility = View.VISIBLE
                     } else {
                         empty.visibility = View.VISIBLE
-                        emptyButton?.setOnClickListener{
-                            when(mode){
-                                0-> bottomBar.selectTabAt(0)
-                                1-> bottomBar.selectTabAt(2)
+                        emptyButton?.setOnClickListener {
+                            when (mode) {
+                                0 -> bottomBar.selectTabAt(0)
+                                1 -> bottomBar.selectTabAt(2)
                             }
                         }
                     }
                     progress.visibility = View.GONE
                 }
-            })
+            }
         }
 
         // Recycler Views
@@ -176,7 +174,7 @@ class HomeFragment : Fragment() {
             binding.homeRecommendedEmpty
         )
 
-        model.homeRefresh.observe(viewLifecycleOwner, {
+        Refresh.home.observe(viewLifecycleOwner) {
             if (it) {
                 scope.launch {
                     //Get userData First
@@ -197,11 +195,11 @@ class HomeFragment : Fragment() {
 
                     awaitAll(a, b, c)
                     activity?.runOnUiThread {
-                        model.homeRefresh.postValue(false)
+                        Refresh.home.postValue(false)
                         _binding?.homeRefresh?.isRefreshing = false
                     }
                 }
             }
-        })
+        }
     }
 }

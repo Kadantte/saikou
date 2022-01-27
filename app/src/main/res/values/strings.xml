@@ -69,6 +69,7 @@
     <string name="started_at">STARTED AT</string>
     <string name="completed_at">COMPLETED AT</string>
     <string name="save">Save</string>
+    <string name="delete">Delete</string>
 
     <string name="name">Name</string>
     <string name="name_romaji">Name Romaji</string>

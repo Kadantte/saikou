@@ -107,7 +107,8 @@
                     android:layout_height="48dp"
                     android:backgroundTint="#00FFFFFF"
                     android:contentDescription="@string/exo_controls_playback_speed"
-                    android:visibility="visible" />
+                    android:visibility="visible"
+                    tools:ignore="PrivateResource" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -204,8 +205,6 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="32dp"
                 android:layout_weight="1"
-                android:scaleX="1.33"
-                android:scaleY="1.33"
                 app:cardBackgroundColor="#00FFFFFF"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp">
@@ -314,6 +313,17 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 tools:ignore="ContentDescription,SpeakableTextPresentCheck"
                 tools:visibility="visible" />
+
+            <ImageButton
+                android:id="@+id/exo_download"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:backgroundTint="#00FFFFFF"
+                android:src="@drawable/ic_round_download_24"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:ignore="ContentDescription,SpeakableTextPresentCheck" />
 
             <LinearLayout
                 android:layout_width="wrap_content"

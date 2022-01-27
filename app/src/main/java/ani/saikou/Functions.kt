@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.app.DatePickerDialog
+import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.Resources.getSystem
@@ -11,6 +12,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.text.InputFilter
@@ -24,35 +26,35 @@ import android.widget.AutoCompleteTextView
 import android.widget.DatePicker
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.core.content.ContextCompat
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.MutableLiveData
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
+import ani.saikou.anilist.Anilist
+import ani.saikou.anime.Episode
 import ani.saikou.media.Media
 import ani.saikou.media.Source
 import com.squareup.picasso.OkHttp3Downloader
 import com.squareup.picasso.Picasso
+import kotlinx.coroutines.*
 import nl.joery.animatedbottombar.AnimatedBottomBar
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import java.io.*
+import java.lang.Runnable
 import java.text.DateFormatSymbols
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.ceil
-import androidx.core.content.ContextCompat.startActivity
-
-
-
-
+import kotlin.math.roundToInt
 
 const val STATE_RESUME_WINDOW = "resumeWindow"
 const val STATE_RESUME_POSITION = "resumePosition"
@@ -68,14 +70,26 @@ val Float.px: Int get() = (this * getSystem().displayMetrics.density).toInt()
 lateinit var bottomBar: AnimatedBottomBar
 var selectedOption = 1
 
+
+object Refresh{
+    suspend fun all(){
+        home.postValue(true)
+        media.postValue(true)
+        delay(100)
+        media.postValue(false)
+    }
+    val media = MutableLiveData(false)
+    val home = MutableLiveData(true)
+    val anime = MutableLiveData(true)
+    val manga = MutableLiveData(true)
+}
+
 fun currActivity():Activity?{
     return App.currentActivity()
 }
 
 var loadMedia:Int?=null
 var loadIsMAL=false
-
-
 
 fun logger(e:Any?,print:Boolean=true){
     if(buildDebug && print)
@@ -116,13 +130,11 @@ fun initActivity(a: Activity,view:View?=null) {
     val window = a.window
     WindowCompat.setDecorFitsSystemWindows(window, false)
     if (view != null) {
-        println("$view")
         val windowInsets = ViewCompat.getRootWindowInsets(window.decorView.findViewById(android.R.id.content))
         if (windowInsets!=null) {
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
             statusBarHeight = insets.top
             navBarHeight = insets.bottom
-            println("$insets")
         }
     }
 }
@@ -457,4 +469,37 @@ fun View.circularReveal(x: Int, y: Int,time:Long) {
 fun openImage(link:String?){
     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
     currActivity()?.startActivity(intent)
+}
+
+fun download(activity: Activity, episode:Episode, animeTitle:String){
+    val manager = activity.getSystemService(AppCompatActivity.DOWNLOAD_SERVICE) as DownloadManager
+    val stream = episode.streamLinks[episode.selectedStream]!!
+    val uri = Uri.parse(stream.quality[episode.selectedQuality].url)
+    val request: DownloadManager.Request = DownloadManager.Request(uri)
+    if(stream.referer!=null) {
+        request.addRequestHeader("referer",stream.referer)
+    }
+    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+    val direct = File(Environment.DIRECTORY_DOWNLOADS + "/Saikou/${animeTitle}/")
+    if (!direct.exists()) direct.mkdirs()
+
+    val title = "Episode ${episode.number} ${if(episode.title!=null) " - ${episode.title}" else ""}"
+
+    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "/Saikou/${animeTitle}/$title (${stream.quality[episode.selectedQuality].quality}).mp4")
+    request.setTitle("$title : $animeTitle")
+    manager.enqueue(request)
+    toastString("Started Downloading\n$title : $animeTitle")
+}
+
+fun updateAnilistProgress(id:Int,number:String){
+    if(Anilist.userid!=null) {
+        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+            val a = number.toFloatOrNull()?.roundToInt()
+            Anilist.mutation.editList(id, a)
+            toastString("Setting progress to $a")
+            Refresh.all()
+        }
+    }else{
+        toastString("Please Login into anilist account!")
+    }
 }

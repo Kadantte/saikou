@@ -2,16 +2,21 @@ package ani.saikou.anime.source.parsers
 
 import android.annotation.SuppressLint
 import ani.saikou.anime.Episode
-import ani.saikou.anime.source.Extractor
 import ani.saikou.anime.source.AnimeParser
-import ani.saikou.anime.source.extractors.*
+import ani.saikou.anime.source.Extractor
+import ani.saikou.anime.source.extractors.FPlayer
+import ani.saikou.anime.source.extractors.GogoCDN
+import ani.saikou.anime.source.extractors.StreamSB
 import ani.saikou.loadData
 import ani.saikou.logger
 import ani.saikou.media.Media
 import ani.saikou.media.Source
 import ani.saikou.saveData
 import ani.saikou.toastString
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 
 @SuppressLint("SetTextI18n")
@@ -72,7 +77,6 @@ class Gogo(private val dub:Boolean=false, override val name: String = "gogoanime
             val linkForVideos = mutableMapOf<String,Episode.StreamLinks?>()
             withContext(Dispatchers.Default) {
                 Jsoup.connect(episode.link!!).ignoreHttpErrors(true).get().select("div.anime_muti_link > ul > li:not(li.anime)").forEach {
-//                    println(it.select("a").attr("data-video"))
                     launch {
                         val directLinks = directLinkify(
                             it.select("a").text().replace("Choose this server", ""),

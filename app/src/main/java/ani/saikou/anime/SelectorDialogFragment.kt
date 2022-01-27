@@ -16,6 +16,7 @@ import ani.saikou.R
 import ani.saikou.databinding.BottomSheetSelectorBinding
 import ani.saikou.databinding.ItemStreamBinding
 import ani.saikou.databinding.ItemUrlBinding
+import ani.saikou.download
 import ani.saikou.media.Media
 import ani.saikou.media.MediaDetailsViewModel
 import ani.saikou.navBarHeight
@@ -67,50 +68,48 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
         val mo : MediaDetailsViewModel by activityViewModels()
         model = mo
 
-        model.getMedia().observe(viewLifecycleOwner,{ m->
+        model.getMedia().observe(viewLifecycleOwner) { m ->
             media = m
-            if (media!=null){
+            if (media != null) {
                 episode = media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!
-                println("Current EP: $episode")
-                if(selected!=null) {
+                if (selected != null) {
                     binding.selectorListContainer.visibility = View.GONE
                     binding.selectorAutoListContainer.visibility = View.VISIBLE
                     binding.selectorAutoText.text = selected
                     binding.selectorCancel.setOnClickListener {
                         media!!.selected!!.stream = null
-                        model.saveSelected(media!!.id,media!!.selected!!,requireActivity())
+                        model.saveSelected(media!!.id, media!!.selected!!, requireActivity())
                         dismiss()
                     }
-                    fun fail(){
+                    fun fail() {
                         toastString("Couldn't auto select the server, Please try again!")
                         binding.selectorCancel.performClick()
                     }
-                    fun load(){
-                        if(episode.streamLinks.containsKey(selected)){
-                            if(episode.streamLinks[selected]!!.quality.size >= media!!.selected!!.quality){
-                                media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedStream = selected
-                                media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedQuality = media!!.selected!!.quality
+
+                    fun load() {
+                        if (episode.streamLinks.containsKey(selected)) {
+                            if (episode.streamLinks[selected]!!.quality.size >= media!!.selected!!.quality) {
+                                media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedStream =
+                                    selected
+                                media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedQuality =
+                                    media!!.selected!!.quality
                                 dismiss()
                                 startExoplayer(media!!)
-                            }
-                            else fail()
-                        }
-                        else fail()
+                            } else fail()
+                        } else fail()
                     }
-                    if(episode.streamLinks.isEmpty()) {
-                        model.getEpisode().observe(this,{
-                            if (it!=null){
+                    if (episode.streamLinks.isEmpty()) {
+                        model.getEpisode().observe(this) {
+                            if (it != null) {
                                 episode = it
                                 load()
                             }
-                        })
+                        }
                         scope.launch {
                             if (!model.loadEpisodeStream(episode, media!!.selected!!)) fail()
                         }
-                    }
-                    else load()
-                }
-                else{
+                    } else load()
+                } else {
                     binding.selectorRecyclerView.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin += navBarHeight }
                     binding.selectorRecyclerView.adapter = null
                     binding.selectorProgressBar.visibility = View.VISIBLE
@@ -118,27 +117,30 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
                     binding.selectorMakeDefault.setOnClickListener {
                         onCheckboxClicked(it)
                     }
-                    fun load(){
+                    fun load() {
                         binding.selectorProgressBar.visibility = View.GONE
                         media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!] = episode
-                        binding.selectorRecyclerView.layoutManager = LinearLayoutManager(requireActivity(),LinearLayoutManager.VERTICAL,false)
+                        binding.selectorRecyclerView.layoutManager = LinearLayoutManager(
+                            requireActivity(),
+                            LinearLayoutManager.VERTICAL,
+                            false
+                        )
                         binding.selectorRecyclerView.adapter = StreamAdapter()
                     }
-                    if(episode.streamLinks.size <= 1) {
-                        model.getEpisode().observe(this,{
-                            if (it!=null){
+                    if (episode.streamLinks.size <= 1) {
+                        model.getEpisode().observe(this) {
+                            if (it != null) {
                                 episode = it
                                 load()
                             }
-                        })
+                        }
                         scope.launch {
                             model.loadEpisodeStreams(episode, media!!.selected!!.source)
                         }
-                    }
-                    else load()
+                    } else load()
                 }
             }
-        })
+        }
 
         super.onViewCreated(view, savedInstanceState)
     }
@@ -184,6 +186,14 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
             binding.urlSize.visibility = if(url.size!=null) View.VISIBLE else View.GONE
 
             binding.urlSize.text = DecimalFormat("#.##").format(url.size?:0).toString()+" MB"
+            if(".mp4" in urls[position].url) {
+                binding.urlDownload.visibility = View.VISIBLE
+                binding.urlDownload.setOnClickListener {
+                    media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedStream = stream
+                    media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedQuality = position
+                    download(requireActivity(),media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!,media!!.userPreferredName)
+                }
+            }else binding.urlDownload.visibility = View.GONE
         }
 
         override fun getItemCount(): Int = urls.size

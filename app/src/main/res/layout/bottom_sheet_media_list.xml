@@ -51,7 +51,6 @@
                 android:insetBottom="0dp"
                 android:padding="8dp"
                 android:text="@string/save"
-                android:textColor="@color/pink_500"
                 android:textSize="16sp"
                 app:cornerRadius="16dp" />
         </LinearLayout>
@@ -127,7 +126,7 @@
 
             <Button
                 android:id="@+id/mediaListIncrement"
-                android:layout_width="54dp"
+                android:layout_width="wrap_content"
                 android:layout_height="48dp"
                 android:layout_marginTop="-2dp"
                 android:elevation="0dp"
@@ -135,6 +134,10 @@
                 android:fontFamily="@font/poppins_bold"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
+                android:minWidth="@null"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:singleLine="true"
                 android:text="+1\u0020"
                 android:textSize="16sp"
                 app:cornerRadius="16dp"
@@ -211,6 +214,7 @@
             android:layout_width="match_parent"
             android:layout_height="56dp"
             android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
             android:hint="@string/completed_at"
             app:boxCornerRadiusBottomEnd="16dp"
             app:boxCornerRadiusBottomStart="16dp"
@@ -236,6 +240,19 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
+        <Button
+            android:id="@+id/mediaListDelete"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="128dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:fontFamily="@font/poppins_bold"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:padding="8dp"
+            android:text="@string/delete"
+            android:textSize="16sp"
+            app:cornerRadius="16dp" />
     </LinearLayout>
 
     <androidx.cardview.widget.CardView
@@ -248,5 +265,7 @@
         app:cardElevation="0dp" >
 
     </androidx.cardview.widget.CardView>
+
+
 
 </FrameLayout>

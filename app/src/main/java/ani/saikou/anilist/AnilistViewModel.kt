@@ -1,9 +1,9 @@
 package ani.saikou.anilist
 
-import ani.saikou.media.Media
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import ani.saikou.media.Media
 
 class AnilistHomeViewModel : ViewModel() {
     private val listImages : MutableLiveData<ArrayList<String?>> = MutableLiveData<ArrayList<String?>>(arrayListOf())
@@ -24,8 +24,6 @@ class AnilistHomeViewModel : ViewModel() {
 
     val load : MutableLiveData<Boolean> = MutableLiveData(false)
     val genres : MutableLiveData<Boolean> = MutableLiveData(false)
-
-    var homeRefresh = MutableLiveData(true)
 }
 
 class AnilistAnimeViewModel : ViewModel() {
@@ -37,9 +35,6 @@ class AnilistAnimeViewModel : ViewModel() {
     private val updated: MutableLiveData<ArrayList<Media>> = MutableLiveData<ArrayList<Media>>(null)
     fun getUpdated(): LiveData<ArrayList<Media>> = updated
     fun loadUpdated() = updated.postValue(Anilist.query.recentlyUpdated())
-
-    var animeRefresh = MutableLiveData(true)
-
 }
 
 class AnilistMangaViewModel : ViewModel() {
@@ -52,7 +47,6 @@ class AnilistMangaViewModel : ViewModel() {
     fun getTrendingNovel(): LiveData<ArrayList<Media>> = updated
     fun loadTrendingNovel() = updated.postValue(Anilist.query.search(type, perPage = 10, sort="TRENDING_DESC",format="NOVEL")?.results)
 
-    var mangaRefresh = MutableLiveData(true)
 }
 
 class AnilistSearch : ViewModel(){

@@ -14,7 +14,6 @@ import kotlinx.serialization.json.*
 import org.jsoup.Jsoup
 import java.io.Serializable
 import java.net.UnknownHostException
-import java.util.*
 
 
 fun executeQuery(query:String, variables:String="",force:Boolean=false,useToken:Boolean=true): JsonObject? {
@@ -90,9 +89,8 @@ class AnilistQueries{
     }
 
     fun mediaDetails(media:Media): Media? {
-        val query = """{Media(id:${media.id}){mediaListEntry{id status score(format:POINT_100) progress repeat updatedAt startedAt{year month day}completedAt{year month day}}isFavourite siteUrl idMal nextAiringEpisode{episode airingAt}source countryOfOrigin format duration season seasonYear startDate{year month day}endDate{year month day}genres studios(isMain:true){nodes{id name siteUrl}}description characters(sort:[ROLE,FAVOURITES_DESC],perPage:25,page:1){edges{role node{id image{medium}name{userPreferred}}}}relations{edges{relationType(version:2)node{id mediaListEntry{progress score(format:POINT_100) status} chapters episodes episodes chapters nextAiringEpisode{episode}meanScore isFavourite title{english romaji userPreferred}type status(version:2)bannerImage coverImage{large}}}}recommendations{nodes{mediaRecommendation{id mediaListEntry{progress score(format:POINT_100) status} chapters episodes chapters nextAiringEpisode{episode}meanScore isFavourite title{english romaji userPreferred}type status(version:2)bannerImage coverImage{large}}}}streamingEpisodes{title thumbnail}externalLinks{url site}}}"""
+        val query = """{Media(id:${media.id}){mediaListEntry{id status score(format:POINT_100) progress repeat updatedAt startedAt{year month day}completedAt{year month day}}isFavourite siteUrl idMal nextAiringEpisode{episode airingAt}source countryOfOrigin format duration season seasonYear startDate{year month day}endDate{year month day}genres studios(isMain:true){nodes{id name siteUrl}}description characters(sort:[ROLE,FAVOURITES_DESC],perPage:25,page:1){edges{role node{id image{medium}name{userPreferred}}}}relations{edges{relationType(version:2)node{id mediaListEntry{progress score(format:POINT_100) status} episodes chapters nextAiringEpisode{episode}meanScore isFavourite title{english romaji userPreferred}type status(version:2)bannerImage coverImage{large}}}}recommendations{nodes{mediaRecommendation{id mediaListEntry{progress score(format:POINT_100) status} episodes chapters nextAiringEpisode{episode}meanScore isFavourite title{english romaji userPreferred}type status(version:2)bannerImage coverImage{large}}}}externalLinks{url site}}}"""
         var response =  executeQuery(query, force = true)
-        println("$response")
         if (response!=null){
             fun parse():Media{
                 val it = response!!["data"]!!.jsonObject["Media"]!!
@@ -117,7 +115,7 @@ class AnilistQueries{
                         media.genres!!.add(i.toString().trim('"'))
                     }
                 }
-                media.description = it.jsonObject["description"]!!.toString().trim('"').replace("\\\"","\"")
+                media.description = it.jsonObject["description"]!!.toString().trim('"').replace("\\\"","\"").replace("\\n","\n")
 
                 if(it.jsonObject["characters"]!=JsonNull){
                     media.characters = arrayListOf()
@@ -184,7 +182,8 @@ class AnilistQueries{
                 if (it.jsonObject["mediaListEntry"]!=JsonNull) {
                     media.userRepeat =
                         if (it.jsonObject["mediaListEntry"]!!.jsonObject["repeat"].toString() == "null") it.jsonObject["mediaListEntry"]!!.jsonObject["repeat"]!!.toString().toInt() else 0
-                    media.userUpdatedAt = Date(it.jsonObject["mediaListEntry"]!!.jsonObject["repeat"]!!.toString().toLong()*1000)
+                    media.userUpdatedAt = it.jsonObject["mediaListEntry"]!!.jsonObject["updatedAt"]!!.toString().toLong()*1000
+                    media.userListId = it.jsonObject["mediaListEntry"]!!.jsonObject["id"]!!.toString().toInt()
                     media.userCompletedAt = FuzzyDate(
                         if (it.jsonObject["mediaListEntry"]!!.jsonObject["completedAt"]!!.jsonObject["year"] != JsonNull) it.jsonObject["mediaListEntry"]!!.jsonObject["completedAt"]!!.jsonObject["year"].toString().toInt() else null,
                         if (it.jsonObject["mediaListEntry"]!!.jsonObject["completedAt"]!!.jsonObject["month"] != JsonNull) it.jsonObject["mediaListEntry"]!!.jsonObject["completedAt"]!!.jsonObject["month"].toString().toInt() else null,
@@ -226,11 +225,46 @@ class AnilistQueries{
             return if (response["data"]!!.jsonObject["Media"]!!!=JsonNull) parse() else {
                 toastString("Adult Stuff? ( ͡° ͜ʖ ͡°)")
                 response = executeQuery(query, force = true, useToken = false)
-                println("$response")
                 parse()
             }
         }
         return null
+    }
+
+    fun updateMedia(media:Media): Media{
+        val query = """{Media(id:${media.id}){mediaListEntry{id status score(format:POINT_100) progress repeat updatedAt startedAt{year month day}completedAt{year month day}}}}"""
+        val response =  executeQuery(query, force = true)?:return media
+        val m = response["data"]?.jsonObject?.get("Media")?:return media
+        if(m.jsonObject["mediaListEntry"]!=JsonNull) {
+            val it = m.jsonObject["mediaListEntry"]!!
+            media.userProgress = it.jsonObject["progress"].toString().toInt()
+            media.userListId = it.jsonObject["id"].toString().toInt()
+            media.userScore = it.jsonObject["score"].toString().toInt()
+            media.userStatus = it.jsonObject["status"].toString().trim('"')
+            media.userRepeat = if (it.jsonObject["repeat"].toString() == "null") it.jsonObject["repeat"]!!.toString().toInt() else 0
+            media.userUpdatedAt = it.jsonObject["updatedAt"]!!.toString().toLong()*1000
+            media.userCompletedAt = FuzzyDate(
+                if (it.jsonObject["completedAt"]!!.jsonObject["year"] != JsonNull) it.jsonObject["completedAt"]!!.jsonObject["year"].toString().toInt() else null,
+                if (it.jsonObject["completedAt"]!!.jsonObject["month"] != JsonNull) it.jsonObject["completedAt"]!!.jsonObject["month"].toString().toInt() else null,
+                if (it.jsonObject["completedAt"]!!.jsonObject["day"] != JsonNull) it.jsonObject["completedAt"]!!.jsonObject["day"].toString().toInt() else null
+            )
+            media.userStartedAt = FuzzyDate(
+                if (it.jsonObject["startedAt"]!!.jsonObject["year"] != JsonNull) it.jsonObject["startedAt"]!!.jsonObject["year"].toString().toInt() else null,
+                if (it.jsonObject["startedAt"]!!.jsonObject["month"] != JsonNull) it.jsonObject["startedAt"]!!.jsonObject["month"].toString().toInt() else null,
+                if (it.jsonObject["startedAt"]!!.jsonObject["day"] != JsonNull) it.jsonObject["startedAt"]!!.jsonObject["day"].toString().toInt() else null
+            )
+        }
+        else{
+            media.userStatus = null
+            media.userListId = null
+            media.userProgress = null
+            media.userScore = 0
+            media.userRepeat = 0
+            media.userUpdatedAt = null
+            media.userCompletedAt = FuzzyDate()
+            media.userStartedAt = FuzzyDate()
+        }
+        return media
     }
 
     fun continueMedia(type:String): ArrayList<Media> {
@@ -440,7 +474,7 @@ class AnilistQueries{
             }
         }
         if (genres==null) {
-            get();println("genres null")
+            get()
         }
         else{
             if(time!=null)
@@ -512,9 +546,7 @@ query (${"$"}page: Int = 1, ${"$"}id: Int, ${"$"}type: MediaType, ${"$"}isAdult:
             ${if (format != null) """,\"format\":\"$format\"""" else ""}
             ${if (genres?.isNotEmpty() == true) """,\"genres\":\"${genres[0]}\"""" else ""}
             }""".replace("\n", " ").replace("""  """, "")
-//        println(variables)
         val response = executeQuery(query, variables, true)
-//        println("$response")
         if(response!=null){
             val a = response["data"]!!.jsonObject["Page"]!!
             val responseArray = arrayListOf<Media>()
@@ -748,7 +780,6 @@ Page(page:1,perPage:50) {
             page++
             val response = executeQuery(query(page), force = true)?:return studio
             val data = response["data"]?.jsonObject?.get("Studio")?.jsonObject?.get("media")?:return studio
-            println("next page : "+data.jsonObject["pageInfo"]?.jsonObject?.get("hasNextPage")?.toString()?.trim('"'))
             hasNextPage = data.jsonObject["pageInfo"]?.jsonObject?.get("hasNextPage")?.toString() == "true"
             data.jsonObject["edges"]?.jsonArray?.forEach { i->
                 val status = i.jsonObject["node"]!!.jsonObject["status"].toString().trim('"')

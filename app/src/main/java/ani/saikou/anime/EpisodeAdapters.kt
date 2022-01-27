@@ -4,21 +4,20 @@ import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.databinding.ItemEpisodeCompactBinding
 import ani.saikou.databinding.ItemEpisodeGridBinding
 import ani.saikou.databinding.ItemEpisodeListBinding
 import ani.saikou.loadData
 import ani.saikou.media.Media
+import ani.saikou.updateAnilistProgress
 import com.squareup.picasso.Picasso
-import android.widget.LinearLayout
 
 fun episodeAdapter(media:Media,fragment: AnimeSourceFragment,style:Int,reversed:Boolean=false,start:Int=0,e:Int?=null): RecyclerView.Adapter<*> {
     val end = e?:(media.anime!!.episodes!!.size-1)
     var arr = media.anime!!.episodes!!.values.toList().slice(start..end)
     arr = if (reversed) arr.reversed() else arr
-//    println(" Start : $start End : $end")
-//    println("First ep : ${arr[0].number} Last ep : ${arr[arr.size - 1].number}")
     return when (style){
         0 -> EpisodeListAdapter(media, fragment,arr)
         1 -> EpisodeGridAdapter(media, fragment,arr)
@@ -60,7 +59,14 @@ class EpisodeCompactAdapter(
         binding.itemEpisodeNumber.text = ep.number
         if (ep.filler) binding.itemEpisodeFillerView.visibility = View.VISIBLE
         if (media.userProgress!=null) {
-            if (ep.number.toFloatOrNull()?:9999f<=media.userProgress!!.toFloat()) binding.root.alpha = 0.66f
+            if (ep.number.toFloatOrNull()?:9999f<=media.userProgress!!.toFloat())
+                binding.root.alpha = 0.5f
+            else{
+                binding.root.setOnLongClickListener{
+                    updateAnilistProgress(media.id, ep.number)
+                    true
+                }
+            }
         }
         handleProgress(binding.itemEpisodeProgressCont,binding.itemEpisodeProgress,binding.itemEpisodeProgressEmpty,media.id,ep.number)
     }
@@ -98,7 +104,15 @@ class EpisodeGridAdapter(
             binding.itemEpisodeFillerView.visibility = View.VISIBLE
         }
         if (media.userProgress!=null) {
-            if (ep.number.toFloatOrNull()?:9999f<=media.userProgress!!.toFloat()) binding.root.alpha = 0.66f
+            if (ep.number.toFloatOrNull()?:9999f<=media.userProgress!!.toFloat()) {
+                binding.root.alpha = 0.66f
+                binding.itemEpisodeViewed.visibility = View.VISIBLE
+            }else{
+                binding.root.setOnLongClickListener{
+                    updateAnilistProgress(media.id, ep.number)
+                    true
+                }
+            }
         }
         handleProgress(binding.itemEpisodeProgressCont,binding.itemEpisodeProgress,binding.itemEpisodeProgressEmpty,media.id,ep.number)
     }
@@ -134,12 +148,22 @@ class EpisodeListAdapter(
             binding.itemEpisodeFiller.visibility = View.VISIBLE
             binding.itemEpisodeFillerView.visibility = View.VISIBLE
         }
-        if (ep.desc==null) binding.itemEpisodeDesc.visibility = View.GONE
+        if (ep.desc==null && ep.desc!="") binding.itemEpisodeDesc.visibility = View.GONE
         binding.itemEpisodeDesc.text = ep.desc?:""
         binding.itemEpisodeTitle.text = ep.title?:media.userPreferredName
         if (media.userProgress!=null) {
-            if (ep.number.toFloatOrNull()?:9999f<=media.userProgress!!.toFloat()) binding.root.alpha = 0.66f
+            if (ep.number.toFloatOrNull()?:9999f<=media.userProgress!!.toFloat()) {
+                binding.root.alpha = 0.66f
+                binding.itemEpisodeViewed.visibility = View.VISIBLE
+            }
+            else{
+                binding.root.setOnLongClickListener{
+                    updateAnilistProgress(media.id, ep.number)
+                    true
+                }
+            }
         }
+
         handleProgress(binding.itemEpisodeProgressCont,binding.itemEpisodeProgress,binding.itemEpisodeProgressEmpty,media.id,ep.number)
     }
 
@@ -150,12 +174,11 @@ class EpisodeListAdapter(
             itemView.setOnClickListener {
                 fragment.onEpisodeClick(media,arr[bindingAdapterPosition].number)
             }
-            itemView.setOnLongClickListener {
+            binding.itemEpisodeDesc.setOnClickListener {
                 if(binding.itemEpisodeDesc.maxLines == 3)
                     binding.itemEpisodeDesc.maxLines = 100
                 else
                     binding.itemEpisodeDesc.maxLines = 3
-                return@setOnLongClickListener true
             }
         }
     }

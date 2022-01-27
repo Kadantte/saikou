@@ -34,7 +34,7 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                app:cardBackgroundColor="@color/nav_bg"
+                app:cardBackgroundColor="#000000"
                 app:cardCornerRadius="16dp">
 
                 <ProgressBar
@@ -145,5 +145,15 @@
             tools:text="@tools:sample/lorem/random" />
 
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/itemEpisodeViewed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_margin="8dp"
+        android:visibility="gone"
+        app:srcCompat="@drawable/ic_round_remove_red_eye_24"
+        tools:ignore="ContentDescription" />
 
 </androidx.cardview.widget.CardView>

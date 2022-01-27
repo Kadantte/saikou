@@ -29,8 +29,10 @@ import ani.saikou.anilist.AnilistSearch
 import ani.saikou.databinding.FragmentMangaBinding
 import ani.saikou.media.MediaAdaptor
 import ani.saikou.media.MediaLargeAdaptor
-import kotlinx.coroutines.*
-import java.lang.Runnable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 class MangaFragment : Fragment() {
@@ -73,7 +75,7 @@ class MangaFragment : Fragment() {
         binding.mangaRefresh.setSlingshotDistance(statusBarHeight+128)
         binding.mangaRefresh.setProgressViewEndTarget(false, statusBarHeight+128)
         binding.mangaRefresh.setOnRefreshListener {
-            model.mangaRefresh.postValue(true)
+            Refresh.manga.postValue(true)
         }
         if(Anilist.avatar!=null){
             loadImage(Anilist.avatar,binding.mangaUserAvatar)
@@ -104,54 +106,60 @@ class MangaFragment : Fragment() {
                 requireActivity(), Intent(requireActivity(), SearchActivity::class.java).putExtra("type","MANGA").putExtra("sortBy","Score"),null)
         }
 
-        model.getTrending().observe(viewLifecycleOwner,{
-            if(it!=null){
+        model.getTrending().observe(viewLifecycleOwner) {
+            if (it != null) {
                 binding.mangaTrendingProgressBar.visibility = View.GONE
-                binding.mangaTrendingViewPager.adapter = MediaLargeAdaptor(it,requireActivity(),binding.mangaTrendingViewPager)
+                binding.mangaTrendingViewPager.adapter =
+                    MediaLargeAdaptor(it, requireActivity(), binding.mangaTrendingViewPager)
                 binding.mangaTrendingViewPager.offscreenPageLimit = 3
-                binding.mangaTrendingViewPager.getChildAt(0).overScrollMode = RecyclerView.OVER_SCROLL_NEVER
+                binding.mangaTrendingViewPager.getChildAt(0).overScrollMode =
+                    RecyclerView.OVER_SCROLL_NEVER
 
                 val a = CompositePageTransformer()
                 a.addTransformer(MarginPageTransformer(8f.px))
                 a.addTransformer { page, position ->
-                    page.scaleY = 0.85f + (1 - abs(position))*0.15f
+                    page.scaleY = 0.85f + (1 - abs(position)) * 0.15f
                 }
                 binding.mangaTrendingViewPager.setPageTransformer(a)
                 trendHandler = Handler(Looper.getMainLooper())
                 trendRun = Runnable {
-                    if (_binding!=null) binding.mangaTrendingViewPager.currentItem = binding.mangaTrendingViewPager.currentItem+1
+                    if (_binding != null) binding.mangaTrendingViewPager.currentItem =
+                        binding.mangaTrendingViewPager.currentItem + 1
                 }
                 binding.mangaTrendingViewPager.registerOnPageChangeCallback(
-                    object : ViewPager2.OnPageChangeCallback(){
+                    object : ViewPager2.OnPageChangeCallback() {
                         override fun onPageSelected(position: Int) {
                             super.onPageSelected(position)
                             trendHandler!!.removeCallbacks(trendRun)
-                            trendHandler!!.postDelayed(trendRun,4000)
+                            trendHandler!!.postDelayed(trendRun, 4000)
                         }
                     }
                 )
             }
-        })
+        }
 
-        model.getTrendingNovel().observe(viewLifecycleOwner,{
-            if(it!=null){
+        model.getTrendingNovel().observe(viewLifecycleOwner) {
+            if (it != null) {
                 binding.mangaNovelProgressBar.visibility = View.GONE
-                binding.mangaNovelRecyclerView.adapter = MediaAdaptor(it,requireActivity())
-                binding.mangaNovelRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+                binding.mangaNovelRecyclerView.adapter = MediaAdaptor(it, requireActivity())
+                binding.mangaNovelRecyclerView.layoutManager =
+                    LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
                 binding.mangaNovelRecyclerView.visibility = View.VISIBLE
             }
-        })
+        }
 
         val popularModel: AnilistSearch by viewModels()
-        popularModel.getSearch().observe(viewLifecycleOwner,{
-            if(it!=null){
-                val adapter = MediaLargeAdaptor(it.results,requireActivity())
+        popularModel.getSearch().observe(viewLifecycleOwner) {
+            if (it != null) {
+                val adapter = MediaLargeAdaptor(it.results, requireActivity())
                 var loading = false
                 binding.mangaPopularRecyclerView.adapter = adapter
-                binding.mangaPopularRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+                binding.mangaPopularRecyclerView.layoutManager =
+                    LinearLayoutManager(requireContext())
                 binding.mangaPopularProgress.visibility = View.GONE
-                if(it.hasNextPage) {
-                    binding.mangaPopularRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                if (it.hasNextPage) {
+                    binding.mangaPopularRecyclerView.addOnScrollListener(object :
+                        RecyclerView.OnScrollListener() {
                         override fun onScrolled(v: RecyclerView, dx: Int, dy: Int) {
                             if (!v.canScrollVertically(1)) {
                                 if (it.hasNextPage)
@@ -160,7 +168,7 @@ class MangaFragment : Fragment() {
                                         scope.launch {
                                             loading = true
                                             val get = popularModel.loadNextPage(it)
-                                            if(get!=null) {
+                                            if (get != null) {
                                                 val a = it.results.size
                                                 it.results.addAll(get.results)
                                                 requireActivity().runOnUiThread {
@@ -176,38 +184,42 @@ class MangaFragment : Fragment() {
                                                 loading = false
                                             }
                                         }
-                                    }
-                                    else binding.mangaPopularProgress.visibility = View.GONE
+                                    } else binding.mangaPopularProgress.visibility = View.GONE
                             }
-                            if (!v.canScrollVertically(-1)){
+                            if (!v.canScrollVertically(-1)) {
                                 _binding?.mangaPopularRecyclerView?.post {
                                     val a = _binding
-                                    a?.mangaPopularRecyclerView?.requestDisallowInterceptTouchEvent(true)
+                                    a?.mangaPopularRecyclerView?.requestDisallowInterceptTouchEvent(
+                                        true
+                                    )
                                 }
-                                activity?.window?.statusBarColor = ContextCompat.getColor(requireContext(), R.color.status)
-                                ObjectAnimator.ofFloat(bottomBar,"scaleX",1f).setDuration(200).start()
-                                ObjectAnimator.ofFloat(bottomBar,"scaleY",1f).setDuration(200).start()
+                                activity?.window?.statusBarColor =
+                                    ContextCompat.getColor(requireContext(), R.color.status)
+                                ObjectAnimator.ofFloat(bottomBar, "scaleX", 1f).setDuration(200)
+                                    .start()
+                                ObjectAnimator.ofFloat(bottomBar, "scaleY", 1f).setDuration(200)
+                                    .start()
                             }
                             super.onScrolled(v, dx, dy)
                         }
                     })
                 }
             }
-        })
+        }
 
-        model.mangaRefresh.observe(viewLifecycleOwner,{
-            if(it) {
+        Refresh.manga.observe(viewLifecycleOwner) {
+            if (it) {
                 scope.launch {
                     model.loadTrending()
                     model.loadTrendingNovel()
-                    popularModel.loadSearch("MANGA",sort="POPULARITY_DESC")
+                    popularModel.loadSearch("MANGA", sort = "POPULARITY_DESC")
                     activity?.runOnUiThread {
-                        model.mangaRefresh.postValue(false)
+                        Refresh.manga.postValue(false)
                         _binding?.mangaRefresh?.isRefreshing = false
                     }
                 }
             }
-        })
+        }
     }
 
     override fun onPause() {

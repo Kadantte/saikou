@@ -206,7 +206,6 @@ class MangaSourceFragment : Fragment() {
         if (total>limit) {
             val arr = media.manga!!.chapters!!.keys.toTypedArray()
             val stored = ceil((total).toDouble() / limit).toInt()
-//            println(stored)
             (1..stored).forEach {
                 val chip = Chip(requireContext())
                 chip.isCheckable = true

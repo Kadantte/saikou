@@ -49,13 +49,11 @@ class MangaDex(override val name: String="mangadex.org") :MangaParser() {
     override fun getChapter(chapter: MangaChapter): MangaChapter {
         try{
         val json = Json.decodeFromString<JsonObject>(Jsoup.connect("$host/at-home/server/${chapter.link}").ignoreContentType(true).get().text())
-        println("$json")
         val images = arrayListOf<String>()
         val hash = json.jsonObject["chapter"]!!.jsonObject["hash"].toString().trim('"')
         for(page in json.jsonObject["chapter"]!!.jsonObject["data"]!!.jsonArray){
             images.add("https://uploads.mangadex.org/data/${hash}/${page.toString().trim('"')}")
         }
-        println(images)
         chapter.images = images
         }catch (e:Exception){
             toastString(e.toString())

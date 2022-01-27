@@ -4,7 +4,6 @@ import ani.saikou.FuzzyDate
 import ani.saikou.anime.Anime
 import ani.saikou.manga.Manga
 import java.io.Serializable
-import java.util.*
 
 data class Media(
     val anime: Anime? = null,
@@ -23,11 +22,13 @@ data class Media(
     var isFav: Boolean = false,
     var notify: Boolean = false,
     val userPreferredName: String,
+
+    var userListId:Int?=null,
     var userProgress: Int? = null,
     var userStatus: String? = null,
     var userScore: Int = 0,
     var userRepeat:Int = 0,
-    var userUpdatedAt: Date?=null,
+    var userUpdatedAt: Long?=null,
     var userStartedAt : FuzzyDate = FuzzyDate(),
     var userCompletedAt : FuzzyDate=FuzzyDate(),
     var userFavOrder:Int?=null,

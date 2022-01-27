@@ -20,7 +20,6 @@ class Zoro(override val name: String = "Zoro") : AnimeParser() {
     private val host = "https://zoro.to"
 
     private fun directLinkify(name: String,url: String): Episode.StreamLinks? {
-        println("$name : $url")
         val domain = Regex("""(?<=^http[s]?://).+?(?=/)""").find(url)!!.value
         val extractor : Extractor?=when {
             "rapid" in domain -> RapidCloud()
@@ -41,7 +40,6 @@ class Zoro(override val name: String = "Zoro") : AnimeParser() {
                 val element = Jsoup.parse(res.findBetween("""{"status":true,"html":"""",""""}""")?: return@withContext episode)
                 element.select("div.server-item").forEach {
                     if("${it.attr("data-type").uppercase()} - ${it.text()}"==server){
-                        println("$host/ajax/v2/episode/sources?id=${it.attr("data-id")}")
                         val resp = Jsoup.connect("$host/ajax/v2/episode/sources?id=${it.attr("data-id")}").ignoreContentType(true).execute().body().replace("\\n","\n").replace("\\\"","\"")
                         launch {
                             val link = resp.findBetween(""""link":"""","""","server"""")?: return@launch
@@ -67,7 +65,6 @@ class Zoro(override val name: String = "Zoro") : AnimeParser() {
                 val res = Jsoup.connect("$host/ajax/v2/episode/servers?episodeId=${episode.link}").ignoreContentType(true).execute().body().replace("\\n","\n").replace("\\\"","\"")
                 val element = Jsoup.parse(res.findBetween("""{"status":true,"html":"""",""""}""")?: return@withContext episode)
                 element.select("div.server-item").forEach {
-                    println("$host/ajax/v2/episode/sources?id=${it.attr("data-id")}")
                     val resp = Jsoup.connect("$host/ajax/v2/episode/sources?id=${it.attr("data-id")}").ignoreContentType(true).execute().body().replace("\\n","\n").replace("\\\"","\"")
                     launch {
                         val link = resp.findBetween(""""link":"""","""","server"""")?: return@launch

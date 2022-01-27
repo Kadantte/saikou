@@ -39,7 +39,6 @@ class MangaSee(override val name: String="MangaSee") : MangaParser() {
 
     override fun getChapter(chapter: MangaChapter): MangaChapter {
         chapter.images = arrayListOf()
-        println(chapter)
         try {
             val a =
                 Jsoup.connect(chapter.link ?: return chapter).maxBodySize(0).get().select("script")

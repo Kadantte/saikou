@@ -5,14 +5,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
+import ani.saikou.*
 import ani.saikou.databinding.ActivityStudioBinding
-import ani.saikou.initActivity
-import ani.saikou.navBarHeight
-import ani.saikou.px
-import ani.saikou.statusBarHeight
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -31,6 +29,7 @@ class StudioActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         initActivity(this)
+        this.window.statusBarColor = ContextCompat.getColor(this, R.color.nav_bg)
 
         binding.root.updateLayoutParams<ViewGroup.MarginLayoutParams> { topMargin += statusBarHeight }
         binding.studioRecycler.updatePadding(bottom = 64f.px + navBarHeight)

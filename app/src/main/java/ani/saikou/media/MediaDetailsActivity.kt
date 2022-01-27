@@ -3,6 +3,7 @@ package ani.saikou.media
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -20,15 +21,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import ani.saikou.*
 import ani.saikou.anilist.Anilist
-import ani.saikou.anilist.AnilistHomeViewModel
 import ani.saikou.anime.AnimeSourceFragment
 import ani.saikou.databinding.ActivityMediaBinding
 import ani.saikou.manga.MangaSourceFragment
 import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.*
 import kotlin.math.abs
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import android.content.Intent
 
 class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedListener {
 
@@ -74,7 +73,7 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         viewPager.isUserInputEnabled = false
         viewPager.setPageTransformer(ZoomOutPageTransformer(true))
 
-        val media: Media = intent.getSerializableExtra("media") as Media
+        var media: Media = intent.getSerializableExtra("media") as Media
         media.selected = model.loadSelected(media.id)
         loadImage(media.cover,binding.mediaCoverImage)
         binding.mediaCoverImage.setOnClickListener{ openImage(media.cover) }
@@ -91,47 +90,44 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
             favButton.clicked()
         }
 
-        //Share Button
-        model.getMedia().observe(this,{
-            if(it!=null) {
-                if (it.notify) binding.mediaNotify.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_round_share_24))
-                val notifyButton = PopImageButton(scope, this, binding.mediaNotify, it, R.drawable.ic_round_share_24, R.drawable.ic_round_share_24, R.color.nav_tab, R.color.violet_400, false)
-                binding.mediaNotify.setOnClickListener { notifyButton.clicked() }
-            }
-        })
-
-        model.userStatus.value = media.userStatus
-        model.userScore.value = media.userScore.toDouble()
-        model.userProgress.value = media.userProgress
-        model.userStatus.observe(this, {
-            if (it != null) {
+        fun progress() {
+            if (media.userStatus != null) {
                 binding.mediaAddToList.setText(R.string.list_editor)
-                binding.mediaUserStatus.text = it
-                binding.mediaUserProgress.text = (model.userProgress.value ?: "~").toString()
+                binding.mediaUserStatus.text = media.userStatus
+                binding.mediaUserProgress.text = (media.userProgress ?: "~").toString()
             } else {
                 binding.mediaUserStatus.visibility = View.GONE
                 binding.mediaUserProgress.visibility = View.GONE
                 binding.mediaTotal.visibility = View.GONE
                 binding.mediaAddToList.setText(R.string.add)
             }
-            media.userStatus = it
-        })
-        model.userProgress.observe(this,{media.userProgress = it})
-        model.userScore.observe(this,{media.userScore = (it?:0).toInt()})
-
-        binding.mediaAddToList.setOnClickListener{
-            if (Anilist.userid!=null)
-                MediaListDialogFragment().show(supportFragmentManager, "dialog")
-            else toastString("Please Login with Anilist!")
+            binding.mediaAddToList.setOnClickListener{
+                if (Anilist.userid!=null)
+                    MediaListDialogFragment().show(supportFragmentManager, "dialog")
+                else toastString("Please Login with Anilist!")
+            }
         }
+        progress()
+
+        //Share Button
+        model.getMedia().observe(this) {
+            if (it != null) {
+                media = it
+                if (it.notify) binding.mediaNotify.setImageDrawable(AppCompatResources.getDrawable(this, R.drawable.ic_round_share_24))
+                val notifyButton = PopImageButton(scope, this, binding.mediaNotify, it, R.drawable.ic_round_share_24, R.drawable.ic_round_share_24, R.color.nav_tab, R.color.violet_400, false)
+                binding.mediaNotify.setOnClickListener { notifyButton.clicked() }
+                progress()
+            }
+        }
+
         tabLayout.menu.clear()
         if (media.anime!=null){
-            binding.mediaTotal.text = if (media.anime.nextAiringEpisode!=null) " | "+(media.anime.nextAiringEpisode.toString()+" | "+(media.anime.totalEpisodes?:"~").toString()) else " | "+(media.anime.totalEpisodes?:"~").toString()
+            binding.mediaTotal.text = if (media.anime!!.nextAiringEpisode!=null) " | "+(media.anime!!.nextAiringEpisode.toString()+" | "+(media.anime!!.totalEpisodes?:"~").toString()) else " | "+(media.anime!!.totalEpisodes?:"~").toString()
             viewPager.adapter = ViewPagerAdapter(supportFragmentManager, lifecycle,true)
             tabLayout.inflateMenu(R.menu.anime_menu_detail)
         }
         else if (media.manga!=null){
-            binding.mediaTotal.text = " | "+(media.manga.totalChapters?:"~").toString()
+            binding.mediaTotal.text = " | "+(media.manga!!.totalChapters?:"~").toString()
             viewPager.adapter = ViewPagerAdapter(supportFragmentManager, lifecycle,false)
             tabLayout.inflateMenu(R.menu.manga_menu_detail)
             anime = false
@@ -155,6 +151,11 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
 
         scope.launch {
             model.loadMedia(media)
+        }
+        Refresh.media.observe(this){
+            if(it){
+                scope.launch { model.updateMedia(media) }
+            }
         }
     }
 
@@ -253,8 +254,6 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
                         media.isFav = !media.isFav
                         clicked = media.isFav
                         scope.launch { Anilist.mutation.toggleFav(media.anime!=null,media.id) }
-                        val model : AnilistHomeViewModel by viewModels()
-                        model.homeRefresh.postValue(true)
                     }
                     else {
                         media.notify = !media.notify

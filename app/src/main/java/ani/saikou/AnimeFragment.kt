@@ -23,14 +23,16 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.CompositePageTransformer
 import androidx.viewpager2.widget.MarginPageTransformer
 import androidx.viewpager2.widget.ViewPager2
-import ani.saikou.anilist.AnilistAnimeViewModel
 import ani.saikou.anilist.Anilist
+import ani.saikou.anilist.AnilistAnimeViewModel
 import ani.saikou.anilist.AnilistSearch
 import ani.saikou.databinding.FragmentAnimeBinding
 import ani.saikou.media.MediaAdaptor
 import ani.saikou.media.MediaLargeAdaptor
-import kotlinx.coroutines.*
-import java.lang.Runnable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 class AnimeFragment : Fragment() {
@@ -73,7 +75,7 @@ class AnimeFragment : Fragment() {
         binding.animeRefresh.setSlingshotDistance(statusBarHeight+128)
         binding.animeRefresh.setProgressViewEndTarget(false, statusBarHeight+128)
         binding.animeRefresh.setOnRefreshListener {
-            model.animeRefresh.postValue(true)
+            Refresh.anime.postValue(true)
         }
         if(Anilist.avatar!=null){
             loadImage(Anilist.avatar,binding.animeUserAvatar)
@@ -104,54 +106,60 @@ class AnimeFragment : Fragment() {
                 requireActivity(), Intent(requireActivity(), SearchActivity::class.java).putExtra("type","ANIME").putExtra("sortBy","Score"),null)
         }
 
-        model.getTrending().observe(viewLifecycleOwner,{
-            if(it!=null){
+        model.getTrending().observe(viewLifecycleOwner) {
+            if (it != null) {
                 binding.animeTrendingProgressBar.visibility = View.GONE
-                binding.animeTrendingViewPager.adapter = MediaLargeAdaptor(it,requireActivity(),binding.animeTrendingViewPager)
+                binding.animeTrendingViewPager.adapter =
+                    MediaLargeAdaptor(it, requireActivity(), binding.animeTrendingViewPager)
                 binding.animeTrendingViewPager.offscreenPageLimit = 3
-                binding.animeTrendingViewPager.getChildAt(0).overScrollMode = RecyclerView.OVER_SCROLL_NEVER
+                binding.animeTrendingViewPager.getChildAt(0).overScrollMode =
+                    RecyclerView.OVER_SCROLL_NEVER
 
                 val a = CompositePageTransformer()
                 a.addTransformer(MarginPageTransformer(8f.px))
                 a.addTransformer { page, position ->
-                    page.scaleY = 0.85f + (1 - abs(position))*0.15f
+                    page.scaleY = 0.85f + (1 - abs(position)) * 0.15f
                 }
                 binding.animeTrendingViewPager.setPageTransformer(a)
                 trendHandler = Handler(Looper.getMainLooper())
                 trendRun = Runnable {
-                    if (_binding!=null) binding.animeTrendingViewPager.currentItem = binding.animeTrendingViewPager.currentItem+1
+                    if (_binding != null) binding.animeTrendingViewPager.currentItem =
+                        binding.animeTrendingViewPager.currentItem + 1
                 }
                 binding.animeTrendingViewPager.registerOnPageChangeCallback(
-                    object : ViewPager2.OnPageChangeCallback(){
+                    object : ViewPager2.OnPageChangeCallback() {
                         override fun onPageSelected(position: Int) {
                             super.onPageSelected(position)
                             trendHandler!!.removeCallbacks(trendRun)
-                            trendHandler!!.postDelayed(trendRun,4000)
+                            trendHandler!!.postDelayed(trendRun, 4000)
                         }
                     }
                 )
             }
-        })
+        }
 
-        model.getUpdated().observe(viewLifecycleOwner,{
-            if(it!=null){
+        model.getUpdated().observe(viewLifecycleOwner) {
+            if (it != null) {
                 binding.animeUpdatedProgressBar.visibility = View.GONE
-                binding.animeUpdatedRecyclerView.adapter = MediaAdaptor(it,requireActivity())
-                binding.animeUpdatedRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+                binding.animeUpdatedRecyclerView.adapter = MediaAdaptor(it, requireActivity())
+                binding.animeUpdatedRecyclerView.layoutManager =
+                    LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
                 binding.animeUpdatedRecyclerView.visibility = View.VISIBLE
             }
-        })
+        }
 
         val popularModel: AnilistSearch by viewModels()
-        popularModel.getSearch().observe(viewLifecycleOwner,{
-            if(it!=null){
-                val adapter = MediaLargeAdaptor(it.results,requireActivity())
+        popularModel.getSearch().observe(viewLifecycleOwner) {
+            if (it != null) {
+                val adapter = MediaLargeAdaptor(it.results, requireActivity())
                 var loading = false
                 binding.animePopularRecyclerView.adapter = adapter
-                binding.animePopularRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+                binding.animePopularRecyclerView.layoutManager =
+                    LinearLayoutManager(requireContext())
                 binding.animePopularProgress.visibility = View.GONE
-                if(it.hasNextPage) {
-                    binding.animePopularRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                if (it.hasNextPage) {
+                    binding.animePopularRecyclerView.addOnScrollListener(object :
+                        RecyclerView.OnScrollListener() {
                         override fun onScrolled(v: RecyclerView, dx: Int, dy: Int) {
                             if (!v.canScrollVertically(1)) {
                                 if (it.hasNextPage)
@@ -160,7 +168,7 @@ class AnimeFragment : Fragment() {
                                         scope.launch {
                                             loading = true
                                             val get = popularModel.loadNextPage(it)
-                                            if(get!=null) {
+                                            if (get != null) {
                                                 val a = it.results.size
                                                 it.results.addAll(get.results)
                                                 requireActivity().runOnUiThread {
@@ -176,38 +184,42 @@ class AnimeFragment : Fragment() {
                                                 loading = false
                                             }
                                         }
-                                }
-                                else binding.animePopularProgress.visibility = View.GONE
+                                    } else binding.animePopularProgress.visibility = View.GONE
                             }
-                            if (!v.canScrollVertically(-1)){
+                            if (!v.canScrollVertically(-1)) {
                                 _binding?.animePopularRecyclerView?.post {
                                     val a = _binding
-                                    a?.animePopularRecyclerView?.requestDisallowInterceptTouchEvent(true)
+                                    a?.animePopularRecyclerView?.requestDisallowInterceptTouchEvent(
+                                        true
+                                    )
                                 }
-                                activity?.window?.statusBarColor = ContextCompat.getColor(requireContext(), R.color.status)
-                                ObjectAnimator.ofFloat(bottomBar,"scaleX",1f).setDuration(200).start()
-                                ObjectAnimator.ofFloat(bottomBar,"scaleY",1f).setDuration(200).start()
+                                activity?.window?.statusBarColor =
+                                    ContextCompat.getColor(requireContext(), R.color.status)
+                                ObjectAnimator.ofFloat(bottomBar, "scaleX", 1f).setDuration(200)
+                                    .start()
+                                ObjectAnimator.ofFloat(bottomBar, "scaleY", 1f).setDuration(200)
+                                    .start()
                             }
                             super.onScrolled(v, dx, dy)
                         }
                     })
                 }
             }
-        })
+        }
 
-        model.animeRefresh.observe(viewLifecycleOwner,{
-            if(it) {
+        Refresh.anime.observe(viewLifecycleOwner) {
+            if (it) {
                 scope.launch {
                     model.loadTrending()
                     model.loadUpdated()
-                    popularModel.loadSearch("ANIME",sort="POPULARITY_DESC")
+                    popularModel.loadSearch("ANIME", sort = "POPULARITY_DESC")
                     activity?.runOnUiThread {
-                        model.animeRefresh.postValue(false)
+                        Refresh.anime.postValue(false)
                         _binding?.animeRefresh?.isRefreshing = false
                     }
                 }
             }
-        })
+        }
 
     }
 

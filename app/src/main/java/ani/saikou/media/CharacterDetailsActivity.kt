@@ -60,25 +60,33 @@ class CharacterDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChang
         binding.characterCoverImage.setOnClickListener{ openImage(character.image) }
         binding.characterBanner.setOnClickListener{ openImage(character.banner) }
 
-        model.getCharacter().observe(this,{
-            if(it!=null){
+        model.getCharacter().observe(this) {
+            if (it != null) {
                 character = it
                 loaded = true
-                binding.characterProgress.visibility=View.GONE
-                binding.characterRecyclerView.visibility=View.VISIBLE
+                binding.characterProgress.visibility = View.GONE
+                binding.characterRecyclerView.visibility = View.VISIBLE
 
-                val adapters: ArrayList<RecyclerView.Adapter<out RecyclerView.ViewHolder>> = arrayListOf(CharacterDetailsAdapter(character,this))
+                val adapters: ArrayList<RecyclerView.Adapter<out RecyclerView.ViewHolder>> =
+                    arrayListOf(CharacterDetailsAdapter(character, this))
                 val perRow = clamp(resources.displayMetrics.widthPixels / 124f.px, 1, 4)
-                val multiplier = min(perRow,character.roles!!.size)
-                println("size : ${character.roles!!.size}, perRow : $perRow, Multiplier : $multiplier")
-                for(i in 0 until max(1,character.roles!!.size/perRow)) {
-                    println("$i - ${(i+1)*multiplier}")
-                    adapters.add(MediaGridAdapter(ArrayList(character.roles!!.subList(i*multiplier,(i+1)*multiplier)),this))
+                val multiplier = min(perRow, character.roles!!.size)
+                for (i in 0 until max(1, character.roles!!.size / perRow)) {
+                    adapters.add(
+                        MediaGridAdapter(
+                            ArrayList(
+                                character.roles!!.subList(
+                                    i * multiplier,
+                                    (i + 1) * multiplier
+                                )
+                            ), this
+                        )
+                    )
                 }
                 binding.characterRecyclerView.adapter = ConcatAdapter(adapters)
                 binding.characterRecyclerView.layoutManager = LinearLayoutManager(this)
             }
-        })
+        }
         if(!loaded) scope.launch {
             model.loadCharacter(character)
         }

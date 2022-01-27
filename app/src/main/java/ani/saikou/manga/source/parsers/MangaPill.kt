@@ -56,7 +56,6 @@ class MangaPill(override val name: String="mangapill.com") :MangaParser() {
         val response = arrayListOf<Source>()
         Jsoup.connect("https://mangapill.com/quick-search?q=$string").get().select(".bg-card").forEach{
             val text2 = it.select(".text-sm").text()
-//            println("AAA : ${it.select(".flex .flex-col").text().split("\n")[0]}")
             response.add(Source(
                 link = it.attr("abs:href"),
                 name = it.select(".flex .flex-col").text().replace(text2,"").trim(),

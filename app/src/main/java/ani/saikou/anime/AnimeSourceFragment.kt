@@ -58,7 +58,7 @@ class AnimeSourceFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val m: MediaDetailsViewModel by activityViewModels()
         model = m
-        model.getMedia().observe(viewLifecycleOwner,{
+        model.getMedia().observe(viewLifecycleOwner) {
             val media = it
             if (media?.anime != null) {
                 binding.animeSourceContainer.visibility = View.VISIBLE
@@ -67,96 +67,112 @@ class AnimeSourceFragment : Fragment() {
 
                 if (media.anime.nextAiringEpisodeTime != null && (media.anime.nextAiringEpisodeTime!! - System.currentTimeMillis() / 1000) <= 86400 * 7.toLong()) {
                     binding.mediaCountdownContainer.visibility = View.VISIBLE
-                    timer = object : CountDownTimer((media.anime.nextAiringEpisodeTime!! + 10000) * 1000 - System.currentTimeMillis(), 1000) {
+                    timer = object : CountDownTimer(
+                        (media.anime.nextAiringEpisodeTime!! + 10000) * 1000 - System.currentTimeMillis(),
+                        1000
+                    ) {
                         override fun onTick(millisUntilFinished: Long) {
                             val a = millisUntilFinished / 1000
-                            binding.mediaCountdown.text =
+                            _binding?.mediaCountdown?.text =
                                 "Next Episode will be released in \n ${a / 86400} days ${a % 86400 / 3600} hrs ${a % 86400 % 3600 / 60} mins ${a % 86400 % 3600 % 60} secs"
                         }
+
                         override fun onFinish() {
-                            binding.mediaCountdownContainer.visibility = View.GONE
+                            _binding?.mediaCountdownContainer?.visibility = View.GONE
                         }
                     }
                     timer?.start()
                 }
 
-                if (media.anime.youtube!=null) {
+                if (media.anime.youtube != null) {
                     binding.animeSourceYT.visibility = View.VISIBLE
                     binding.animeSourceYT.setOnClickListener {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(media.anime.youtube))
                         requireContext().startActivity(intent)
                     }
                 }
-                val sources : Array<String> = resources.getStringArray(R.array.anime_sources)
+                val sources: Array<String> = resources.getStringArray(R.array.anime_sources)
                 binding.animeSource.setText(sources[media.selected!!.source])
-                binding.animeSource.setAdapter(ArrayAdapter(requireContext(), R.layout.item_dropdown,sources))
+                binding.animeSource.setAdapter(
+                    ArrayAdapter(
+                        requireContext(),
+                        R.layout.item_dropdown,
+                        sources
+                    )
+                )
                 binding.animeSource.setOnItemClickListener { _, _, i, _ ->
                     binding.animeEpisodesRecycler.adapter = null
                     binding.animeSourceChipGroup.removeAllViews()
-                    loading=true
-                    binding.animeSourceProgressBar.visibility=View.VISIBLE
+                    loading = true
+                    binding.animeSourceProgressBar.visibility = View.VISIBLE
                     media.selected!!.source = i
-                    model.saveSelected(media.id,media.selected!!,requireActivity())
-                    AnimeSources[i]!!.live.observe(viewLifecycleOwner,{ j->
+                    model.saveSelected(media.id, media.selected!!, requireActivity())
+                    AnimeSources[i]!!.live.observe(viewLifecycleOwner) { j ->
                         binding.animeSourceTitle.text = j
-                    })
-                    scope.launch{
-                        model.loadEpisodes(media,i)
+                    }
+                    scope.launch {
+                        model.loadEpisodes(media, i)
                     }
                 }
-                selected = when(media.selected!!.recyclerStyle){
-                    0->binding.animeSourceList
-                    1->binding.animeSourceGrid
-                    2->binding.animeSourceCompact
+                selected = when (media.selected!!.recyclerStyle) {
+                    0 -> binding.animeSourceList
+                    1 -> binding.animeSourceGrid
+                    2 -> binding.animeSourceCompact
                     else -> binding.animeSourceList
                 }
 
                 binding.animeSourceSearch.setOnClickListener {
-                    SourceSearchDialogFragment().show(requireActivity().supportFragmentManager,null)
+                    SourceSearchDialogFragment().show(
+                        requireActivity().supportFragmentManager,
+                        null
+                    )
                 }
 
                 selected?.alpha = 1f
-                binding.animeSourceTop.rotation = if (!media.selected!!.recyclerReversed) 90f else -90f
+                binding.animeSourceTop.rotation =
+                    if (!media.selected!!.recyclerReversed) 90f else -90f
                 binding.animeSourceTop.setOnClickListener {
-                    binding.animeSourceTop.rotation = if (media.selected!!.recyclerReversed) 90f else -90f
-                    media.selected!!.recyclerReversed=!media.selected!!.recyclerReversed
+                    binding.animeSourceTop.rotation =
+                        if (media.selected!!.recyclerReversed) 90f else -90f
+                    media.selected!!.recyclerReversed = !media.selected!!.recyclerReversed
                     updateRecycler(media)
                 }
                 binding.animeSourceList.setOnClickListener {
-                    media.selected!!.recyclerStyle=0
+                    media.selected!!.recyclerStyle = 0
                     selected?.alpha = 0.33f
                     selected = binding.animeSourceList
                     selected?.alpha = 1f
                     updateRecycler(media)
                 }
                 binding.animeSourceGrid.setOnClickListener {
-                    media.selected!!.recyclerStyle=1
+                    media.selected!!.recyclerStyle = 1
                     selected?.alpha = 0.33f
                     selected = binding.animeSourceGrid
                     selected?.alpha = 1f
                     updateRecycler(media)
                 }
                 binding.animeSourceCompact.setOnClickListener {
-                    media.selected!!.recyclerStyle=2
+                    media.selected!!.recyclerStyle = 2
                     selected?.alpha = 0.33f
                     selected = binding.animeSourceCompact
                     selected?.alpha = 1f
                     updateRecycler(media)
                 }
 
-                model.getEpisodes().observe(viewLifecycleOwner,{loadedEpisodes->
-                    if(loadedEpisodes!=null) {
+                model.getEpisodes().observe(viewLifecycleOwner) { loadedEpisodes ->
+                    if (loadedEpisodes != null) {
                         binding.animeEpisodesRecycler.adapter = null
                         binding.animeSourceChipGroup.removeAllViews()
-                        loading=true
-                        binding.animeSourceProgressBar.visibility=View.VISIBLE
+                        loading = true
+                        binding.animeSourceProgressBar.visibility = View.VISIBLE
                         val episodes = loadedEpisodes[media.selected!!.source]
                         if (episodes != null) {
                             episodes.forEach { (i, episode) ->
-                                if(media.anime.fillerEpisodes!=null){
+                                if (media.anime.fillerEpisodes != null) {
                                     if (media.anime.fillerEpisodes!!.containsKey(i)) {
                                         episode.title = media.anime.fillerEpisodes!![i]?.title
-                                        episode.filler = media.anime.fillerEpisodes!![i]?.filler?:false
+                                        episode.filler =
+                                            media.anime.fillerEpisodes!![i]?.filler ?: false
                                     }
                                 }
                                 if (media.anime.kitsuEpisodes != null) {
@@ -174,29 +190,29 @@ class AnimeSourceFragment : Fragment() {
                             updateRecycler(media)
                         }
                     }
-                })
-                model.getKitsuEpisodes().observe(viewLifecycleOwner,{ i->
-                    if (i!=null) {
+                }
+                model.getKitsuEpisodes().observe(viewLifecycleOwner) { i ->
+                    if (i != null) {
                         media.anime.kitsuEpisodes = i
                     }
-                })
-                model.getFillerEpisodes().observe(viewLifecycleOwner,{ i->
-                    if (i!=null) {
+                }
+                model.getFillerEpisodes().observe(viewLifecycleOwner) { i ->
+                    if (i != null) {
                         media.anime.fillerEpisodes = i
                     }
-                })
-                AnimeSources[media.selected!!.source]!!.live.observe(viewLifecycleOwner,{ j->
+                }
+                AnimeSources[media.selected!!.source]!!.live.observe(viewLifecycleOwner) { j ->
                     binding.animeSourceTitle.text = j
-                })
-                scope.launch{
+                }
+                scope.launch {
                     val a = async { model.loadKitsuEpisodes(media) }
                     val b = async { model.loadFillerEpisodes(media) }
                     b.await()
                     a.await()
-                    model.loadEpisodes(media,media.selected!!.source)
+                    model.loadEpisodes(media, media.selected!!.source)
                 }
             }
-        })
+        }
     }
 
     override fun onResume() {
@@ -245,7 +261,6 @@ class AnimeSourceFragment : Fragment() {
         if (total>limit) {
             val arr = media.anime!!.episodes!!.keys.toTypedArray()
             val stored = ceil((total).toDouble() / limit).toInt()
-//            println(stored)
             (1..stored).forEach {
                 val chip = Chip(requireContext())
                 chip.isCheckable = true

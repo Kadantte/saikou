@@ -15,7 +15,6 @@ class MangaBuddy(override val name: String="mangabuddy.com") : MangaParser() {
         val arr = mutableMapOf<String, MangaChapter>()
         try {
         Jsoup.connect("https://mangabuddy.com/api/manga${link}/chapters?source=detail").get().select("#chapter-list>li").reversed().forEach {
-//            println(it.toString())
             if (it.select("strong").text().contains("Chapter")) {
                 val chap = Regex("(Chapter ([A-Za-z0-9.]+))( ?: ?)?( ?(.+))?").find(it.select("strong").text())?.destructured
                 if(chap!=null) {
@@ -48,7 +47,6 @@ class MangaBuddy(override val name: String="mangabuddy.com") : MangaParser() {
                 val link = "https:$cdn$it"
                 chapter.images!!.add(link)
             }
-//        println("${chapter.images}")
             chapter.referer = "https://mangabuddy.com/"
         }catch (e:Exception){
             toastString(e.toString())

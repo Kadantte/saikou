@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.graphics.drawable.Animatable
+import android.hardware.SensorManager
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
@@ -21,13 +22,13 @@ import android.view.OrientationEventListener
 import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.math.MathUtils.clamp
 import ani.saikou.*
+import ani.saikou.anilist.Anilist
 import ani.saikou.databinding.ActivityExoplayerBinding
 import ani.saikou.media.Media
 import ani.saikou.media.MediaDetailsViewModel
@@ -47,15 +48,9 @@ import com.google.android.exoplayer2.upstream.cache.CacheDataSource
 import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.material.slider.Slider
 import java.util.*
-import kotlin.math.roundToInt
-import ani.saikou.anilist.Anilist
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import com.google.android.exoplayer2.ExoPlayer
 import java.util.concurrent.TimeUnit
-import android.hardware.SensorManager
+import kotlin.math.roundToInt
+
 
 class ExoplayerView : AppCompatActivity(), Player.Listener {
     private lateinit var binding : ActivityExoplayerBinding
@@ -151,7 +146,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         }
 
         playerView.subtitleView?.setStyle(CaptionStyleCompat(Color.WHITE,Color.TRANSPARENT,Color.TRANSPARENT,EDGE_TYPE_OUTLINE,Color.BLACK,
-            ResourcesCompat.getFont(this, R.font.poppins)))
+            ResourcesCompat.getFont(this, R.font.poppins_bold)))
 
         if (savedInstanceState != null) {
             currentWindow = savedInstanceState.getInt(STATE_RESUME_WINDOW)
@@ -326,21 +321,21 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         media = intent.getSerializableExtra("media")!! as Media
         model.setMedia(media)
 
-        model.epChanged.observe(this,{
+        model.epChanged.observe(this) {
             epChanging = !it
-        })
+        }
         val episodeObserverRunnable = Runnable {
-            model.getEpisode().observe(this,{
+            model.getEpisode().observe(this) {
                 hideSystemBars()
-                if(it!=null && !epChanging) {
+                if (it != null && !epChanging) {
                     media.selected = model.loadSelected(media.id)
                     model.setMedia(media)
                     currentEpisodeIndex = episodeArr.indexOf(it.number)
                     if (isInitialized) releasePlayer()
-                    playbackPosition = loadData("${media.id}_${it.number}",this)?:0
+                    playbackPosition = loadData("${media.id}_${it.number}", this) ?: 0
                     initPlayer(it)
                 }
-            })
+            }
         }
         episodeObserverRunnable.run()
         //Anime Title
@@ -368,7 +363,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                     if(progressDialog!=null) {
                         progressDialog?.setCancelable(false)
                             ?.setPositiveButton("Yes") { dialog, _ ->
-                                updateAnilistProgress()
+                                updateAnilistProgress(media.id,media.anime!!.selectedEpisode!!)
                                 dialog.dismiss()
                                 change(currentEpisodeIndex + 1)
                             }
@@ -378,7 +373,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                             }
                         progressDialog?.show()
                     }else{
-                        updateAnilistProgress()
+                        updateAnilistProgress(media.id,media.anime!!.selectedEpisode!!)
                         change(currentEpisodeIndex + 1)
                     }
                 } else change(currentEpisodeIndex + 1)
@@ -468,7 +463,16 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                 .build()
         else null
 
-        val builder =  MediaItem.Builder().setUri(if(stream.quality.size>=episode.selectedQuality) stream.quality[episode.selectedQuality].url else return)
+        val url = if(stream.quality.size>=episode.selectedQuality) stream.quality[episode.selectedQuality].url else return
+        val but = playerView.findViewById<ImageButton>(R.id.exo_download)
+        if(".mp4" in url) {
+            but.visibility = View.VISIBLE
+            but.setOnClickListener {
+                download(this,episode,animeTitle.text.toString())
+            }
+        }else but.visibility = View.GONE
+
+        val builder =  MediaItem.Builder().setUri(url)
         if(subtitle!=null) builder.setSubtitleConfigurations(mutableListOf(subtitle))
         mediaItem = builder.build()
 
@@ -560,7 +564,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
     private var wasPlaying = false
     override fun onWindowFocusChanged(hasFocus: Boolean) {
-        if(isInitialized) wasPlaying = exoPlayer.isPlaying
+        if(isInitialized && !hasFocus) wasPlaying = exoPlayer.isPlaying
         if (hasFocus) {
             if(isInitialized && wasPlaying) exoPlayer.play()
         } else {
@@ -598,12 +602,11 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     }
 
     override fun onBackPressed() {
-        println("${loadData<Boolean>("${media.id}_progress")}")
         if (exoPlayer.currentPosition/episodeLength>0.8f && Anilist.userid!=null) {
             if(dontAskProgressDialog) {
                 progressDialog?.setCancelable(false)
                     ?.setPositiveButton("Yes") { dialog, _ ->
-                        updateAnilistProgress()
+                        updateAnilistProgress(media.id,media.anime!!.selectedEpisode!!)
                         dialog.dismiss()
                         super.onBackPressed()
                     }
@@ -614,21 +617,11 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                 progressDialog?.show()
             }
             else{
-                updateAnilistProgress()
+                updateAnilistProgress(media.id,media.anime!!.selectedEpisode!!)
                 super.onBackPressed()
             }
         } else {
             super.onBackPressed()
-        }
-    }
-
-    private fun updateAnilistProgress(){
-        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
-            val a = media.anime!!.selectedEpisode!!.toFloatOrNull()?.roundToInt()
-            Anilist.mutation.editList(media.id,a)
-            this@ExoplayerView.runOnUiThread {
-                Toast.makeText(this@ExoplayerView, "Setting progress to $a", Toast.LENGTH_SHORT).show()
-            }
         }
     }
 

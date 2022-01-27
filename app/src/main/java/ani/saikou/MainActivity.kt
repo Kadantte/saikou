@@ -7,7 +7,6 @@ import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.viewModels
-
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.doOnAttach
 import androidx.core.view.updateLayoutParams
@@ -15,18 +14,16 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
 import androidx.viewpager2.adapter.FragmentStateAdapter
-
 import ani.saikou.anilist.Anilist
 import ani.saikou.anilist.AnilistHomeViewModel
 import ani.saikou.databinding.ActivityMainBinding
 import ani.saikou.media.MediaDetailsActivity
-
-import nl.joery.animatedbottombar.AnimatedBottomBar
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import nl.joery.animatedbottombar.AnimatedBottomBar
 import java.io.Serializable
 
 class MainActivity : AppCompatActivity() {
@@ -43,7 +40,6 @@ class MainActivity : AppCompatActivity() {
         initActivity(this, binding.root)
 
         binding.navbarContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-            println("height : $navBarHeight")
             bottomMargin = navBarHeight
         }
 
@@ -53,8 +49,8 @@ class MainActivity : AppCompatActivity() {
         }
         else{
             val  model : AnilistHomeViewModel by viewModels()
-            model.genres.observe(this,{
-                if(it){
+            model.genres.observe(this) {
+                if (it) {
                     val navbar = binding.navbar
                     bottomBar = navbar
                     navbar.visibility = View.VISIBLE
@@ -64,29 +60,38 @@ class MainActivity : AppCompatActivity() {
                     mainViewPager.adapter = ViewPagerAdapter(supportFragmentManager, lifecycle)
                     mainViewPager.setPageTransformer(ZoomOutPageTransformer(true))
                     navbar.setOnTabSelectListener(object : AnimatedBottomBar.OnTabSelectListener {
-                        override fun onTabSelected(lastIndex: Int, lastTab: AnimatedBottomBar.Tab?, newIndex: Int, newTab: AnimatedBottomBar.Tab) {
+                        override fun onTabSelected(
+                            lastIndex: Int,
+                            lastTab: AnimatedBottomBar.Tab?,
+                            newIndex: Int,
+                            newTab: AnimatedBottomBar.Tab
+                        ) {
                             navbar.animate().translationZ(12f).setDuration(200).start()
                             selectedOption = newIndex
-                            mainViewPager.setCurrentItem(newIndex,false)
+                            mainViewPager.setCurrentItem(newIndex, false)
                         }
                     })
                     navbar.selectTabAt(selectedOption)
                     mainViewPager.post { mainViewPager.setCurrentItem(selectedOption, false) }
 
-                    if (loadMedia!=null){
+                    if (loadMedia != null) {
                         scope.launch {
                             val media = Anilist.query.getMedia(loadMedia!!, loadIsMAL)
-                            if (media!=null){
-                                startActivity(Intent(this@MainActivity, MediaDetailsActivity::class.java).putExtra("media",media as Serializable))
-                                runOnUiThread { model.homeRefresh.postValue(true) }
-                            }
-                            else{
+                            if (media != null) {
+                                startActivity(
+                                    Intent(
+                                        this@MainActivity,
+                                        MediaDetailsActivity::class.java
+                                    ).putExtra("media", media as Serializable)
+                                )
+                                runOnUiThread { Refresh.home.postValue(true) }
+                            } else {
                                 toastString("Seems like that wasn't found on Anilist.")
                             }
                         }
                     }
                 }
-            })
+            }
             //Load Data
             if (!load) {
                 Anilist.getSavedToken(this)

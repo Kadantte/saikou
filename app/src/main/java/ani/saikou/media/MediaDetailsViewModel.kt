@@ -9,14 +9,16 @@ import ani.saikou.anilist.Anilist
 import ani.saikou.anime.Episode
 import ani.saikou.anime.SelectorDialogFragment
 import ani.saikou.anime.source.AnimeSources
-import ani.saikou.others.Kitsu
 import ani.saikou.loadData
 import ani.saikou.logger
 import ani.saikou.manga.MangaChapter
 import ani.saikou.manga.source.MangaSources
 import ani.saikou.others.AnimeFillerList
+import ani.saikou.others.Kitsu
 import ani.saikou.saveData
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 
 class MediaDetailsViewModel:ViewModel() {
     fun saveSelected(id:Int,data:Selected,activity: Activity){
@@ -29,13 +31,10 @@ class MediaDetailsViewModel:ViewModel() {
     private val media: MutableLiveData<Media> = MutableLiveData<Media>(null)
     fun getMedia(): LiveData<Media> = media
     fun loadMedia(m:Media) { if (media.value==null) media.postValue(Anilist.query.mediaDetails(m)) }
+    fun updateMedia(m:Media) { media.postValue(Anilist.query.updateMedia(m)) }
     fun setMedia(m:Media) = media.postValue(m)
 
     val sources = MutableLiveData<ArrayList<Source>?>(null)
-
-    val userScore = MutableLiveData<Double?>(null)
-    val userProgress = MutableLiveData<Int?>(null)
-    val userStatus = MutableLiveData<String?>(null)
 
     private val kitsuEpisodes: MutableLiveData<MutableMap<String,Episode>> = MutableLiveData<MutableMap<String,Episode>>(null)
     fun getKitsuEpisodes() : LiveData<MutableMap<String,Episode>> = kitsuEpisodes
@@ -79,7 +78,6 @@ class MediaDetailsViewModel:ViewModel() {
         } else false
     }
     fun setEpisode(ep: Episode?){
-        println("Setting EP : ${ep?.number}")
         episode.postValue(ep)
         MainScope().launch(Dispatchers.Main) {
             episode.value = null
