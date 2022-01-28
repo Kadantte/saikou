@@ -9,23 +9,24 @@ import androidx.core.content.ContextCompat
 import androidx.core.math.MathUtils.clamp
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.*
 import ani.saikou.databinding.ActivityCharacterBinding
 import com.google.android.material.appbar.AppBarLayout
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
 class CharacterDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedListener {
     private lateinit var binding: ActivityCharacterBinding
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = lifecycleScope
     private val model: OtherDetailsViewModel by viewModels()
     private lateinit var character: Character
     private var loaded = false
@@ -57,8 +58,8 @@ class CharacterDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChang
         loadImage(character.banner,binding.characterBanner)
         loadImage(character.banner,binding.characterBannerStatus)
         loadImage(character.image,binding.characterCoverImage)
-        binding.characterCoverImage.setOnClickListener{ openImage(character.image) }
-        binding.characterBanner.setOnClickListener{ openImage(character.banner) }
+        binding.characterCoverImage.setOnClickListener{ (openImage(character.image)) }
+//        binding.characterBanner.setOnClickListener{ openImage(character.banner) }
 
         model.getCharacter().observe(this) {
             if (it != null) {
@@ -88,13 +89,15 @@ class CharacterDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChang
             }
         }
         if(!loaded) scope.launch {
-            model.loadCharacter(character)
+            withContext(Dispatchers.IO){ model.loadCharacter(character) }
         }
-    }
 
-    override fun onDestroy() {
-        scope.cancel()
-        super.onDestroy()
+        val live = Refresh.activity.getOrPut(this.hashCode()){ MutableLiveData(false) }
+        live.observe(this){
+            scope.launch {
+                withContext(Dispatchers.IO){ model.loadCharacter(character) }
+            }
+        }
     }
 
     override fun onResume() {
@@ -116,6 +119,8 @@ class CharacterDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChang
         binding.characterCover.scaleX = 1f*cap
         binding.characterCover.scaleY = 1f*cap
         binding.characterCover.cardElevation = 32f*cap
+
+        binding.characterCover.visibility= if(binding.characterCover.scaleX==0f) View.GONE else View.VISIBLE
 
         if (percentage >= percent && !isCollapsed) {
             isCollapsed = true

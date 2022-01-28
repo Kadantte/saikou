@@ -13,22 +13,22 @@ import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import ani.saikou.anilist.Anilist
 import ani.saikou.anilist.AnilistHomeViewModel
 import ani.saikou.databinding.ActivityMainBinding
 import ani.saikou.media.MediaDetailsActivity
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import nl.joery.animatedbottombar.AnimatedBottomBar
 import java.io.Serializable
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding : ActivityMainBinding
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val scope = lifecycleScope
     private var load = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity() {
 
                     if (loadMedia != null) {
                         scope.launch {
-                            val media = Anilist.query.getMedia(loadMedia!!, loadIsMAL)
+                            val media = withContext(Dispatchers.IO){ Anilist.query.getMedia(loadMedia!!, loadIsMAL) }
                             if (media != null) {
                                 startActivity(
                                     Intent(
@@ -84,7 +84,6 @@ class MainActivity : AppCompatActivity() {
                                         MediaDetailsActivity::class.java
                                     ).putExtra("media", media as Serializable)
                                 )
-                                runOnUiThread { Refresh.home.postValue(true) }
                             } else {
                                 toastString("Seems like that wasn't found on Anilist.")
                             }
@@ -95,7 +94,7 @@ class MainActivity : AppCompatActivity() {
             //Load Data
             if (!load) {
                 Anilist.getSavedToken(this)
-                scope.launch { model.genres.postValue(Anilist.query.genreCollection(this@MainActivity)) }
+                scope.launch(Dispatchers.IO) { model.genres.postValue(Anilist.query.genreCollection(this@MainActivity)) }
                 load = true
             }
         }

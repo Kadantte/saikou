@@ -116,10 +116,10 @@ class Gogo(private val dub:Boolean=false, override val name: String = "gogoanime
                 }
             }
         }
-        else{
+        else {
             live.postValue("Selected : ${slug.name}")
-            return getSlugEpisodes(slug.link)
         }
+        if (slug!=null) return getSlugEpisodes(slug.link)
         }catch (e:Exception){
             toastString("$e")
         }
@@ -141,17 +141,21 @@ class Gogo(private val dub:Boolean=false, override val name: String = "gogoanime
     }
 
     override fun getSlugEpisodes(slug: String): MutableMap<String, Episode> {
+        val responseArray = mutableMapOf<String,Episode>()
+        try{
         val pageBody = Jsoup.connect("${host[0]}/category/$slug").get().body()
         val lastEpisode = pageBody.select("ul#episode_page > li:last-child > a").attr("ep_end").toString()
         val animeId = pageBody.select("input#movie_id").attr("value").toString()
 
-        val responseArray = mutableMapOf<String,Episode>()
         val a = Jsoup.connect("https://ajax.gogo-load.com/ajax/load-list-episode?ep_start=0&ep_end=$lastEpisode&id=$animeId").get().body().select("ul > li > a").reversed()
         a.forEach{
             val num = it.select(".name").text().replace("EP","").trim()
             responseArray[num] = Episode(number = num,link = host[0]+it.attr("href").trim())
         }
         logger("Response Episodes : $responseArray")
+        }catch (e:Exception){
+            toastString(e.toString())
+        }
         return responseArray
     }
 

@@ -8,17 +8,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import ani.saikou.*
 import ani.saikou.databinding.ActivityStudioBinding
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class StudioActivity : AppCompatActivity() {
     private lateinit var binding: ActivityStudioBinding
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = lifecycleScope
     private val model: OtherDetailsViewModel by viewModels()
     private lateinit var studio: Studio
     private var loaded = false
@@ -42,23 +43,34 @@ class StudioActivity : AppCompatActivity() {
             onBackPressed()
         }
 
-        model.getStudio().observe(this, {
+        model.getStudio().observe(this) {
             if (it != null) {
                 studio = it
                 loaded = true
                 binding.studioProgressBar.visibility = View.GONE
                 binding.studioRecycler.visibility = View.VISIBLE
-                binding.studioRecycler.adapter = MediasWithTitleAdapter(studio.yearMedia!!,this)
+                binding.studioRecycler.adapter = MediasWithTitleAdapter(studio.yearMedia!!, this)
                 binding.studioRecycler.layoutManager = LinearLayoutManager(this)
             }
-        })
+        }
         if(!loaded) scope.launch {
-            model.loadStudio(studio)
+            withContext(Dispatchers.IO){ model.loadStudio(studio) }
+        }
+        val live = Refresh.activity.getOrPut(this.hashCode()) { MutableLiveData(true) }
+        live.observe(this) {
+            if (it) {
+                scope.launch {
+                    withContext(Dispatchers.IO){ model.loadStudio(studio) }
+                    Refresh.activity[this.hashCode()]!!.postValue(false)
+                }
+            }
         }
     }
 
     override fun onDestroy() {
-        scope.cancel()
+        if(Refresh.activity.containsKey(this.hashCode())){
+            Refresh.activity.remove(this.hashCode())
+        }
         super.onDestroy()
     }
 

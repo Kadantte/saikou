@@ -6,18 +6,19 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.lifecycleScope
 import ani.saikou.R
+import ani.saikou.Refresh
 import ani.saikou.databinding.ActivityListBinding
 import com.google.android.material.tabs.TabLayoutMediator
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ListActivity : AppCompatActivity() {
     private lateinit var binding: ActivityListBinding
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private var load = false
+    private val scope = lifecycleScope
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,20 +31,23 @@ class ListActivity : AppCompatActivity() {
         binding.listTitle.text = intent.getStringExtra("username")+"'s "+(if(anime) "Anime" else "Manga")+" List"
 
         val model : ListViewModel by viewModels()
-        model.getLists().observe(this,{
-            if(it!=null){
+        model.getLists().observe(this) {
+            if (it != null) {
                 binding.listProgressBar.visibility = View.GONE
                 binding.listViewPager.adapter = ListViewPagerAdapter(it.size, this)
                 TabLayoutMediator(binding.listTabLayout, binding.listViewPager) { tab, position ->
                     tab.text = it.keys.toList()[position]
                 }.attach()
             }
-        })
-        if(!load){
-            scope.launch {
-                model.loadLists(anime,intent.getIntExtra("userId",0))
+        }
+        val live = Refresh.activity.getOrPut(this.hashCode()){ MutableLiveData(true) }
+        live.observe(this){
+            if(it){
+                scope.launch {
+                    withContext(Dispatchers.IO) { model.loadLists(anime, intent.getIntExtra("userId", 0)) }
+                    live.postValue(false)
+                }
             }
-            load = true
         }
     }
 }

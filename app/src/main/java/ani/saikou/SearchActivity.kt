@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePaddingRelative
 import androidx.core.widget.NestedScrollView
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.anilist.Anilist
@@ -22,13 +23,13 @@ import ani.saikou.anilist.SearchResults
 import ani.saikou.databinding.ActivitySearchBinding
 import ani.saikou.media.MediaAdaptor
 import ani.saikou.media.MediaLargeAdaptor
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SearchActivity : AppCompatActivity() {
     private lateinit var binding : ActivitySearchBinding
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = lifecycleScope
     private var screenWidth:Float = 0f
     private var search:SearchResults?=null
 
@@ -85,17 +86,12 @@ class SearchActivity : AppCompatActivity() {
                                     scope.launch {
                                         if (!loading) {
                                             loading = true
-                                            val get = model.loadNextPage(search!!)
+                                            val get = withContext(Dispatchers.IO){ model.loadNextPage(search!!) }
                                             if(get!=null) {
                                                 val a = search!!.results.size
                                                 search!!.results.addAll(get.results)
-                                                runOnUiThread {
-                                                    adapter.notifyItemRangeInserted(
-                                                        a,
-                                                        get.results.size
-                                                    )
-                                                    binding.searchProgress.visibility = View.GONE
-                                                }
+                                                adapter.notifyItemRangeInserted(a, get.results.size)
+                                                binding.searchProgress.visibility = View.GONE
                                                 search!!.page = get.page
                                                 search!!.hasNextPage = get.hasNextPage
                                                 loading = false
@@ -118,10 +114,10 @@ class SearchActivity : AppCompatActivity() {
         val type:String = intent.getStringExtra("type")!!
         binding.searchBar.hint = type
 
-        model.getSearch().observe(this,{
+        model.getSearch().observe(this){
             search=it
             recycler()
-        })
+        }
         binding.searchBarText.requestFocusFromTouch()
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
         val imm: InputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -135,7 +131,7 @@ class SearchActivity : AppCompatActivity() {
             val genre = if (binding.searchGenre.text.toString()!="") arrayListOf(binding.searchGenre.text.toString()) else null
             val sortBy = if (binding.searchSortBy.text.toString()!="") Anilist.sortBy[binding.searchSortBy.text.toString()] else null
             scope.launch {
-                model.loadSearch(type,search,genre,sortBy?:"SEARCH_MATCH")
+                withContext(Dispatchers.IO){ model.loadSearch(type,search,genre,sortBy?:"SEARCH_MATCH") }
             }
         }
 

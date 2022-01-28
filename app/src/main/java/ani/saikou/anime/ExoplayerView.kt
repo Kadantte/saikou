@@ -12,14 +12,13 @@ import android.graphics.drawable.Animatable
 import android.hardware.SensorManager
 import android.media.AudioManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings.System
-import android.view.GestureDetector
-import android.view.MotionEvent
-import android.view.OrientationEventListener
-import android.view.View
+import android.util.TypedValue
+import android.view.*
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.activity.viewModels
@@ -27,6 +26,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.math.MathUtils.clamp
+import androidx.core.view.WindowCompat
+import androidx.core.view.updateLayoutParams
 import ani.saikou.*
 import ani.saikou.anilist.Anilist
 import ani.saikou.databinding.ActivityExoplayerBinding
@@ -47,14 +48,9 @@ import com.google.android.exoplayer2.upstream.HttpDataSource
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource
 import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.material.slider.Slider
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
-
 
 class ExoplayerView : AppCompatActivity(), Player.Listener {
     private lateinit var binding : ActivityExoplayerBinding
@@ -102,13 +98,28 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     }
 
     @SuppressLint("ClickableViewAccessibility")
+
+    override fun onAttachedToWindow() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val displayCutout =window.decorView.rootWindowInsets.displayCutout
+            if (displayCutout != null) {
+                if (displayCutout.boundingRects.size>0) {
+                    val notchHeight = displayCutout.boundingRects[0].height()
+                    exoBrightnessCont.updateLayoutParams<ViewGroup.MarginLayoutParams> { marginEnd +=notchHeight }
+                    exoVolumeCont.updateLayoutParams<ViewGroup.MarginLayoutParams> { marginStart +=notchHeight }
+                }
+            }
+        }
+        super.onAttachedToWindow()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityExoplayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         //Initialize
-        initActivity(this)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         hideSystemBars()
 
         playerView = findViewById(R.id.player_view)
@@ -125,6 +136,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         episodeTitle = playerView.findViewById(R.id.exo_ep_title)
 
         val screenWidth = resources.displayMetrics.run { widthPixels / density }
+
         playerView.controllerShowTimeoutMs = 5000
         val audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         if (System.getInt(contentResolver, System.ACCELEROMETER_ROTATION, 0) != 1) {
@@ -151,6 +163,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
         playerView.subtitleView?.setStyle(CaptionStyleCompat(Color.WHITE,Color.TRANSPARENT,Color.TRANSPARENT,EDGE_TYPE_OUTLINE,Color.BLACK,
             ResourcesCompat.getFont(this, R.font.poppins_bold)))
+        playerView.subtitleView?.setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, 22f)
 
         if (savedInstanceState != null) {
             currentWindow = savedInstanceState.getInt(STATE_RESUME_WINDOW)
@@ -444,6 +457,12 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         //Title
         episodeTitle.text = "Episode ${episode.number}${if(episode.title!="" && episode.title!=null && episode.title!="null") " : "+episode.title else ""}${if(episode.filler) "\n[Filler]" else ""}"
         saveData("${media.id}_current_ep",media.anime!!.selectedEpisode!!,this)
+
+        val set = loadData<MutableSet<Int>>("continue_ANIME",this)?: mutableSetOf()
+        if(set.contains(media.id)) set.remove(media.id)
+        set.add(media.id)
+        saveData("continue_ANIME",set,this)
+
         val stream = episode.streamLinks[episode.selectedStream]?: return
 
         val simpleCache = VideoCache.getInstance(this)
@@ -490,7 +509,11 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
         //Quality Track
         trackSelector = DefaultTrackSelector(this)
-        trackSelector.setParameters(trackSelector.buildUponParameters().setMaxVideoSize(loadData("maxWidth",this)?:900, loadData("maxHeight",this)?:500))
+        trackSelector.setParameters(
+            trackSelector.buildUponParameters()
+            .setMinVideoSize(loadData("maxWidth",this)?:720, loadData("maxHeight",this)?:480)
+            .setMaxVideoSize(1,1)
+        )
 
         if(playbackPosition!=0L && !changingServer) {
             val time = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(playbackPosition),
@@ -537,8 +560,10 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putInt(STATE_RESUME_WINDOW, exoPlayer.currentMediaItemIndex)
-        outState.putLong(STATE_RESUME_POSITION, exoPlayer.currentPosition)
+        if(isInitialized) {
+            outState.putInt(STATE_RESUME_WINDOW, exoPlayer.currentMediaItemIndex)
+            outState.putLong(STATE_RESUME_POSITION, exoPlayer.currentPosition)
+        }
         outState.putBoolean(STATE_PLAYER_FULLSCREEN, isFullscreen)
         outState.putBoolean(STATE_PLAYER_PLAYING, isPlayerPlaying)
         super.onSaveInstanceState(outState)
@@ -547,8 +572,10 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     override fun onPause() {
         super.onPause()
         orientationListener?.disable()
-        if(isInitialized) playerView.player?.pause()
-        saveData("${media.id}_${media.anime!!.selectedEpisode}",exoPlayer.currentPosition,this)
+        if(isInitialized) {
+            playerView.player?.pause()
+            saveData("${media.id}_${media.anime!!.selectedEpisode}", exoPlayer.currentPosition, this)
+        }
     }
 
     override fun onResume() {
@@ -606,31 +633,30 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     }
 
     override fun onBackPressed() {
-        if (exoPlayer.currentPosition/episodeLength>0.8f && Anilist.userid!=null) {
-            if(dontAskProgressDialog) {
-                progressDialog?.setCancelable(false)
-                    ?.setPositiveButton("Yes") { dialog, _ ->
-                        updateAnilistProgress(media.id,media.anime!!.selectedEpisode!!)
-                        dialog.dismiss()
-                        super.onBackPressed()
-                    }
-                    ?.setNegativeButton("No") { dialog, _ ->
-                        dialog.dismiss()
-                        super.onBackPressed()
-                    }
-                progressDialog?.show()
-            }
-            else{
-                updateAnilistProgress(media.id,media.anime!!.selectedEpisode!!)
+        if(isInitialized) {
+            if (exoPlayer.currentPosition / episodeLength > 0.8f && Anilist.userid != null) {
+                if (dontAskProgressDialog) {
+                    progressDialog?.setCancelable(false)
+                        ?.setPositiveButton("Yes") { dialog, _ ->
+                            updateAnilistProgress(media.id, media.anime!!.selectedEpisode!!)
+                            dialog.dismiss()
+                            super.onBackPressed()
+                        }
+                        ?.setNegativeButton("No") { dialog, _ ->
+                            dialog.dismiss()
+                            super.onBackPressed()
+                        }
+                    progressDialog?.show()
+                } else {
+                    updateAnilistProgress(media.id, media.anime!!.selectedEpisode!!)
+                    super.onBackPressed()
+                }
+            } else {
                 super.onBackPressed()
             }
-        } else {
-            super.onBackPressed()
         }
-        MainScope().launch(Dispatchers.Main) {
-            Refresh.media.postValue(true)
-            delay(100)
-            Refresh.media.postValue(false)
+        else{
+            super.onBackPressed()
         }
     }
 

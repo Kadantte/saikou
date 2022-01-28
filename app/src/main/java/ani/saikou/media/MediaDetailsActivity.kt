@@ -18,6 +18,8 @@ import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import ani.saikou.*
 import ani.saikou.anilist.Anilist
@@ -32,7 +34,7 @@ import kotlin.math.abs
 class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedListener {
 
     private lateinit var binding: ActivityMediaBinding
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = lifecycleScope
     private val model: MediaDetailsViewModel by viewModels()
     private lateinit var tabLayout : BottomNavigationView
     var selected = 0
@@ -78,7 +80,7 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         loadImage(media.cover,binding.mediaCoverImage)
         binding.mediaCoverImage.setOnClickListener{ openImage(media.cover) }
         loadImage(media.banner?:media.cover,binding.mediaBanner)
-        binding.mediaBanner.setOnClickListener{ openImage(media.banner?:media.cover) }
+//        binding.mediaBanner.setOnClickListener{ openImage(media.banner?:media.cover) }
         loadImage(media.banner?:media.cover,binding.mediaBannerStatus)
         binding.mediaTitle.text=media.userPreferredName
         binding.mediaTitleCollapse.text=media.userPreferredName
@@ -92,7 +94,11 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
 
         fun progress() {
             if (media.userStatus != null) {
+                binding.mediaUserStatus.visibility = View.VISIBLE
+                binding.mediaUserProgress.visibility = View.VISIBLE
+                binding.mediaTotal.visibility = View.VISIBLE
                 binding.mediaAddToList.setText(R.string.list_editor)
+
                 binding.mediaUserStatus.text = media.userStatus
                 binding.mediaUserProgress.text = (media.userProgress ?: "~").toString()
             } else {
@@ -150,11 +156,17 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         viewPager.setCurrentItem(selected,false)
 
         scope.launch {
-            model.loadMedia(media)
+            withContext(Dispatchers.IO){ model.loadMedia(media) }
         }
-        Refresh.media.observe(this){
+
+        val live = Refresh.activity.getOrPut(this.hashCode()){ MutableLiveData(false) }
+        live.observe(this){
             if(it){
-                scope.launch { model.updateMedia(media) }
+                println("Media Refresh Invoked")
+                scope.launch {
+                    withContext(Dispatchers.IO){ model.loadMedia(media) }
+                    live.postValue(false)
+                }
             }
         }
     }
@@ -177,11 +189,6 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
             1 -> return R.id.read
         }
         return R.id.info
-    }
-
-    override fun onDestroy() {
-        scope.cancel()
-        super.onDestroy()
     }
 
     override fun onResume() {
@@ -226,6 +233,8 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         binding.mediaCover.scaleY = 1f*cap
         binding.mediaCover.cardElevation = 32f*cap
 
+        binding.mediaCover.visibility= if(binding.mediaCover.scaleX==0f) View.GONE else View.VISIBLE
+
         if (percentage >= percent && !isCollapsed) {
             isCollapsed = true
             ObjectAnimator.ofFloat(binding.mediaTitle,"translationX",0f).setDuration(200).start()
@@ -253,7 +262,7 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
                     if (fav_or_not) {
                         media.isFav = !media.isFav
                         clicked = media.isFav
-                        scope.launch { Anilist.mutation.toggleFav(media.anime!=null,media.id) }
+                        scope.launch(Dispatchers.IO) { Anilist.mutation.toggleFav(media.anime!=null,media.id) }
                     }
                     else {
                         media.notify = !media.notify
@@ -269,28 +278,18 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
                 ObjectAnimator.ofFloat(image,"scaleY",1f,0f).setDuration(100).start()
                 scope.launch {
                     delay(100)
-                    activity.runOnUiThread {
-                        if (clicked) {
-                            ObjectAnimator.ofArgb(image,"ColorFilter",ContextCompat.getColor(activity, c1),ContextCompat.getColor(activity, c2)).setDuration(120).start()
-                            image.setImageDrawable(AppCompatResources.getDrawable(activity,d1))
-                        }
-                        else{
-                            image.setImageDrawable(AppCompatResources.getDrawable(activity,d2))
-                        }
-                        ObjectAnimator.ofFloat(image,"scaleX",0f,1.5f).setDuration(120).start()
-                        ObjectAnimator.ofFloat(image,"scaleY",0f,1.5f).setDuration(100).start()
+                    if (clicked) {
+                        ObjectAnimator.ofArgb(image,"ColorFilter",ContextCompat.getColor(activity, c1),ContextCompat.getColor(activity, c2)).setDuration(120).start()
+                        image.setImageDrawable(AppCompatResources.getDrawable(activity,d1))
                     }
+                    else image.setImageDrawable(AppCompatResources.getDrawable(activity,d2))
+                    ObjectAnimator.ofFloat(image,"scaleX",0f,1.5f).setDuration(120).start()
+                    ObjectAnimator.ofFloat(image,"scaleY",0f,1.5f).setDuration(100).start()
                     delay(120)
-                    activity.runOnUiThread {
-                        ObjectAnimator.ofFloat(image,"scaleX",1.5f,1f).setDuration(100).start()
-                        ObjectAnimator.ofFloat(image,"scaleY",1.5f,1f).setDuration(100).start()
-                    }
+                    ObjectAnimator.ofFloat(image,"scaleX",1.5f,1f).setDuration(100).start()
+                    ObjectAnimator.ofFloat(image,"scaleY",1.5f,1f).setDuration(100).start()
                     delay(200)
-                    activity.runOnUiThread{
-                        if (clicked) {
-                            ObjectAnimator.ofArgb(image,"ColorFilter", ContextCompat.getColor(activity, c2), ContextCompat.getColor(activity, c1)).setDuration(200).start()
-                        }
-                    }
+                    if (clicked) ObjectAnimator.ofArgb(image,"ColorFilter", ContextCompat.getColor(activity, c2), ContextCompat.getColor(activity, c1)).setDuration(200).start()
                     pressable = true
                 }
             }

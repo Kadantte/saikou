@@ -11,25 +11,23 @@ import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-
 import ani.saikou.anilist.Anilist
 import ani.saikou.anilist.AnilistHomeViewModel
 import ani.saikou.databinding.FragmentHomeBinding
 import ani.saikou.media.Media
 import ani.saikou.media.MediaAdaptor
 import ani.saikou.user.ListActivity
-
 import kotlinx.coroutines.*
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
-
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -39,11 +37,11 @@ class HomeFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        scope.cancel()
     }
+    val model: AnilistHomeViewModel by activityViewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val model: AnilistHomeViewModel by viewModels()
+        val scope = lifecycleScope
         fun load(){
             if(activity!=null) requireActivity().runOnUiThread {
                 binding.homeUserName.text = Anilist.username
@@ -53,6 +51,22 @@ class HomeFragment : Fragment() {
                 binding.homeUserAvatar.scaleType = ImageView.ScaleType.FIT_CENTER
                 binding.homeUserDataProgressBar.visibility = View.GONE
                 binding.homeUserDataContainer.visibility = View.VISIBLE
+                binding.homeAnimeList.setOnClickListener {
+                    ContextCompat.startActivity(
+                        requireActivity(), Intent(requireActivity(), ListActivity::class.java)
+                            .putExtra("anime", true)
+                            .putExtra("userId", Anilist.userid)
+                            .putExtra("username", Anilist.username), null
+                    )
+                }
+                binding.homeMangaList.setOnClickListener {
+                    ContextCompat.startActivity(
+                        requireActivity(), Intent(requireActivity(), ListActivity::class.java)
+                            .putExtra("anime", false)
+                            .putExtra("userId", Anilist.userid)
+                            .putExtra("username", Anilist.username), null
+                    )
+                }
             }
             else{
                 toastString("Please Reload.")
@@ -82,36 +96,21 @@ class HomeFragment : Fragment() {
         binding.homeRefresh.setSlingshotDistance(statusBarHeight+128)
         binding.homeRefresh.setProgressViewEndTarget(false, statusBarHeight+128)
         binding.homeRefresh.setOnRefreshListener {
-            Refresh.home.postValue(true)
+            Refresh.activity[1]!!.postValue(true)
         }
 
         //UserData
         binding.homeUserDataProgressBar.visibility = View.VISIBLE
         binding.homeUserDataContainer.visibility = View.GONE
-        if(model.load.value!!){
+        if(model.loaded){
             load()
         }
         //List Images
         model.getListImages().observe(viewLifecycleOwner) {
+            println("Invoked observer")
             if (it.isNotEmpty()) {
                 loadImage(it[0] ?: "https://bit.ly/31bsIHq", binding.homeAnimeListImage)
                 loadImage(it[1] ?: "https://bit.ly/2ZGfcuG", binding.homeMangaListImage)
-            }
-            binding.homeAnimeList.setOnClickListener {
-                ContextCompat.startActivity(
-                    requireActivity(), Intent(requireActivity(), ListActivity::class.java)
-                        .putExtra("anime", true)
-                        .putExtra("userId", Anilist.userid)
-                        .putExtra("username", Anilist.username), null
-                )
-            }
-            binding.homeMangaList.setOnClickListener {
-                ContextCompat.startActivity(
-                    requireActivity(), Intent(requireActivity(), ListActivity::class.java)
-                        .putExtra("anime", false)
-                        .putExtra("userId", Anilist.userid)
-                        .putExtra("username", Anilist.username), null
-                )
             }
         }
 
@@ -119,8 +118,9 @@ class HomeFragment : Fragment() {
         fun initRecyclerView(mode: Int, recyclerView: RecyclerView, progress: View, empty: View,emptyButton:Button?=null) {
             lateinit var modelFunc: LiveData<ArrayList<Media>>
             when (mode) {
-                0 -> modelFunc = model.getAnimeContinue();1 -> modelFunc =
-                model.getMangaContinue();2 -> modelFunc = model.getRecommendation()
+                0 -> modelFunc = model.getAnimeContinue()
+                1 -> modelFunc = model.getMangaContinue()
+                2 -> modelFunc = model.getRecommendation()
             }
             progress.visibility = View.VISIBLE
             recyclerView.visibility = View.GONE
@@ -174,30 +174,31 @@ class HomeFragment : Fragment() {
             binding.homeRecommendedEmpty
         )
 
-        Refresh.home.observe(viewLifecycleOwner) {
+        val live = Refresh.activity.getOrPut(1) { MutableLiveData(true) }
+        live.observe(viewLifecycleOwner) {
             if (it) {
                 scope.launch {
-                    //Get userData First
-                    if (Anilist.userid == null)
-                        if (Anilist.query.getUserData()) load() else logger("Error loading data")
-                    else load()
-                    model.load.postValue(true)
-                    //get Watching in new Thread
-                    val a = async { model.setAnimeContinue() }
-                    //get Reading in new Thread
-                    val b = async { model.setMangaContinue() }
-                    // get genres and respective images
-                    val c = async { model.setListImages() }
-                    //get List Images in current Thread(idle)
+                    withContext(Dispatchers.IO) {
+                        //Get userData First
+                        if (Anilist.userid == null)
+                            if (Anilist.query.getUserData()) load() else logger("Error loading data")
+                        else load()
+                        model.loaded = true
+                        //get Watching in new Thread
+                        val a = async { model.setAnimeContinue() }
+                        //get Reading in new Thread
+                        val b = async { model.setMangaContinue() }
+                        // get genres and respective images
+                        val c = async { model.setListImages() }
+                        //get List Images in current Thread(idle)
 
-                    //get Recommended in current Thread(idle)
-                    model.setRecommendation()
+                        //get Recommended in current Thread(idle)
+                        model.setRecommendation()
 
-                    awaitAll(a, b, c)
-                    activity?.runOnUiThread {
-                        Refresh.home.postValue(false)
-                        _binding?.homeRefresh?.isRefreshing = false
+                        awaitAll(a, b, c)
                     }
+                    live.postValue(false)
+                    _binding?.homeRefresh?.isRefreshing = false
                 }
             }
         }

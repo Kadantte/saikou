@@ -42,14 +42,16 @@ import ani.saikou.media.Media
 import ani.saikou.media.Source
 import com.squareup.picasso.OkHttp3Downloader
 import com.squareup.picasso.Picasso
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import nl.joery.animatedbottombar.AnimatedBottomBar
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import java.io.*
-import java.lang.Runnable
 import java.text.DateFormatSymbols
 import java.util.*
 import kotlin.math.max
@@ -70,18 +72,13 @@ val Float.px: Int get() = (this * getSystem().displayMetrics.density).toInt()
 lateinit var bottomBar: AnimatedBottomBar
 var selectedOption = 1
 
-
 object Refresh{
-    suspend fun all(){
-        home.postValue(true)
-        media.postValue(true)
-        delay(100)
-        media.postValue(false)
+    fun all(){
+        for (i in activity){
+            activity[i.key]!!.postValue(true)
+        }
     }
-    val media = MutableLiveData(false)
-    val home = MutableLiveData(true)
-    val anime = MutableLiveData(true)
-    val manga = MutableLiveData(true)
+    val activity = mutableMapOf<Int,MutableLiveData<Boolean>>()
 }
 
 fun currActivity():Activity?{
@@ -323,10 +320,10 @@ fun ArrayList<Source>.sortByTitle(string: String){
         temp[i] = levenshtein(string.lowercase(),this[i].name.lowercase())
     }
     val c = temp.toList().sortedBy{ (_, value) -> value}.toMap()
-    val a = c.keys.toList().subList(0,min(this.size,25)) as MutableList
+    val a = ArrayList(c.keys.toList().subList(0,min(this.size,25)))
     val b = c.values.toList().subList(0,min(this.size,25))
     for( i in b.indices.reversed()){
-        if(b[i]>20) a.removeAt(i)
+        if(b[i]>18 && i<a.size) a.removeAt(i)
     }
     val temp2 = arrayListOf<Source>()
     temp2.addAll(this)
@@ -480,16 +477,27 @@ fun download(activity: Activity, episode:Episode, animeTitle:String){
     if(stream.referer!=null) {
         request.addRequestHeader("referer",stream.referer)
     }
-    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-    val direct = File(Environment.DIRECTORY_DOWNLOADS + "/Saikou/${animeTitle}/")
-    if (!direct.exists()) direct.mkdirs()
+    try {
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+        val direct = File(Environment.DIRECTORY_DOWNLOADS + "/Saikou/${animeTitle}/")
+        if (!direct.exists()) direct.mkdirs()
 
-    val title = "Episode ${episode.number} ${if(episode.title!=null) " - ${episode.title}" else ""}"
+        val title =
+            "Episode ${episode.number} ${if (episode.title != null) " - ${episode.title}" else ""}"
 
-    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "/Saikou/${animeTitle}/$title (${stream.quality[episode.selectedQuality].quality})")
-    request.setTitle("$title : $animeTitle")
-    manager.enqueue(request)
-    toastString("Started Downloading\n$title : $animeTitle")
+        request.setDestinationInExternalPublicDir(
+            Environment.DIRECTORY_DOWNLOADS,
+            "/Saikou/${animeTitle}/$title (${stream.quality[episode.selectedQuality].quality})"
+        )
+        request.setTitle("$title : $animeTitle")
+        manager.enqueue(request)
+        toastString("Started Downloading\n$title : $animeTitle")
+    }catch (e:SecurityException){
+        toastString("Please give permission to access Media from Settings, & Try again.")
+    }
+    catch (e:Exception){
+        toastString(e.toString())
+    }
 }
 
 fun updateAnilistProgress(id:Int,number:String){

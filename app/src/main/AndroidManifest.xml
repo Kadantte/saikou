@@ -22,27 +22,35 @@
         tools:ignore="AllowBackup">
         <activity
             android:name=".media.StudioActivity"
+            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="false" />
         <activity
             android:name=".user.ListActivity"
+            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="false" />
         <activity
             android:name=".manga.MangaReaderActivity"
+            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="false" />
         <activity
             android:name=".GenreActivity"
+            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="true" />
         <activity
             android:name=".SearchActivity"
+            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="true" />
         <activity
             android:name=".media.MediaDetailsActivity"
+            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="true" />
         <activity
             android:name=".media.CharacterDetailsActivity"
+            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="true" />
         <activity
             android:name=".NoInternet"
+            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="true" />
         <activity
             android:name=".anime.ExoplayerView"
@@ -52,6 +60,7 @@
             android:theme="@style/Theme.Saikou.Exoplayer" />
         <activity
             android:name=".anilist.Login"
+            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="true">
             <intent-filter android:label="Anilist Login for Saikou">
                 <action android:name="android.intent.action.VIEW" />
@@ -66,6 +75,7 @@
         </activity>
         <activity
             android:name=".anilist.UrlMedia"
+            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="true">
             <intent-filter android:label="Read on Saikou">
                 <action android:name="android.intent.action.VIEW" />
@@ -94,6 +104,7 @@
         </activity>
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

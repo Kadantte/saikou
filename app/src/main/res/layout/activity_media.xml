@@ -229,15 +229,15 @@
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/mediaTab"
         android:layout_width="match_parent"
-        android:layout_height="96dp"
+        android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:background="@color/nav_bg"
         app:itemActiveIndicatorStyle="@style/BottomNavBar"
         app:itemIconTint="@color/tab_layout_icon"
-        app:itemTextColor="@color/tab_layout_text"
         app:itemRippleColor="?attr/colorSecondary"
         app:itemTextAppearanceActive="@style/NavBarText"
         app:itemTextAppearanceInactive="@style/NavBarText"
+        app:itemTextColor="@color/tab_layout_text"
         app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior" />
 
     <androidx.cardview.widget.CardView

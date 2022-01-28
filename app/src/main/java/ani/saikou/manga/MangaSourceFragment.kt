@@ -12,6 +12,7 @@ import android.widget.ImageView
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import ani.saikou.R
 import ani.saikou.databinding.FragmentMangaSourceBinding
@@ -22,16 +23,15 @@ import ani.saikou.media.SourceSearchDialogFragment
 import ani.saikou.navBarHeight
 import ani.saikou.px
 import com.google.android.material.chip.Chip
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.ceil
 
 @SuppressLint("SetTextI18n")
 class MangaSourceFragment : Fragment() {
     private var _binding: FragmentMangaSourceBinding? = null
     private val binding get() = _binding!!
-    private val scope = CoroutineScope(Dispatchers.Default)
     private var screenWidth:Float =0f
     private var timer: CountDownTimer?=null
 
@@ -56,8 +56,9 @@ class MangaSourceFragment : Fragment() {
         binding.mangaSourceTitle.isSelected = true
         super.onViewCreated(view, savedInstanceState)
         val a : MediaDetailsViewModel by activityViewModels()
+        val scope = viewLifecycleOwner.lifecycleScope
         model = a
-        model.getMedia().observe(viewLifecycleOwner,{
+        model.getMedia().observe(viewLifecycleOwner) {
             val media = it
             if (media?.manga != null) {
 //                if (media.manga.nextAiringChapterTime!=null && (media.manga.nextAiringChapterTime!!-System.currentTimeMillis()/1000)<=86400*7.toLong()) {
@@ -78,26 +79,35 @@ class MangaSourceFragment : Fragment() {
                 binding.mediaLoadProgressBar.visibility = View.GONE
                 progress = View.GONE
 
-                if(media.format=="MANGA") {
+                if (media.format == "MANGA") {
                     binding.mangaSourceContainer.visibility = View.VISIBLE
                     val sources: Array<String> = resources.getStringArray(R.array.manga_sources)
                     binding.mangaSource.setText(sources[media.selected!!.source])
-                    binding.mangaSource.setAdapter(ArrayAdapter(requireContext(), R.layout.item_dropdown, sources))
+                    binding.mangaSource.setAdapter(
+                        ArrayAdapter(
+                            requireContext(),
+                            R.layout.item_dropdown,
+                            sources
+                        )
+                    )
                     binding.mangaSource.setOnItemClickListener { _, _, i, _ ->
                         binding.mangaSourceRecycler.adapter = null
                         binding.mangaSourceChipGroup.removeAllViews()
                         loading = true
                         binding.mangaSourceProgressBar.visibility = View.VISIBLE
                         media.selected!!.source = i
-                        model.saveSelected(media.id,media.selected!!,requireActivity())
-                        MangaSources[i]!!.live.observe(viewLifecycleOwner,{ j ->
+                        model.saveSelected(media.id, media.selected!!, requireActivity())
+                        MangaSources[i]!!.live.observe(viewLifecycleOwner) { j ->
                             binding.mangaSourceTitle.text = j
-                        })
-                        scope.launch { model.loadMangaChapters(media, i) }
+                        }
+                        scope.launch { withContext(Dispatchers.IO){ model.loadMangaChapters(media, i) } }
                     }
 
                     binding.mangaSourceSearch.setOnClickListener {
-                        SourceSearchDialogFragment().show(requireActivity().supportFragmentManager,null)
+                        SourceSearchDialogFragment().show(
+                            requireActivity().supportFragmentManager,
+                            null
+                        )
                     }
 
                     selected = when (media.selected!!.recyclerStyle) {
@@ -106,9 +116,11 @@ class MangaSourceFragment : Fragment() {
                         else -> binding.mangaSourceList
                     }
                     selected?.alpha = 1f
-                    binding.mangaSourceTop.rotation = if (!media.selected!!.recyclerReversed) 90f else -90f
+                    binding.mangaSourceTop.rotation =
+                        if (!media.selected!!.recyclerReversed) 90f else -90f
                     binding.mangaSourceTop.setOnClickListener {
-                        binding.mangaSourceTop.rotation = if (media.selected!!.recyclerReversed) 90f else -90f
+                        binding.mangaSourceTop.rotation =
+                            if (media.selected!!.recyclerReversed) 90f else -90f
                         media.selected!!.recyclerReversed = !media.selected!!.recyclerReversed
                         updateRecycler(media)
                     }
@@ -127,11 +139,11 @@ class MangaSourceFragment : Fragment() {
                         updateRecycler(media)
                     }
 
-                    model.getMangaChapters().observe(viewLifecycleOwner, { loadedChapters ->
+                    model.getMangaChapters().observe(viewLifecycleOwner) { loadedChapters ->
                         binding.mangaSourceRecycler.adapter = null
                         binding.mangaSourceChipGroup.removeAllViews()
-                        loading=true
-                        binding.mangaSourceProgressBar.visibility=View.VISIBLE
+                        loading = true
+                        binding.mangaSourceProgressBar.visibility = View.VISIBLE
                         if (loadedChapters != null) {
                             val chapters = loadedChapters[media.selected!!.source]
                             if (chapters != null) {
@@ -141,19 +153,18 @@ class MangaSourceFragment : Fragment() {
                                 updateRecycler(media)
                             }
                         }
-                    })
-                    MangaSources[media.selected!!.source]!!.live.observe(viewLifecycleOwner,{ j->
-                        binding.mangaSourceTitle.text = j
-                    })
-                    scope.launch {
-                        model.loadMangaChapters(media, media.selected!!.source)
                     }
-                }
-                else{
-                    binding.mangaSourceNovel.visibility=View.VISIBLE
+                    MangaSources[media.selected!!.source]!!.live.observe(viewLifecycleOwner) { j ->
+                        binding.mangaSourceTitle.text = j
+                    }
+                    scope.launch {
+                        withContext(Dispatchers.IO){ model.loadMangaChapters(media, media.selected!!.source) }
+                    }
+                } else {
+                    binding.mangaSourceNovel.visibility = View.VISIBLE
                 }
             }
-        })
+        }
     }
 
     override fun onResume() {

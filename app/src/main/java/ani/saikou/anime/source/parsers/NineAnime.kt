@@ -71,8 +71,10 @@ class NineAnime(private val dub:Boolean=false, override val name: String = "9Ani
             val search = search("$! | &language%5B%5D=${if(dub) "d" else "s"}ubbed&year%5B%5D=${media.anime?.seasonYear}&sort=default&season%5B%5D=${media.anime?.season?.lowercase()}&type%5B%5D=${media.typeMAL?.lowercase()}")
             if (search.isNotEmpty()) {
                 search.sortByTitle(it)
-                slug = search[0]
-                saveSource(slug,media.id,false)
+                if(search.isNotEmpty()) {
+                    slug = search[0]
+                    saveSource(slug, media.id, false)
+                }
             }
         }
         else{

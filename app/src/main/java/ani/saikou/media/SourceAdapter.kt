@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.databinding.ItemCharacterBinding
 import ani.saikou.loadImage
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 abstract class SourceAdapter(
@@ -37,7 +38,7 @@ abstract class SourceAdapter(
         init {
             itemView.setOnClickListener {
                 dialogFragment.dismiss()
-                scope.launch{ onItemClick(sources[bindingAdapterPosition]) }
+                scope.launch(Dispatchers.IO){ onItemClick(sources[bindingAdapterPosition]) }
             }
             var a = true
             itemView.setOnLongClickListener {

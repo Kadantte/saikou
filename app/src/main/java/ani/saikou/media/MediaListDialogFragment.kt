@@ -10,21 +10,20 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import ani.saikou.*
 import ani.saikou.anilist.Anilist
 import ani.saikou.databinding.BottomSheetMediaListBinding
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class MediaListDialogFragment : BottomSheetDialogFragment(){
 
     private var _binding: BottomSheetMediaListBinding? = null
     private val binding get() = _binding!!
-    private val scope = CoroutineScope(Dispatchers.Default)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = BottomSheetMediaListBinding.inflate(inflater, container, false)
@@ -36,6 +35,8 @@ class MediaListDialogFragment : BottomSheetDialogFragment(){
         binding.mediaListContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin += navBarHeight }
         var media : Media?
         val model : MediaDetailsViewModel by activityViewModels()
+        val scope = viewLifecycleOwner.lifecycleScope
+
         model.getMedia().observe(this) {
             media = it
             if (media != null) {
@@ -168,32 +169,36 @@ class MediaListDialogFragment : BottomSheetDialogFragment(){
 
                 binding.mediaListSave.setOnClickListener {
                     scope.launch {
-                        Anilist.mutation.editList(
-                            media!!.id,
-                            if (_binding?.mediaListProgress?.text.toString() != "") _binding?.mediaListProgress?.text.toString()
-                                .toInt() else null,
-                            if (_binding?.mediaListScore?.text.toString() != "") (_binding?.mediaListScore?.text.toString()
-                                .toDouble() * 10).toInt() else null,
-                            if (_binding?.mediaListStatus?.text.toString() != "") _binding?.mediaListStatus?.text.toString() else null,
-                            if (start.date.year != null) start.date.getEpoch() else null,
-                            if (end.date.year != null) end.date.getEpoch() else null,
-                        )
-                        MainScope().launch(Dispatchers.Main) {
-                            Refresh.all()
-                            toastString("List Updated")
-                            dismiss()
+                        withContext(Dispatchers.IO){
+                            Anilist.mutation.editList(
+                                media!!.id,
+                                if (_binding?.mediaListProgress?.text.toString() != "") _binding?.mediaListProgress?.text.toString()
+                                    .toInt() else null,
+                                if (_binding?.mediaListScore?.text.toString() != "") (_binding?.mediaListScore?.text.toString()
+                                    .toDouble() * 10).toInt() else null,
+                                if (_binding?.mediaListStatus?.text.toString() != "") _binding?.mediaListStatus?.text.toString() else null,
+                                if (start.date.year != null) start.date.getEpoch() else null,
+                                if (end.date.year != null) end.date.getEpoch() else null,
+                            )
                         }
+                        Refresh.all()
+                        toastString("List Updated")
+                        dismiss()
                     }
                 }
 
                 binding.mediaListDelete.setOnClickListener {
-                    scope.launch {
-                        Anilist.mutation.deleteList(media!!.userListId!!)
-                        MainScope().launch(Dispatchers.Main) {
+                    val id = media!!.userListId
+                    if(id!=null) {
+                        scope.launch {
+                            withContext(Dispatchers.IO){ Anilist.mutation.deleteList(id) }
                             Refresh.all()
                             toastString("Deleted from List")
                             dismiss()
                         }
+                    }else{
+                        toastString("No List ID found, reloading...")
+                        Refresh.all()
                     }
                 }
             }

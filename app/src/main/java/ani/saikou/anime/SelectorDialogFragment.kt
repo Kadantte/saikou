@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.CheckBox
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.R
@@ -22,20 +23,17 @@ import ani.saikou.media.MediaDetailsViewModel
 import ani.saikou.navBarHeight
 import ani.saikou.toastString
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.text.DecimalFormat
 
 class SelectorDialogFragment : BottomSheetDialogFragment(){
     private var _binding: BottomSheetSelectorBinding? = null
     private val binding get() = _binding!!
     private lateinit var model : MediaDetailsViewModel
+    private lateinit var scope: CoroutineScope
     private var media: Media? = null
     private lateinit var episode: Episode
     private var makeDefault = false
-    private val scope = CoroutineScope(Dispatchers.Default)
     private var selected:String?=null
     private var launch:Boolean?=null
 
@@ -45,6 +43,7 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
             selected = it.getString("server")
             launch = it.getBoolean("launch",true)
         }
+        if(!launch!!) isCancelable = false
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -66,6 +65,7 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val mo : MediaDetailsViewModel by activityViewModels()
+        scope = viewLifecycleOwner.lifecycleScope
         model = mo
 
         model.getMedia().observe(viewLifecycleOwner) { m ->
@@ -106,7 +106,7 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
                             }
                         }
                         scope.launch {
-                            if (!model.loadEpisodeStream(episode, media!!.selected!!)) fail()
+                            if (withContext(Dispatchers.IO){ !model.loadEpisodeStream(episode, media!!.selected!!) }) fail()
                         }
                     } else load()
                 } else {
@@ -135,7 +135,9 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
                             }
                         }
                         scope.launch {
-                            model.loadEpisodeStreams(episode, media!!.selected!!.source)
+                            withContext(Dispatchers.IO) {
+                                model.loadEpisodeStreams(episode, media!!.selected!!.source)
+                            }
                         }
                     } else load()
                 }

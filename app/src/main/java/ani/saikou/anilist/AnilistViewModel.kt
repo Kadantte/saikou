@@ -22,7 +22,7 @@ class AnilistHomeViewModel : ViewModel() {
     fun getRecommendation(): LiveData<ArrayList<Media>> = recommendation
     fun setRecommendation() = recommendation.postValue(Anilist.query.recommendations())
 
-    val load : MutableLiveData<Boolean> = MutableLiveData(false)
+    var loaded : Boolean = false
     val genres : MutableLiveData<Boolean> = MutableLiveData(false)
 }
 

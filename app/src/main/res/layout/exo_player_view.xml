@@ -86,12 +86,17 @@
             app:strokeWidth="0dp"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+
     <com.google.android.exoplayer2.ui.SubtitleView
         android:id="@id/exo_subtitles"
         android:layout_width="match_parent"
-        android:layout_height="128dp"
+        android:layout_height="match_parent"
         android:layout_gravity="bottom"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="16dp"
+        android:layout_weight="1"
+        android:adjustViewBounds="true">
+
+    </com.google.android.exoplayer2.ui.SubtitleView>
 
     <View android:id="@id/exo_controller_placeholder"
         android:layout_width="match_parent"
@@ -104,7 +109,7 @@
         android:layout_gravity="center_vertical|end"
         android:layout_margin="8dp"
         android:clipChildren="true"
-        android:translationX="80dp"
+        android:translationX="200dp"
         app:cardBackgroundColor="#000"
         app:cardCornerRadius="24dp"
         app:contentPadding="4dp">
@@ -146,7 +151,7 @@
         android:layout_gravity="center_vertical"
         android:layout_margin="8dp"
         android:clipChildren="true"
-        android:translationX="-80dp"
+        android:translationX="-200dp"
         app:cardBackgroundColor="#000"
         app:cardCornerRadius="24dp"
         app:contentPadding="4dp">

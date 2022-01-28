@@ -1,13 +1,13 @@
 package ani.saikou.media
 
-import android.app.Activity
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.databinding.ItemMediasWithTitleBinding
 
-class MediasWithTitleAdapter(private val medias: MutableMap<String,ArrayList<Media>>, private val activity: Activity) : RecyclerView.Adapter<MediasWithTitleAdapter.MediaGridViewHolder>() {
+class MediasWithTitleAdapter(private val medias: MutableMap<String,ArrayList<Media>>, private val activity: FragmentActivity) : RecyclerView.Adapter<MediasWithTitleAdapter.MediaGridViewHolder>() {
     private var keys = medias.keys.toList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MediaGridViewHolder {

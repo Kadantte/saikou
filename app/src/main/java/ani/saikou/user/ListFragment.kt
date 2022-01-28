@@ -43,16 +43,16 @@ class ListFragment : Fragment() {
             }
         }
 
-        model.getLists().observe(viewLifecycleOwner,{
-            if(it!=null){
+        model.getLists().observe(viewLifecycleOwner) {
+            if (it != null) {
                 list = it.values.toList().getOrNull(pos!!)
                 update()
             }
-        })
-        model.grid.observe(viewLifecycleOwner,{
+        }
+        model.grid.observe(viewLifecycleOwner) {
             grid = it
             update()
-        })
+        }
     }
 
     companion object {

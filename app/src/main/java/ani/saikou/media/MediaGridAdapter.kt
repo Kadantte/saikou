@@ -1,13 +1,13 @@
 package ani.saikou.media
 
-import android.app.Activity
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.databinding.ItemRecyclerviewBinding
 
-class MediaGridAdapter(private val medias: ArrayList<Media>, private val activity: Activity) : RecyclerView.Adapter<MediaGridAdapter.MediaGridViewHolder>() {
+class MediaGridAdapter(private val medias: ArrayList<Media>, private val activity: FragmentActivity) : RecyclerView.Adapter<MediaGridAdapter.MediaGridViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MediaGridViewHolder {
         val binding = ItemRecyclerviewBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return MediaGridViewHolder(binding)

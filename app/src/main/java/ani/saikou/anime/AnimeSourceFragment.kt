@@ -13,6 +13,7 @@ import android.widget.ImageView
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import ani.saikou.R
 import ani.saikou.anime.source.AnimeSources
@@ -24,17 +25,16 @@ import ani.saikou.media.SourceSearchDialogFragment
 import ani.saikou.navBarHeight
 import ani.saikou.px
 import com.google.android.material.chip.Chip
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.ceil
 
 @SuppressLint("SetTextI18n")
 class AnimeSourceFragment : Fragment() {
     private var _binding: FragmentAnimeSourceBinding? = null
     private val binding get() = _binding!!
-    private val scope = CoroutineScope(Dispatchers.Default)
     private var screenWidth:Float =0f
     private var timer: CountDownTimer? = null
     private var selected:ImageView?=null
@@ -57,6 +57,7 @@ class AnimeSourceFragment : Fragment() {
         binding.animeSourceContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin += 128f.px+navBarHeight }
         binding.animeSourceTitle.isSelected = true
         super.onViewCreated(view, savedInstanceState)
+        val scope = viewLifecycleOwner.lifecycleScope
         val m: MediaDetailsViewModel by activityViewModels()
         model = m
         model.getMedia().observe(viewLifecycleOwner) {
@@ -117,7 +118,7 @@ class AnimeSourceFragment : Fragment() {
                         binding.animeSourceTitle.text = j
                     }
                     scope.launch {
-                        model.loadEpisodes(media, i)
+                        withContext(Dispatchers.IO){ model.loadEpisodes(media, i) }
                     }
                 }
                 selected = when (media.selected!!.recyclerStyle) {
@@ -208,11 +209,13 @@ class AnimeSourceFragment : Fragment() {
                     binding.animeSourceTitle.text = j
                 }
                 scope.launch {
-                    val a = async { model.loadKitsuEpisodes(media) }
-                    val b = async { model.loadFillerEpisodes(media) }
-                    b.await()
-                    a.await()
-                    model.loadEpisodes(media, media.selected!!.source)
+                    withContext(Dispatchers.IO){
+                        val a = async { model.loadKitsuEpisodes(media) }
+                        val b = async { model.loadFillerEpisodes(media) }
+                        b.await()
+                        a.await()
+                        model.loadEpisodes(media, media.selected!!.source)
+                    }
                 }
             }
         }

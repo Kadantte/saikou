@@ -10,6 +10,7 @@ import android.view.inputmethod.InputMethodManager
 import androidx.core.math.MathUtils.clamp
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import ani.saikou.anime.source.AnimeSourceAdapter
 import ani.saikou.anime.source.AnimeSources
@@ -19,15 +20,14 @@ import ani.saikou.manga.source.MangaSources
 import ani.saikou.navBarHeight
 import ani.saikou.px
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SourceSearchDialogFragment : BottomSheetDialogFragment(){
 
     private var _binding: BottomSheetSourceSearchBinding? = null
     private val binding get() = _binding!!
-    private val scope = CoroutineScope(Dispatchers.Default)
     lateinit var model : MediaDetailsViewModel
     private var searched = false
     var anime = true
@@ -45,12 +45,14 @@ class SourceSearchDialogFragment : BottomSheetDialogFragment(){
         binding.mediaListContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin += navBarHeight }
 
         val m : MediaDetailsViewModel by activityViewModels()
+        val scope = viewLifecycleOwner.lifecycleScope
+
         val imm = requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         model = m
 
-        model.getMedia().observe(viewLifecycleOwner,{
+        model.getMedia().observe(viewLifecycleOwner) {
             media = it
-            if (media!=null){
+            if (media != null) {
                 binding.mediaListProgressBar.visibility = View.GONE
                 binding.mediaListLayout.visibility = View.VISIBLE
 
@@ -58,16 +60,16 @@ class SourceSearchDialogFragment : BottomSheetDialogFragment(){
                 binding.searchProgress.visibility = View.VISIBLE
 
                 i = media!!.selected!!.source
-                if (media!!.anime!=null){
+                if (media!!.anime != null) {
                     val source = AnimeSources[i!!]!!
                     referer = source.referer
                     binding.searchSourceTitle.text = source.name
                     binding.searchBarText.setText(media!!.getMangaName())
-                    fun search(){
+                    fun search() {
                         binding.searchBarText.clearFocus()
                         imm.hideSoftInputFromWindow(binding.searchBarText.windowToken, 0)
                         scope.launch {
-                            model.sources.postValue(source.search(binding.searchBarText.text.toString()))
+                            model.sources.postValue(withContext(Dispatchers.IO){ source.search(binding.searchBarText.text.toString()) })
                         }
                     }
                     binding.searchBarText.setOnEditorActionListener { _, actionId, _ ->
@@ -79,20 +81,20 @@ class SourceSearchDialogFragment : BottomSheetDialogFragment(){
                             else -> false
                         }
                     }
-                    binding.searchBar.setEndIconOnClickListener{ search() }
+                    binding.searchBar.setEndIconOnClickListener { search() }
                     if (!searched) search()
 
-                }else if(media!!.manga!=null){
+                } else if (media!!.manga != null) {
                     anime = false
                     val source = MangaSources[i!!]!!
                     referer = source.referer
                     binding.searchSourceTitle.text = source.name
                     binding.searchBarText.setText(media!!.getMangaName())
-                    fun search(){
+                    fun search() {
                         binding.searchBarText.clearFocus()
                         imm.hideSoftInputFromWindow(binding.searchBarText.windowToken, 0)
                         scope.launch {
-                            model.sources.postValue(source.search(binding.searchBarText.text.toString()))
+                            model.sources.postValue(withContext(Dispatchers.IO){ source.search(binding.searchBarText.text.toString()) })
                         }
                     }
                     binding.searchBarText.setOnEditorActionListener { _, actionId, _ ->
@@ -104,20 +106,22 @@ class SourceSearchDialogFragment : BottomSheetDialogFragment(){
                             else -> false
                         }
                     }
-                    binding.searchBar.setEndIconOnClickListener{ search() }
+                    binding.searchBar.setEndIconOnClickListener { search() }
                     if (!searched) search()
                 }
                 searched = true
-                model.sources.observe(viewLifecycleOwner,{ j->
-                    if (j!=null) {
+                model.sources.observe(viewLifecycleOwner) { j ->
+                    if (j != null) {
                         binding.searchRecyclerView.visibility = View.VISIBLE
                         binding.searchProgress.visibility = View.GONE
-                        binding.searchRecyclerView.adapter = if (anime) AnimeSourceAdapter(j,model,i!!,media!!.id,this,scope,referer) else MangaSourceAdapter(j,model,i!!,media!!.id,this,scope,referer)
-                        binding.searchRecyclerView.layoutManager = GridLayoutManager(requireActivity(),clamp(requireActivity().resources.displayMetrics.widthPixels / 124f.px,1,4))
+                        binding.searchRecyclerView.adapter =
+                            if (anime) AnimeSourceAdapter(j, model, i!!, media!!.id, this, scope, referer)
+                            else MangaSourceAdapter(j, model, i!!, media!!.id, this, scope, referer)
+                        binding.searchRecyclerView.layoutManager = GridLayoutManager(requireActivity(), clamp(requireActivity().resources.displayMetrics.widthPixels / 124f.px, 1, 4))
                     }
-                })
+                }
             }
-        })
+        }
     }
 
     override fun onDestroyView() {

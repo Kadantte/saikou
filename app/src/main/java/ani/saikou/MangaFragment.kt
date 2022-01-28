@@ -17,7 +17,9 @@ import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePaddingRelative
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.CompositePageTransformer
@@ -29,16 +31,14 @@ import ani.saikou.anilist.AnilistSearch
 import ani.saikou.databinding.FragmentMangaBinding
 import ani.saikou.media.MediaAdaptor
 import ani.saikou.media.MediaLargeAdaptor
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.abs
 
 class MangaFragment : Fragment() {
     private var _binding: FragmentMangaBinding? = null
     private val binding get() = _binding!!
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var trendHandler : Handler?=null
     private lateinit var trendRun : Runnable
 
@@ -51,7 +51,10 @@ class MangaFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val model: AnilistMangaViewModel by viewModels()
+
+        val scope = viewLifecycleOwner.lifecycleScope
+        val model: AnilistMangaViewModel by activityViewModels()
+
         binding.mangaContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> { topMargin = statusBarHeight }
 
         binding.mangaScroll.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { v, _, _, _, _ ->
@@ -75,7 +78,7 @@ class MangaFragment : Fragment() {
         binding.mangaRefresh.setSlingshotDistance(statusBarHeight+128)
         binding.mangaRefresh.setProgressViewEndTarget(false, statusBarHeight+128)
         binding.mangaRefresh.setOnRefreshListener {
-            Refresh.manga.postValue(true)
+            Refresh.activity[this.hashCode()]!!.postValue(true)
         }
         if(Anilist.avatar!=null){
             loadImage(Anilist.avatar,binding.mangaUserAvatar)
@@ -148,7 +151,7 @@ class MangaFragment : Fragment() {
             }
         }
 
-        val popularModel: AnilistSearch by viewModels()
+        val popularModel: AnilistSearch by activityViewModels()
         popularModel.getSearch().observe(viewLifecycleOwner) {
             if (it != null) {
                 val adapter = MediaLargeAdaptor(it.results, requireActivity())
@@ -167,18 +170,12 @@ class MangaFragment : Fragment() {
                                         binding.mangaPopularProgress.visibility = View.VISIBLE
                                         scope.launch {
                                             loading = true
-                                            val get = popularModel.loadNextPage(it)
+                                            val get = withContext(Dispatchers.IO){ popularModel.loadNextPage(it) }
                                             if (get != null) {
                                                 val a = it.results.size
                                                 it.results.addAll(get.results)
-                                                requireActivity().runOnUiThread {
-                                                    adapter.notifyItemRangeInserted(
-                                                        a,
-                                                        get.results.size
-                                                    )
-                                                    binding.mangaPopularProgress.visibility =
-                                                        View.GONE
-                                                }
+                                                adapter.notifyItemRangeInserted(a, get.results.size)
+                                                binding.mangaPopularProgress.visibility = View.GONE
                                                 it.page = get.page
                                                 it.hasNextPage = get.hasNextPage
                                                 loading = false
@@ -207,16 +204,17 @@ class MangaFragment : Fragment() {
             }
         }
 
-        Refresh.manga.observe(viewLifecycleOwner) {
+        val live = Refresh.activity.getOrPut(this.hashCode()) { MutableLiveData(true) }
+        live.observe(viewLifecycleOwner) {
             if (it) {
                 scope.launch {
-                    model.loadTrending()
-                    model.loadTrendingNovel()
-                    popularModel.loadSearch("MANGA", sort = "POPULARITY_DESC")
-                    activity?.runOnUiThread {
-                        Refresh.manga.postValue(false)
-                        _binding?.mangaRefresh?.isRefreshing = false
+                    withContext(Dispatchers.IO){
+                        model.loadTrending()
+                        model.loadTrendingNovel()
+                        popularModel.loadSearch("MANGA", sort = "POPULARITY_DESC")
                     }
+                    live.postValue(false)
+                    _binding?.mangaRefresh?.isRefreshing = false
                 }
             }
         }
