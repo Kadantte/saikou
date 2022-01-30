@@ -70,22 +70,25 @@ class CharacterDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChang
 
                 val adapters: ArrayList<RecyclerView.Adapter<out RecyclerView.ViewHolder>> =
                     arrayListOf(CharacterDetailsAdapter(character, this))
-                val perRow = clamp(resources.displayMetrics.widthPixels / 124f.px, 1, 4)
-                val multiplier = min(perRow, character.roles!!.size)
-                for (i in 0 until max(1, character.roles!!.size / perRow)) {
-                    adapters.add(
-                        MediaGridAdapter(
-                            ArrayList(
-                                character.roles!!.subList(
-                                    i * multiplier,
-                                    (i + 1) * multiplier
-                                )
-                            ), this
+                val roles = character.roles
+                if(roles!=null){
+                    val perRow = clamp(resources.displayMetrics.widthPixels / 124f.px, 1, 4)
+                    val multiplier = min(perRow, roles.size)
+                    for (i in 0 until max(1, roles.size / perRow)) {
+                        adapters.add(
+                            MediaGridAdapter(
+                                ArrayList(
+                                    roles.subList(
+                                        i * multiplier,
+                                        (i + 1) * multiplier
+                                    )
+                                ), this
+                            )
                         )
-                    )
+                    }
+                    binding.characterRecyclerView.adapter = ConcatAdapter(adapters)
+                    binding.characterRecyclerView.layoutManager = LinearLayoutManager(this)
                 }
-                binding.characterRecyclerView.adapter = ConcatAdapter(adapters)
-                binding.characterRecyclerView.layoutManager = LinearLayoutManager(this)
             }
         }
         if(!loaded) scope.launch {

@@ -28,6 +28,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.math.MathUtils.clamp
 import androidx.core.view.WindowCompat
 import androidx.core.view.updateLayoutParams
+import androidx.lifecycle.lifecycleScope
 import ani.saikou.*
 import ani.saikou.anilist.Anilist
 import ani.saikou.databinding.ActivityExoplayerBinding
@@ -48,6 +49,8 @@ import com.google.android.exoplayer2.upstream.HttpDataSource
 import com.google.android.exoplayer2.upstream.cache.CacheDataSource
 import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.material.slider.Slider
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
@@ -84,7 +87,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     private var currentWindow = 0
     private var playbackPosition: Long = 0
     private var episodeLength: Float = 0f
-    private var isFullscreen = false
+    private var isFullscreen : Int = 0
     private var isInitialized = false
     private var isPlayerPlaying = true
     private var changingServer = false
@@ -135,8 +138,6 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         animeTitle = playerView.findViewById(R.id.exo_anime_title)
         episodeTitle = playerView.findViewById(R.id.exo_ep_title)
 
-        val screenWidth = resources.displayMetrics.run { widthPixels / density }
-
         playerView.controllerShowTimeoutMs = 5000
         val audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         if (System.getInt(contentResolver, System.ACCELEROMETER_ROTATION, 0) != 1) {
@@ -163,12 +164,12 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
         playerView.subtitleView?.setStyle(CaptionStyleCompat(Color.WHITE,Color.TRANSPARENT,Color.TRANSPARENT,EDGE_TYPE_OUTLINE,Color.BLACK,
             ResourcesCompat.getFont(this, R.font.poppins_bold)))
-        playerView.subtitleView?.setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, 22f)
+        playerView.subtitleView?.setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
 
         if (savedInstanceState != null) {
             currentWindow = savedInstanceState.getInt(STATE_RESUME_WINDOW)
             playbackPosition = savedInstanceState.getLong(STATE_RESUME_POSITION)
-            isFullscreen = savedInstanceState.getBoolean(STATE_PLAYER_FULLSCREEN)
+            isFullscreen = savedInstanceState.getInt(STATE_PLAYER_FULLSCREEN)
             isPlayerPlaying = savedInstanceState.getBoolean(STATE_PLAYER_PLAYING)
         }
 
@@ -219,10 +220,20 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
         //Player UI Visibility Handler
         val brightnessRunnable = Runnable {
-            if(exoBrightnessCont.translationX==0f) ObjectAnimator.ofFloat(exoBrightnessCont,"translationX",0f,screenWidth).setDuration(300).start()
+            if(exoBrightnessCont.alpha==1f)
+                lifecycleScope.launch {
+                    ObjectAnimator.ofFloat(exoBrightnessCont, "alpha", 1f, 0f).setDuration(300).start()
+                    delay(300)
+                    exoBrightnessCont.visibility = View.GONE
+                }
         }
         val volumeRunnable = Runnable {
-            if(exoVolumeCont.translationX==0f) ObjectAnimator.ofFloat(exoVolumeCont,"translationX",0f, -screenWidth).setDuration(300).start()
+            if(exoVolumeCont.alpha==1f)
+                lifecycleScope.launch {
+                    ObjectAnimator.ofFloat(exoVolumeCont, "alpha", 1f, 0f).setDuration(300).start()
+                    delay(300)
+                    exoVolumeCont.visibility = View.GONE
+                }
         }
         playerView.setControllerVisibilityListener {
             if(it==View.GONE) {
@@ -242,7 +253,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
 
         //Brightness
         var brightnessTimer = Timer()
-        exoBrightnessCont.translationX = screenWidth
+        exoBrightnessCont.visibility = View.GONE
 
         fun brightnessHide(){
             brightnessTimer.cancel()
@@ -276,21 +287,24 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             override fun onScrollYClick(y: Float) {
                 if(!sliderLocked) {
                     exoBrightness.value = clamp(exoBrightness.value + y / 50, 0f, 10f)
-                    if (exoBrightnessCont.translationX == screenWidth) ObjectAnimator.ofFloat(exoBrightnessCont, "translationX", 0f, 0f).setDuration(0).start()
+                    if(exoBrightnessCont.visibility != View.VISIBLE){
+                        exoBrightnessCont.visibility = View.VISIBLE
+                        exoBrightnessCont.alpha = 1f
+                    }
                 }
             }
             override fun onSingleClick(event: MotionEvent?) = handleController()
         })
-        fastRewindCard.setOnTouchListener { v, event ->
+        playerView.findViewById<View>(R.id.exo_rewind_area).setOnTouchListener { v, event ->
             fastRewindDetector.onTouchEvent(event)
             v.performClick()
             true
         }
 
-
         //Volume
         var volumeTimer = Timer()
-        exoVolumeCont.translationX = -screenWidth
+        exoVolumeCont.visibility = View.GONE
+
         val volumeMax = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         exoVolume.value = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat()/volumeMax*10
         fun volumeHide(){
@@ -322,13 +336,16 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             override fun onScrollYClick(y: Float) {
                 if(!sliderLocked) {
                     exoVolume.value = clamp(exoVolume.value+y/50,0f,10f)
-                    if (exoVolumeCont.translationX == -screenWidth) ObjectAnimator.ofFloat(exoVolumeCont,"translationX", 0f,0f).setDuration(0).start()
+                    if(exoVolumeCont.visibility != View.VISIBLE){
+                        exoVolumeCont.visibility = View.VISIBLE
+                        exoVolumeCont.alpha = 1f
+                    }
                 }
             }
 
             override fun onSingleClick(event: MotionEvent?) = handleController()
         })
-        fastForwardCard.setOnTouchListener { v, event ->
+        playerView.findViewById<View>(R.id.exo_forward_area).setOnTouchListener { v, event ->
             fastForwardDetector.onTouchEvent(event)
             v.performClick()
             true
@@ -372,7 +389,10 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             model.setMedia(media)
             model.epChanged.postValue(false)
             model.setEpisode(media.anime!!.episodes!![media.anime!!.selectedEpisode!!]!!)
-            model.onEpisodeClick(media, media.anime!!.selectedEpisode!!,this.supportFragmentManager,false)
+            model.onEpisodeClick(media, media.anime!!.selectedEpisode!!,this.supportFragmentManager,
+                launch = false,
+                cancellable = false
+            )
         }
         playerView.findViewById<ImageButton>(R.id.exo_next_ep).setOnClickListener {
             if(episodeArr.size>currentEpisodeIndex+1) {
@@ -408,18 +428,28 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         }
 
         //FullScreen
-        isFullscreen = loadData("${media.id}_fullscreen",this)?:isFullscreen
-        playerView.resizeMode = if(isFullscreen) AspectRatioFrameLayout.RESIZE_MODE_ZOOM else AspectRatioFrameLayout.RESIZE_MODE_FIT
+        isFullscreen = loadData("${media.id}_fullscreenInt",this)?:isFullscreen
+        playerView.resizeMode = when(isFullscreen) {
+            0 -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+            1 -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+            2 -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+            else -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+        }
             exoScreen.setOnClickListener {
-            if(!isFullscreen) {
-                playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-                isFullscreen = true
-            }
-            else {
-                playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                isFullscreen = false
-            }
-            saveData("${media.id}_fullscreen",isFullscreen,this)
+                if(isFullscreen<2) isFullscreen += 1 else isFullscreen = 0
+                playerView.resizeMode = when(isFullscreen) {
+                    0 -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+                    1 -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                    2 -> AspectRatioFrameLayout.RESIZE_MODE_FILL
+                    else -> AspectRatioFrameLayout.RESIZE_MODE_FIT
+                }
+                toastString(when(isFullscreen) {
+                    0 -> "Original"
+                    1 -> "Zoom"
+                    2 -> "Stretch"
+                    else -> "Original"
+                })
+                saveData("${media.id}_fullscreenInt",isFullscreen,this)
         }
 
         //Speed
@@ -442,10 +472,10 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         }
         speedDialog.setOnCancelListener { hideSystemBars() }
 
-        dontAskProgressDialog = loadData<Boolean>("${media.id}_progress") != true
+        dontAskProgressDialog = loadData<Boolean>("${media.id}_progressDialog") != true
         progressDialog = if(dontAskProgressDialog && Anilist.userid!=null) AlertDialog.Builder(this, R.style.DialogTheme).setTitle("Update progress on anilist?").apply {
             setMultiChoiceItems(arrayOf("Don't ask again"), booleanArrayOf(false)) { _, _, isChecked ->
-                if (isChecked) saveData("${media.id}_progress", isChecked)
+                if (isChecked) saveData("${media.id}_progressDialog", isChecked)
                 dontAskProgressDialog = isChecked
             }
             setOnCancelListener { hideSystemBars() }
@@ -486,7 +516,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                 .build()
         else null
 
-        val url = if(stream.quality.size>=episode.selectedQuality) stream.quality[episode.selectedQuality] else return
+        val url = if(episode.selectedQuality<stream.quality.size) stream.quality[episode.selectedQuality] else return
         val but = playerView.findViewById<ImageButton>(R.id.exo_download)
         if(url.quality!="Multi Quality") {
             but.visibility = View.VISIBLE
@@ -504,7 +534,10 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             changingServer = true
             media.selected!!.stream = null
             model.saveSelected(media.id,media.selected!!,this)
-            model.onEpisodeClick(media,episode.number,this.supportFragmentManager,false)
+            model.onEpisodeClick(media,episode.number,this.supportFragmentManager,
+                launch = false,
+                cancellable = true
+            )
         }
 
         //Quality Track
@@ -564,7 +597,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             outState.putInt(STATE_RESUME_WINDOW, exoPlayer.currentMediaItemIndex)
             outState.putLong(STATE_RESUME_POSITION, exoPlayer.currentPosition)
         }
-        outState.putBoolean(STATE_PLAYER_FULLSCREEN, isFullscreen)
+        outState.putInt(STATE_PLAYER_FULLSCREEN, isFullscreen)
         outState.putBoolean(STATE_PLAYER_PLAYING, isPlayerPlaying)
         super.onSaveInstanceState(outState)
     }
@@ -608,11 +641,15 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         playerView.keepScreenOn = isPlaying
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onRenderedFirstFrame() {
         super.onRenderedFirstFrame()
         saveData("${media.id}_${media.anime!!.selectedEpisode}_max",exoPlayer.duration,this)
-        saveData("maxHeight",(exoPlayer.videoFormat?:return).height)
-        saveData("maxWidth",(exoPlayer.videoFormat?:return).width)
+        val height = (exoPlayer.videoFormat?:return).height
+        val width = (exoPlayer.videoFormat?:return).width
+        saveData("maxHeight",height)
+        saveData("maxWidth",width)
+        playerView.findViewById<TextView>(R.id.exo_video_details).text = "$width x $height"
     }
 
     override fun onTracksInfoChanged(tracksInfo: TracksInfo) {
@@ -638,17 +675,20 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
                 if (dontAskProgressDialog) {
                     progressDialog?.setCancelable(false)
                         ?.setPositiveButton("Yes") { dialog, _ ->
+                            saveData("${media.id}_save_progress",true)
                             updateAnilistProgress(media.id, media.anime!!.selectedEpisode!!)
                             dialog.dismiss()
                             super.onBackPressed()
                         }
                         ?.setNegativeButton("No") { dialog, _ ->
+                            saveData("${media.id}_save_progress",false)
                             dialog.dismiss()
                             super.onBackPressed()
                         }
                     progressDialog?.show()
                 } else {
-                    updateAnilistProgress(media.id, media.anime!!.selectedEpisode!!)
+                    if(loadData<Boolean>("${media.id}_save_progress")==true)
+                        updateAnilistProgress(media.id, media.anime!!.selectedEpisode!!)
                     super.onBackPressed()
                 }
             } else {

@@ -22,11 +22,9 @@
         tools:ignore="AllowBackup">
         <activity
             android:name=".media.StudioActivity"
-            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="false" />
         <activity
             android:name=".user.ListActivity"
-            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="false" />
         <activity
             android:name=".manga.MangaReaderActivity"
@@ -34,23 +32,18 @@
             android:exported="false" />
         <activity
             android:name=".GenreActivity"
-            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="true" />
         <activity
             android:name=".SearchActivity"
-            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="true" />
         <activity
             android:name=".media.MediaDetailsActivity"
-            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="true" />
         <activity
             android:name=".media.CharacterDetailsActivity"
-            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="true" />
         <activity
             android:name=".NoInternet"
-            android:configChanges="orientation|screenSize|layoutDirection"
             android:exported="true" />
         <activity
             android:name=".anime.ExoplayerView"

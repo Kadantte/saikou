@@ -42,8 +42,8 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
         arguments?.let {
             selected = it.getString("server")
             launch = it.getBoolean("launch",true)
+            isCancelable = it.getBoolean("cancellable",true)
         }
-        if(!launch!!) isCancelable = false
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -162,9 +162,10 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
 
     private inner class StreamAdapter : RecyclerView.Adapter<StreamAdapter.StreamViewHolder>() {
         val links = episode.streamLinks
+        val keys = links.keys.toList()
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StreamViewHolder = StreamViewHolder(ItemStreamBinding.inflate(LayoutInflater.from(parent.context), parent, false))
         override fun onBindViewHolder(holder: StreamViewHolder, position: Int) {
-            val server = links[links.keys.toList()[position]]!!.server
+            val server = links[keys[position]]!!.server
             holder.binding.streamName.text = server
             holder.binding.streamRecyclerView.layoutManager = LinearLayoutManager(requireContext())
             holder.binding.streamRecyclerView.adapter = QualityAdapter(server)
@@ -218,11 +219,12 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
     }
 
     companion object {
-        fun newInstance(server:String?=null,la:Boolean=true): SelectorDialogFragment =
+        fun newInstance(server:String?=null,la:Boolean=true,ca:Boolean=true): SelectorDialogFragment =
             SelectorDialogFragment().apply {
                 arguments = Bundle().apply {
                     putString("server",server)
                     putBoolean("launch",la)
+                    putBoolean("cancellable",ca)
                 }
             }
     }

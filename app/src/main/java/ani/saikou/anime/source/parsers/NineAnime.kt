@@ -91,7 +91,9 @@ class NineAnime(private val dub:Boolean=false, override val name: String = "9Ani
             val a = string.replace("$!","").split(" | ")
             url = URLEncoder.encode(a[0], "utf-8")+a[1]
         }
+
         val responseArray = arrayListOf<Source>()
+        try{
         Jsoup.connect("${host[0]}filter?keyword=$url").get()
             .select("#main-wrapper .film_list-wrap > .flw-item .film-poster").forEach{
                 val link = it.select("a").attr("href")
@@ -99,6 +101,9 @@ class NineAnime(private val dub:Boolean=false, override val name: String = "9Ani
                 val cover = it.select("img").attr("data-src")
                 responseArray.add(Source(link,title,cover))
             }
+        }catch (e:Exception){
+            toastString(e.toString())
+        }
         return responseArray
     }
 

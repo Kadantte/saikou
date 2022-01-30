@@ -22,6 +22,8 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewAnimationUtils
+import android.view.animation.Animation
+import android.view.animation.ScaleAnimation
 import android.widget.AutoCompleteTextView
 import android.widget.DatePicker
 import android.widget.ImageView
@@ -254,6 +256,14 @@ class ZoomOutPageTransformer(private val bottom:Boolean=false) : ViewPager2.Page
         }
     }
 }
+
+fun setAnimation(context: Context,viewToAnimate: View) {
+    val anim = ScaleAnimation(0.0f, 1.0f, 0.0f, 1.0f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
+    anim.duration = 150
+    anim.setInterpolator(context,R.anim.over_shoot)
+    viewToAnimate.startAnimation(anim)
+}
+
 
 class FadingEdgeRecyclerView : RecyclerView {
 

@@ -50,6 +50,8 @@ data class Media(
     var nameMAL:String?=null,
     var shareLink:String?=null,
     var selected: Selected?=null,
+
+    var cameFromContinue:Boolean=false
 ) : Serializable{
     fun getMainName() = if (name!="null") name else nameRomaji
     fun getMangaName() = if (countryOfOrigin!="JP") getMainName() else nameRomaji

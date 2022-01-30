@@ -107,7 +107,6 @@ class HomeFragment : Fragment() {
         }
         //List Images
         model.getListImages().observe(viewLifecycleOwner) {
-            println("Invoked observer")
             if (it.isNotEmpty()) {
                 loadImage(it[0] ?: "https://bit.ly/31bsIHq", binding.homeAnimeListImage)
                 loadImage(it[1] ?: "https://bit.ly/2ZGfcuG", binding.homeMangaListImage)

@@ -72,7 +72,7 @@ class Gogo(private val dub:Boolean=false, override val name: String = "gogoanime
     }
 
     override fun getStreams(episode: Episode): Episode {
-//        try {
+        try {
         episode.streamLinks = runBlocking {
             val linkForVideos = mutableMapOf<String,Episode.StreamLinks?>()
             withContext(Dispatchers.Default) {
@@ -88,9 +88,9 @@ class Gogo(private val dub:Boolean=false, override val name: String = "gogoanime
             }
             return@runBlocking (linkForVideos)
         }
-//        }catch (e:Exception){
-//            toastString("$e")
-//        }
+        }catch (e:Exception){
+            toastString("$e")
+        }
         return episode
     }
 

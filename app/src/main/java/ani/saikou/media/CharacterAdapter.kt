@@ -12,6 +12,7 @@ import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.databinding.ItemCharacterBinding
 import ani.saikou.loadImage
+import ani.saikou.setAnimation
 import java.io.Serializable
 
 class CharacterAdapter(
@@ -26,6 +27,7 @@ class CharacterAdapter(
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: CharacterViewHolder, position: Int) {
         val binding = holder.binding
+        setAnimation(activity,holder.binding.root)
         val character = characterList[position]
         binding.itemCompactRelation.text = character.role+"  "
         loadImage(character.image,binding.itemCompactImage)

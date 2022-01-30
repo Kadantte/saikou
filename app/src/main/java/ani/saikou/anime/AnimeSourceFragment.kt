@@ -244,7 +244,7 @@ class AnimeSourceFragment : Fragment() {
                     }
                 }
             }
-            binding.animeEpisodesRecycler.adapter = episodeAdapter(media, this, media.selected!!.recyclerStyle, media.selected!!.recyclerReversed, start, end)
+//            binding.animeEpisodesRecycler.adapter = episodeAdapter(media, this, media.selected!!.recyclerStyle, media.selected!!.recyclerReversed, start, end)
             val gridCount = when (media.selected!!.recyclerStyle){
                 0->1
                 1->(screenWidth/155f).toInt()

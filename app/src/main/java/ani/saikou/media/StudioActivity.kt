@@ -61,7 +61,7 @@ class StudioActivity : AppCompatActivity() {
             if (it) {
                 scope.launch {
                     withContext(Dispatchers.IO){ model.loadStudio(studio) }
-                    Refresh.activity[this.hashCode()]!!.postValue(false)
+                    live.postValue(false)
                 }
             }
         }

@@ -23,7 +23,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import ani.saikou.*
 import ani.saikou.anilist.Anilist
-import ani.saikou.anime.AnimeSourceFragment
+import ani.saikou.anime.AnimeWatchFragment
 import ani.saikou.databinding.ActivityMediaBinding
 import ani.saikou.manga.MangaSourceFragment
 import com.google.android.material.appbar.AppBarLayout
@@ -145,16 +145,20 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         tabLayout.visibility = View.VISIBLE
 
         tabLayout.setOnItemSelectedListener { item ->
+            val sel = loadData<Selected>(media.id.toString())?:media.selected!!
             selectFromID(item.itemId)
             viewPager.setCurrentItem(selected,false)
-            media.selected!!.window = selected
-            saveData(media.id.toString(),media.selected!!)
+            sel.window = selected
+            saveData(media.id.toString(),sel)
             true
         }
+
 
         tabLayout.selectedItemId = idFromSelect()
         viewPager.setCurrentItem(selected,false)
 
+        model.continueMedia = media.cameFromContinue
+        if(media.cameFromContinue) selected = 1
         scope.launch {
             withContext(Dispatchers.IO){ model.loadMedia(media) }
         }
@@ -162,7 +166,6 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         val live = Refresh.activity.getOrPut(this.hashCode()){ MutableLiveData(false) }
         live.observe(this){
             if(it){
-                println("Media Refresh Invoked")
                 scope.launch {
                     withContext(Dispatchers.IO){ model.loadMedia(media) }
                     live.postValue(false)
@@ -206,7 +209,7 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
             if (anime){
                 when (position) {
                     0 -> return MediaInfoFragment()
-                    1 -> return AnimeSourceFragment()
+                    1 -> return AnimeWatchFragment()
                 }
             }
             else{

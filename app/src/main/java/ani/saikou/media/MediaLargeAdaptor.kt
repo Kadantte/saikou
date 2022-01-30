@@ -16,6 +16,7 @@ import androidx.viewpager2.widget.ViewPager2
 import ani.saikou.R
 import ani.saikou.databinding.ItemMediaLargeBinding
 import ani.saikou.loadImage
+import ani.saikou.setAnimation
 import java.io.Serializable
 
 class MediaLargeAdaptor(
@@ -30,6 +31,7 @@ class MediaLargeAdaptor(
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: MediaViewHolder, position: Int) {
         val b = holder.binding
+        setAnimation(activity,holder.binding.root)
         val media = mediaList[position]
         loadImage(media.cover,b.itemCompactImage)
         loadImage(media.banner?:media.cover,b.itemCompactBanner)
