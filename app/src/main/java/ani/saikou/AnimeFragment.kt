@@ -227,6 +227,7 @@ class AnimeFragment : Fragment() {
     }
 
     override fun onResume() {
+        Refresh.activity[this.hashCode()]!!.postValue(true)
         super.onResume()
         trendHandler?.postDelayed(trendRun,4000)
     }

@@ -1,9 +1,6 @@
 package ani.saikou.anime.source
 
-import ani.saikou.anime.source.parsers.Gogo
-import ani.saikou.anime.source.parsers.NineAnime
-import ani.saikou.anime.source.parsers.Twist
-import ani.saikou.anime.source.parsers.Zoro
+import ani.saikou.anime.source.parsers.*
 
 object AnimeSources {
     val Names = arrayListOf(
@@ -13,6 +10,7 @@ object AnimeSources {
         "9ANIME-DUB",
         "ZORO",
         "TWIST",
+        "TENSHI",
     )
 
     private val animeParsers:MutableMap<Int,AnimeParser> = mutableMapOf()
@@ -24,6 +22,7 @@ object AnimeSources {
             3 -> animeParsers.getOrPut(i) { NineAnime(true) }
             4 -> animeParsers.getOrPut(i) { Zoro() }
             5 -> animeParsers.getOrPut(i) { Twist() }
+            6 -> animeParsers.getOrPut(i) { Tenshi() }
             else -> null
         }
         return a

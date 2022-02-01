@@ -7,13 +7,19 @@ import ani.saikou.manga.source.MangaParser
 import ani.saikou.media.Media
 import ani.saikou.media.Source
 import ani.saikou.saveData
+import ani.saikou.toastString
 import org.jsoup.Jsoup
+import java.net.URLEncoder
 
 class MangaPill(override val name: String="mangapill.com") :MangaParser() {
     override fun getChapter(chapter: MangaChapter): MangaChapter {
         chapter.images = arrayListOf()
-        Jsoup.connect(chapter.link!!).get().select("img.js-page").forEach {
-            chapter.images!!.add(it.attr("data-src"))
+        try {
+            Jsoup.connect(chapter.link!!).get().select("img.js-page").forEach {
+                chapter.images!!.add(it.attr("data-src"))
+            }
+        }catch (e:Exception){
+            toastString(e.toString())
         }
         return chapter
     }
@@ -54,13 +60,17 @@ class MangaPill(override val name: String="mangapill.com") :MangaParser() {
 
     override fun search(string: String): ArrayList<Source> {
         val response = arrayListOf<Source>()
-        Jsoup.connect("https://mangapill.com/quick-search?q=$string").get().select(".bg-card").forEach{
+        try{
+        Jsoup.connect("https://mangapill.com/quick-search?q=${URLEncoder.encode(string,"utf-8")}").get().select(".bg-card").forEach{
             val text2 = it.select(".text-sm").text()
             response.add(Source(
                 link = it.attr("abs:href"),
                 name = it.select(".flex .flex-col").text().replace(text2,"").trim(),
                 cover = it.select("img").attr("src")
             ))
+        }
+        }catch (e:Exception){
+            toastString(e.toString())
         }
         return response
     }

@@ -248,8 +248,8 @@ class AnilistQueries{
         val map = mutableMapOf<Int, Media>()
         val statuses = arrayOf("CURRENT","REPEATING")
         fun repeat(status:String) {
-            val response = executeQuery(""" { MediaListCollection(userId: ${Anilist.userid}, type: $type, status: $status) { lists { entries { progress score(format:POINT_100) status media { id status chapters episodes nextAiringEpisode {episode} meanScore isFavourite bannerImage coverImage{large} title { english romaji userPreferred } } } } } } """)
-            val data = if(response?.get("data")!=JsonNull) response?.get("data") else null
+            val response = executeQuery(""" { MediaListCollection(userId: ${Anilist.userid}, type: $type, status: $status , sort: UPDATED_TIME ) { lists { entries { progress score(format:POINT_100) status media { id status chapters episodes nextAiringEpisode {episode} meanScore isFavourite bannerImage coverImage{large} title { english romaji userPreferred } } } } } } """)
+            val data = if(response?.get("data")!=null && response["data"] !=JsonNull) response["data"] else null
             val list = data?.jsonObject?.get("MediaListCollection")?.jsonObject?.get("lists")?.jsonArray
             if (list != null && list.isNotEmpty()) {
                 list[0].jsonObject["entries"]!!.jsonArray.reversed().forEach {
@@ -338,10 +338,16 @@ class AnilistQueries{
 
     private fun bannerImage(type: String): String? {
         val response = executeQuery("""{ MediaListCollection(userId: ${Anilist.userid}, type: $type, sort:[SCORE_DESC,UPDATED_TIME_DESC],chunk:1,perChunk:1) { lists { entries{ media { bannerImage } } } } } """)
-        val list = if (response!=null) response["data"]?.jsonObject?.get("MediaListCollection")?.jsonObject?.get("lists")?.jsonArray else null
-        if (list!=null && list.isNotEmpty()){
-            val a = list[0].jsonObject["entries"]?.jsonArray?.get(0)?.jsonObject?.get("media")?.jsonObject?.get("bannerImage")?.toString()?.trim('"')
-            return if(a!=null && a!="null") a else null
+        val data = if (response!=null) response["data"] else null
+        if(data!=null && data!=JsonNull) {
+            val list = data.jsonObject["MediaListCollection"]?.jsonObject?.get("lists")?.jsonArray
+            if (list != null && list.isNotEmpty()) {
+                val a =
+                    list[0].jsonObject["entries"]?.jsonArray?.get(0)?.jsonObject?.get("media")?.jsonObject?.get(
+                        "bannerImage"
+                    )?.toString()?.trim('"')
+                return if (a != null && a != "null") a else null
+            }
         }
         return null
     }

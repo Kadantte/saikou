@@ -20,8 +20,8 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 fun episodeAdapter(media:Media,fragment: AnimeWatchFragment,screenWidth:Float,style:Int,reversed:Boolean=false,start:Int=0,e:Int?=null): RecyclerView.Adapter<*> {
-    val end = e?:(media.anime!!.episodes!!.size-1)
-    var arr = media.anime!!.episodes!!.values.toList().slice(start..end)
+    val end = if(e!=null && e<media.anime!!.episodes!!.size) e else null
+    var arr = media.anime!!.episodes!!.values.toList().slice(start..(end?:(media.anime.episodes!!.size-1)))
     arr = if (reversed) arr.reversed() else arr
 
     val adapters: ArrayList<RecyclerView.Adapter<out RecyclerView.ViewHolder>> = arrayListOf()

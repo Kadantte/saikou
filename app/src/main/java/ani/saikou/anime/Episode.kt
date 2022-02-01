@@ -24,7 +24,7 @@ data class Episode (
     data class StreamLinks(
         val server: String,
         val quality: List<Quality>,
-        val referer:String?,
+        val headers: MutableMap<String,String>?=null,
         val subtitles : MutableMap<String,String>?=null
     ):Serializable
 }

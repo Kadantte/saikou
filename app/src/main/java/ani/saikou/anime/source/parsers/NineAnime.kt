@@ -34,7 +34,7 @@ class NineAnime(private val dub:Boolean=false, override val name: String = "9Ani
                     val m3u8Link = Json.decodeFromString<JsonObject>(Jsoup.connect("${embedLink.replace("/e/", "/info/")}&skey=$token")
                         .header("referer", host[0])
                         .ignoreContentType(true).get().body().text())["media"]!!.jsonObject["sources"]!!.jsonArray[0].jsonObject["file"].toString().trim('"')
-                    streams[name] = (Episode.StreamLinks(name,listOf(Episode.Quality(m3u8Link,"Multi Quality",null)),"https://vidstream.pro/"))
+                    streams[name] = (Episode.StreamLinks(name,listOf(Episode.Quality(m3u8Link,"Multi Quality",null)), mutableMapOf("referer" to "https://vidstream.pro/")))
             }
         }
         }catch (e:Exception){ toastString(e.toString()) }
@@ -55,7 +55,7 @@ class NineAnime(private val dub:Boolean=false, override val name: String = "9Ani
             val m3u8Link = Json.decodeFromString<JsonObject>(Jsoup.connect("${embedLink.replace("/e/", "/info/")}&skey=$token")
                 .header("referer", host[0])
                 .ignoreContentType(true).get().body().text())["media"]!!.jsonObject["sources"]!!.jsonArray[0].jsonObject["file"].toString().trim('"')
-            streams[name] = (Episode.StreamLinks(name,listOf(Episode.Quality(m3u8Link,"Multi Quality",null)),"https://vidstream.pro/"))
+            streams[name] = (Episode.StreamLinks(name,listOf(Episode.Quality(m3u8Link,"Multi Quality",null)), mutableMapOf("referer" to "https://vidstream.pro/")))
         }
         }catch (e:Exception){ toastString(e.toString()) }
         episode.streamLinks = streams

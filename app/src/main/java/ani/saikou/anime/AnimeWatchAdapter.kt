@@ -56,6 +56,7 @@ class AnimeWatchAdapter(private val media: Media, private val fragment: AnimeWat
         binding.animeSource.setText(sources[media.selected!!.source])
         AnimeSources[media.selected!!.source]!!.live.observe(fragment.viewLifecycleOwner){ binding.animeSourceTitle.text = it }
         binding.animeSource.setAdapter(ArrayAdapter(fragment.requireContext(), R.layout.item_dropdown, sources))
+        binding.animeSourceTitle.isSelected = true
         binding.animeSource.setOnItemClickListener { _, _, i, _ ->
             binding.animeSourceTitle.text = ""
             fragment.onSourceChange(i).observe(fragment.viewLifecycleOwner){ binding.animeSourceTitle.text = it }

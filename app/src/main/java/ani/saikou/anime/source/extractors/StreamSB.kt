@@ -23,7 +23,7 @@ class StreamSB: Extractor(){
             Episode.StreamLinks(
                 name,
                 listOf(Episode.Quality(m3u8, "Multi Quality", null)),
-                url
+                mutableMapOf("referer" to url)
             )
         }catch (e:Exception){
             toastString(e.toString())

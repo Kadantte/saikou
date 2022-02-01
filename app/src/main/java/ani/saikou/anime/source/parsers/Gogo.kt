@@ -130,6 +130,7 @@ class Gogo(private val dub:Boolean=false, override val name: String = "gogoanime
         // make search and get all links
         logger("Searching for : $string")
         val responseArray = arrayListOf<Source>()
+        try{
         Jsoup.connect("${host[0]}/search.html?keyword=$string").get().body()
             .select(".last_episodes > ul > li div.img > a").forEach {
                 val link = it.attr("href").toString().replace("/category/", "")
@@ -137,6 +138,9 @@ class Gogo(private val dub:Boolean=false, override val name: String = "gogoanime
                 val cover = it.select("img").attr("src")
                 responseArray.add(Source(link,title,cover))
             }
+        }catch (e:Exception){
+            toastString(e.toString())
+        }
         return responseArray
     }
 

@@ -1,6 +1,7 @@
 package ani.saikou
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -8,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.doOnAttach
 import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.Fragment
@@ -33,13 +35,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         binding.root.doOnAttach {
         initActivity(this, binding.root)
 
-        binding.navbarContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+            binding.navbarContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> {
             bottomMargin = navBarHeight
         }
 

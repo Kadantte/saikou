@@ -53,6 +53,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 class ExoplayerView : AppCompatActivity(), Player.Listener {
@@ -107,7 +108,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             val displayCutout =window.decorView.rootWindowInsets.displayCutout
             if (displayCutout != null) {
                 if (displayCutout.boundingRects.size>0) {
-                    val notchHeight = displayCutout.boundingRects[0].height()
+                    val notchHeight = min(displayCutout.boundingRects[0].width(),displayCutout.boundingRects[0].height())
                     exoBrightnessCont.updateLayoutParams<ViewGroup.MarginLayoutParams> { marginEnd +=notchHeight }
                     exoVolumeCont.updateLayoutParams<ViewGroup.MarginLayoutParams> { marginStart +=notchHeight }
                 }
@@ -486,6 +487,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
     private fun initPlayer(episode: Episode){
         //Title
         episodeTitle.text = "Episode ${episode.number}${if(episode.title!="" && episode.title!=null && episode.title!="null") " : "+episode.title else ""}${if(episode.filler) "\n[Filler]" else ""}"
+        episodeTitle.isSelected = true
         saveData("${media.id}_current_ep",media.anime!!.selectedEpisode!!,this)
 
         val set = loadData<MutableSet<Int>>("continue_ANIME",this)?: mutableSetOf()
@@ -499,8 +501,11 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         val dataSourceFactory = DataSource.Factory {
             val dataSource: HttpDataSource = DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true).createDataSource()
             dataSource.setRequestProperty("User-Agent","Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36")
-            if (stream.referer!=null)
-                dataSource.setRequestProperty("referer", stream.referer)
+            if(stream.headers!=null) {
+                stream.headers.forEach{
+                    dataSource.setRequestProperty(it.key,it.value)
+                }
+            }
             dataSource
         }
         cacheFactory = CacheDataSource.Factory().apply {

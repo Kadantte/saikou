@@ -91,6 +91,7 @@ class AnimeWatchFragment : Fragment() {
                                 (divisions < 50) -> 50
                                 else -> 100
                             }
+                            chipAdapter = null
                             if (total>limit) {
                                 val arr = media.anime!!.episodes!!.keys.toTypedArray()
                                 val stored = ceil((total).toDouble() / limit).toInt()
@@ -128,9 +129,6 @@ class AnimeWatchFragment : Fragment() {
         reload()
         media.selected!!.source = i
         model.saveSelected(media.id, media.selected!!, requireActivity())
-        AnimeSources[i]!!.live.observe(viewLifecycleOwner){
-            println(it)
-        }
         lifecycleScope.launch(Dispatchers.IO) { model.loadEpisodes(media, i) }
         return AnimeSources[i]!!.live
     }

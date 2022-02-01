@@ -6,9 +6,8 @@ import ani.saikou.media.Media
 import ani.saikou.toastString
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.*
-import org.jsoup.Connection.*
+import org.jsoup.Connection.Method
 import org.jsoup.Jsoup
-import java.lang.Exception
 
 object Kitsu {
     private fun getKitsuData(query:String): String {
@@ -40,7 +39,7 @@ object Kitsu {
                         logger("Kitsu : Not Empty",print)
                         node.jsonArray.forEach { j->
                             logger(j.jsonObject["season"].toString().trim('"'),print)
-                            if(j.jsonObject["season"].toString().trim('"')==media.anime!!.season){
+                            if(j.jsonObject["season"].toString().trim('"')==media.anime!!.season && j.jsonObject["startDate"].toString().trim('"').split('-')[0]==media.anime.seasonYear.toString()){
                                 val episodes : JsonElement? = j.jsonObject["episodes"]!!.jsonObject["nodes"]
                                 logger("Kitsu : episodes=$episodes",print)
                                 arr = mutableMapOf()

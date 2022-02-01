@@ -374,15 +374,14 @@ fun loadImage(url:String?,imageView: ImageView,referer:String?=null){
     }
 }
 
-fun getSize(url: String,referer: String=""):Double?{
-    return try {
-        Jsoup.connect(url)
-            .ignoreContentType(true)
-            .ignoreHttpErrors(true).timeout(750)
-            .followRedirects(true)
-            .header("referer",referer)
-            .method(Connection.Method.HEAD)
-            .execute().header("Content-Length")?.toDouble()?.div(1048576)
+fun getSize(url: String,headers:MutableMap<String,String>?=null):Double?{
+    return try { Jsoup.connect(url)
+        .ignoreContentType(true)
+        .ignoreHttpErrors(true).timeout(1000)
+        .followRedirects(true)
+        .headers(headers?: mutableMapOf())
+        .method(Connection.Method.HEAD)
+        .execute().header("Content-Length")?.toDouble()?.div(1048576)
     } catch (e:Exception){
 //        logger(e)
         null
@@ -484,8 +483,10 @@ fun download(activity: Activity, episode:Episode, animeTitle:String){
     val stream = episode.streamLinks[episode.selectedStream]!!
     val uri = Uri.parse(stream.quality[episode.selectedQuality].url)
     val request: DownloadManager.Request = DownloadManager.Request(uri)
-    if(stream.referer!=null) {
-        request.addRequestHeader("referer",stream.referer)
+    if(stream.headers!=null) {
+        stream.headers.forEach{
+            request.addRequestHeader(it.key,it.value)
+        }
     }
     try {
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
@@ -514,7 +515,7 @@ fun updateAnilistProgress(id:Int,number:String){
     if(Anilist.userid!=null) {
         CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
             val a = number.toFloatOrNull()?.roundToInt()
-            Anilist.mutation.editList(id, a)
+            Anilist.mutation.editList(id, a, status = "CURRENT")
             toastString("Setting progress to $a")
             Refresh.all()
         }

@@ -202,4 +202,9 @@ class HomeFragment : Fragment() {
             }
         }
     }
+
+    override fun onResume() {
+        Refresh.activity[1]!!.postValue(true)
+        super.onResume()
+    }
 }

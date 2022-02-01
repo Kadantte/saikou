@@ -7,16 +7,16 @@ import ani.saikou.anime.source.AnimeParser
 import ani.saikou.media.Media
 import ani.saikou.media.Source
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.jsonObject
 import org.jsoup.Jsoup
+import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
+import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import java.nio.charset.StandardCharsets
-import java.util.*
-import kotlin.Exception
-import kotlin.collections.ArrayList
 
 class Twist(override val name: String="twist.moe") :AnimeParser() {
 
@@ -78,7 +78,7 @@ class Twist(override val name: String="twist.moe") :AnimeParser() {
                         size = 0.0
                     )
                 ),
-                "https://twist.moe/"
+                mutableMapOf("referer" to "https://twist.moe/")
             )
         )}catch (e:Exception){
             toastString(e.toString())

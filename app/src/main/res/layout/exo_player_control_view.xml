@@ -275,6 +275,7 @@
                     android:singleLine="false"
                     android:textAllCaps="false"
                     android:textColor="@color/bg_white"
+                    android:visibility="gone"
                     tools:text="@string/anime" />
 
             </LinearLayout>

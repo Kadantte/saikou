@@ -4,6 +4,9 @@ import ani.saikou.anime.Episode
 import ani.saikou.anime.source.Extractor
 import ani.saikou.getSize
 import ani.saikou.toastString
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -18,14 +21,20 @@ class FPlayer(private val getSize:Boolean): Extractor() {
         try{
         val jsonResponse = Json.decodeFromString<JsonObject>(Jsoup.connect(apiLink).ignoreContentType(true).post().body().text())
         if(jsonResponse["success"].toString() == "true") {
-            jsonResponse.jsonObject["data"]!!.jsonArray.forEach {
-                tempQuality.add(
-                    Episode.Quality(
-                        it.jsonObject["file"].toString().trim('"'),
-                        it.jsonObject["label"].toString().trim('"'),
-                        if(getSize) getSize(it.jsonObject["file"].toString().trim('"')) else null
-                    )
-                )
+            val a = arrayListOf<Deferred<*>>()
+            runBlocking {
+                jsonResponse.jsonObject["data"]!!.jsonArray.forEach {
+                    a.add(async {
+                        println("it")
+                        tempQuality.add(
+                            Episode.Quality(
+                                it.jsonObject["file"].toString().trim('"'),
+                                it.jsonObject["label"].toString().trim('"'),
+                                if(getSize) getSize(it.jsonObject["file"].toString().trim('"')) else null
+                            )
+                        )
+                    })
+                }
             }
         }
         }catch (e:Exception){ toastString(e.toString()) }

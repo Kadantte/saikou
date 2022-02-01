@@ -165,10 +165,12 @@ class SelectorDialogFragment : BottomSheetDialogFragment(){
         val keys = links.keys.toList()
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StreamViewHolder = StreamViewHolder(ItemStreamBinding.inflate(LayoutInflater.from(parent.context), parent, false))
         override fun onBindViewHolder(holder: StreamViewHolder, position: Int) {
-            val server = links[keys[position]]!!.server
-            holder.binding.streamName.text = server
-            holder.binding.streamRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-            holder.binding.streamRecyclerView.adapter = QualityAdapter(server)
+            val server = if(position<keys.size) links[keys[position]]!!.server else null
+            if(server!=null) {
+                holder.binding.streamName.text = server
+                holder.binding.streamRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+                holder.binding.streamRecyclerView.adapter = QualityAdapter(server)
+            }
         }
         override fun getItemCount(): Int = links.size
         private inner class StreamViewHolder(val binding: ItemStreamBinding) : RecyclerView.ViewHolder(binding.root)
