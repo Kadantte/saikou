@@ -1,34 +1,45 @@
 # **Saikou**
+<p align="center">
+   <a href="https://discord.gg/5TXAWTU5qr"><img src="https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white"></a>
+   <a href="https://telegram.me/saikou_app" ><img src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white"></a> 
+   <a href="https://github.com/saikou-app/saikou/releases"><img src="https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white"></a>
+</p>
 
-Saikou (最高; Sai-kō) literally means the best in japanese. Well, we would like to say this is the best open source app for anime and manga on Android, but hey, Try it out yourself & judge!
-
-Saikou is crafted based on simplistic yet out-of-state elegancy. Inspired from an app called AnymeX , Saikou is an [Anilist](https://anilist.co/) only client, which also lets you stream & download Anime & Manga.  
-
-**🌟STAR THIS REPOSITORY TO SUPPORT THE DEVELOPER AND ENCOURAGE THE DEVELOPMENT OF THE APPLICATION!🌟**
+Saikou is crafted based on simplistic yet out-of-state elegancy. It is an [Anilist](https://anilist.co/) only client, which also lets you stream & download Anime & Manga. 
+<br><br>
+<i>Saikou (最高; Sai-kō) literally means the best in japanese. Well, we would like to say this is the best open source app for anime and manga on Android, but hey, Try it out yourself & judge!
+</i> 
+<br>
+<br>
 
 > NOTE: Please do not attempt to upload Saikou or any of it's forks upon the Playstore or any other Android appstores on the internet. Doing so may infringe their terms and conditions. This may result to legal action or immediate take-down of the app.
 
+<br>
+
+**🌟STAR THIS REPOSITORY TO SUPPORT THE DEVELOPER AND ENCOURAGE THE DEVELOPMENT OF THE APPLICATION!🌟**
+
 ## APP FEATURES
 
-✓ Easy and functional way to stream anime and read manga, free of charge, with ZERO adverts bombardment.
+✓ Easy and functional way to stream anime and read manga, free with no ads.
 
-✓ Efficient scraping for anime and manga from multiple sources.
+✓ Efficient scraping for anime and manga from multiple sources. (_Spoiler Alert : No webviews were harmed_)
 
   * **Available Anime sources:-** 
 
-| SITE                       | STATUS  |
-|----------------------------|---------|
-| [Gogo](gogoanime.cm)       | WORKING |
-| [9Anime](animekisa.in)     | WORKING |
-| [Tenshi](tenshi.moe)       | WORKING |
-| [Zoro](zoro.to)            | WORKING |
-| [Twist](twist.moe)         | WORKING |
 
+| SITE                       | STATUS  | DOWNLOADS |
+|:--------------------------:|:-------:|:---------:|
+| [Gogo](https://gogoanime.cm)       | WORKING | SOME      |
+| [Zoro](https://zoro.to)            | WORKING | NO        |
+| [9Anime](https://animekisa.in) 😮  | WORKING | NO        |
+| [Tenshi](https://tenshi.moe)       | WORKING | YES       |
+| [Twist](https://twist.moe)         | WORKING | YES       |
 
+ 
   * **Available Manga sources:-** 
  
 | SITE                                  | STATUS  |
-|---------------------------------------|---------|
+|:-------------------------------------:|:-------:|
 | [MangaBuddy](https://mangabuddy.com/) | WORKING |
 | [MangaSee](https://mangasee123.com/)  | WORKING |
 | [MangaPill](https://mangapill.com/)   | WORKING |
@@ -44,17 +55,21 @@ Saikou is crafted based on simplistic yet out-of-state elegancy. Inspired from a
 
 ## WANT TO CONTRIBUTE?
 
-✓ All contributions are welcome, from code to documentation to graphics to design suggestions to bug reports. Please use GitHub to its fullest; contribute Pull Requests, contribute tutorials or other content- whatever you have to offer, we can use it!
+- All contributions are welcome, from code to documentation to graphics to design suggestions to bug reports. Please use GitHub to its fullest; contribute Pull Requests, contribute tutorials or other content- whatever you have to offer, we can use it!
 
-✓ You can come hang out with our awesome community and request new features and report any bugs or issue at our discord server too.
+- You can come hang out with our awesome community and request new features and report any bugs or issue at our discord server too.
 
 ### Official Discord Server
 
-https://discord.gg/5TXAWTU5qr
+<p align="center">
+ <a href="https://discord.gg/5TXAWTU5qr">
+  <img src="https://invidget.switchblade.xyz/5TXAWTU5qr">
+ </a>
+</p>
 
 ### Official Telegram Group
 
-https://t.me/saikou_app
+https://telegram.me/saikou_app
 
 ### VISIT FOR MORE INFORMATION:-
 
@@ -74,5 +89,6 @@ https://saikou-app.github.io/
 
 * If the internet infringement issues are involved, please contact the source website. The developer does not assume any legal responsibility.
 
-##License
-Saikou is licensed under the [GNU General Public License v3.0](https://github.com/saikou-app/saikou/blob/master/LICENSE.md)
+## License
+
+Saikou is licensed under the [GNU General Public License v3.0](LICENSE.md)
