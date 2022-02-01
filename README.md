@@ -1,12 +1,12 @@
 # **Saikou**
 
-Saikou (最高; Sai-kō) is literally the best anime and manga Android app.
+Saikou (最高; Sai-kō) literally means the best in japanese. Well, we would like to say this is the best open source app for anime and manga on Android, but hey, Try it out yourself & judge!
 
-Saikou is crafted based on simplistic yet out-of-state elegancy. Start binging your anime and catching up with the latest chapters of your favourite manga completely ad-free and without paying subscription charges.
+Saikou is crafted based on simplistic yet out-of-state elegancy. Inspired from an app called AnymeX , Saikou is an [Anilist](https://anilist.co/) only client, which also lets you stream & download Anime & Manga.  
 
-NOTE: Please do not attempt to upload Saikou or any of it's forks upon the Playstore or any other Android appstores on the internet. Doing so may infringe their terms and conditions. This may result to legal action or immediate take-down of the app.
+**🌟STAR THIS REPOSITORY TO SUPPORT THE DEVELOPER AND ENCOURAGE THE DEVELOPMENT OF THE APPLICATION!🌟**
 
-STAR THIS REPOSITORY TO SUPPORT THE DEVELOPER AND ENCOURAGE THE DEVELOPMENT OF THE APPLICATION!
+> NOTE: Please do not attempt to upload Saikou or any of it's forks upon the Playstore or any other Android appstores on the internet. Doing so may infringe their terms and conditions. This may result to legal action or immediate take-down of the app.
 
 ## APP FEATURES
 
@@ -16,23 +16,23 @@ STAR THIS REPOSITORY TO SUPPORT THE DEVELOPER AND ENCOURAGE THE DEVELOPMENT OF T
 
   * **Available Anime sources:-** 
 
-     * gogoanime
+| SITE                       | STATUS  |
+|----------------------------|---------|
+| [Gogo](gogoanime.cm)       | WORKING |
+| [9Anime](animekisa.in)     | WORKING |
+| [Tenshi](tenshi.moe)       | WORKING |
+| [Zoro](zoro.to)            | WORKING |
+| [Twist](twist.moe)         | WORKING |
 
-     * 9anime
-
-     * zoro
-
-     * twist
 
   * **Available Manga sources:-** 
-
-     * mangabuddy
-
-     * mangasee
-
-     * mangapill
-
-     * mangadex
+ 
+| SITE                                  | STATUS  |
+|---------------------------------------|---------|
+| [MangaBuddy](https://mangabuddy.com/) | WORKING |
+| [MangaSee](https://mangasee123.com/)  | WORKING |
+| [MangaPill](https://mangapill.com/)   | WORKING |
+| [MangaDex](https://mangadex.org/)     | WORKING |
 
 ✓ View extensive details about anime shows, movies and manga titles. It also features ability to countdown to the next episode of airing anime. (Powered by AniList)
 
@@ -64,7 +64,7 @@ https://saikou-app.github.io/
 
 * Saikou only scrapes links from various websites and makes it easier for users to find anime and manga. 
 
-* Saikou or any of its developer/staff doesn't host any of the contents found inside Saikou. Any and all images and anime/manga information found in the app are taken from various public APIs (AniList). 
+* Saikou or any of its developer/staff doesn't host any of the contents found inside Saikou. Any and all images and anime/manga information found in the app are taken from various public APIs (AniList, MyAnimeList, Kitsu). 
 
 * Furthermore, all of the anime/manga links found in Saikou are taken from various 3rd party anime hosting websites.
 
@@ -73,4 +73,6 @@ https://saikou-app.github.io/
 * By using Saikou, you comply to the fact that the developer of the app is not responsible for any of the contents found in the app; nonetheless they may or may not be from their legitimate sources. 
 
 * If the internet infringement issues are involved, please contact the source website. The developer does not assume any legal responsibility.
+
+#License
 
