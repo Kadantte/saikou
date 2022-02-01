@@ -74,5 +74,5 @@ https://saikou-app.github.io/
 
 * If the internet infringement issues are involved, please contact the source website. The developer does not assume any legal responsibility.
 
-#License
-
+##License
+Saikou is licensed under the [GNU General Public License v3.0](https://github.com/saikou-app/saikou/blob/master/LICENSE.md)
