@@ -154,7 +154,7 @@ class Tenshi(override val name: String="tenshi.moe") : AnimeParser() {
     override fun getSlugEpisodes(slug: String): MutableMap<String, Episode> {
         val responseArray = mutableMapOf<String,Episode>()
         try {
-            (1..Jsoup.connect(slug).cookies(getCookies()).get().select("ul.loop.episode-loop.list > li").count()).forEach{
+            (1..Jsoup.connect(slug).cookies(getCookies()).get().select(".entry-episodes > h2 > span.badge.badge-secondary.align-top").text().toInt()).forEach{
                 responseArray[it.toString()] = Episode(it.toString(), link = "${slug}/$it")
             }
         }catch (e:Exception){

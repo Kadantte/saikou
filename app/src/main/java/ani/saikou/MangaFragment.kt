@@ -27,7 +27,6 @@ import androidx.viewpager2.widget.MarginPageTransformer
 import androidx.viewpager2.widget.ViewPager2
 import ani.saikou.anilist.Anilist
 import ani.saikou.anilist.AnilistMangaViewModel
-import ani.saikou.anilist.AnilistSearch
 import ani.saikou.databinding.FragmentMangaBinding
 import ani.saikou.media.MediaAdaptor
 import ani.saikou.media.MediaLargeAdaptor
@@ -41,6 +40,7 @@ class MangaFragment : Fragment() {
     private val binding get() = _binding!!
     private var trendHandler : Handler?=null
     private lateinit var trendRun : Runnable
+    val model: AnilistMangaViewModel by activityViewModels()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentMangaBinding.inflate(inflater, container, false)
@@ -53,7 +53,7 @@ class MangaFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val scope = viewLifecycleOwner.lifecycleScope
-        val model: AnilistMangaViewModel by activityViewModels()
+
 
         binding.mangaContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> { topMargin = statusBarHeight }
 
@@ -151,8 +151,7 @@ class MangaFragment : Fragment() {
             }
         }
 
-        val popularModel: AnilistSearch by activityViewModels()
-        popularModel.getSearch().observe(viewLifecycleOwner) {
+        model.getPopular().observe(viewLifecycleOwner) {
             if (it != null) {
                 val adapter = MediaLargeAdaptor(it.results, requireActivity())
                 var loading = false
@@ -170,7 +169,7 @@ class MangaFragment : Fragment() {
                                         binding.mangaPopularProgress.visibility = View.VISIBLE
                                         scope.launch {
                                             loading = true
-                                            val get = withContext(Dispatchers.IO){ popularModel.loadNextPage(it) }
+                                            val get = withContext(Dispatchers.IO){ model.loadNextPage(it) }
                                             if (get != null) {
                                                 val a = it.results.size
                                                 it.results.addAll(get.results)
@@ -209,9 +208,10 @@ class MangaFragment : Fragment() {
             if (it) {
                 scope.launch {
                     withContext(Dispatchers.IO){
+                        model.loaded = true
                         model.loadTrending()
                         model.loadTrendingNovel()
-                        popularModel.loadSearch("MANGA", sort = "POPULARITY_DESC")
+                        model.loadPopular("MANGA", sort = "POPULARITY_DESC")
                     }
                     live.postValue(false)
                     _binding?.mangaRefresh?.isRefreshing = false
@@ -226,7 +226,7 @@ class MangaFragment : Fragment() {
     }
 
     override fun onResume() {
-        Refresh.activity[this.hashCode()]!!.postValue(true)
+        if(!model.loaded) Refresh.activity[this.hashCode()]!!.postValue(true)
         super.onResume()
         trendHandler?.postDelayed(trendRun,4000)
     }

@@ -27,7 +27,6 @@ import androidx.viewpager2.widget.MarginPageTransformer
 import androidx.viewpager2.widget.ViewPager2
 import ani.saikou.anilist.Anilist
 import ani.saikou.anilist.AnilistAnimeViewModel
-import ani.saikou.anilist.AnilistSearch
 import ani.saikou.databinding.FragmentAnimeBinding
 import ani.saikou.media.MediaAdaptor
 import ani.saikou.media.MediaLargeAdaptor
@@ -41,6 +40,7 @@ class AnimeFragment : Fragment() {
     private val binding get() = _binding!!
     private var trendHandler :Handler?=null
     private lateinit var trendRun : Runnable
+    val model: AnilistAnimeViewModel by activityViewModels()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentAnimeBinding.inflate(inflater, container, false)
@@ -49,7 +49,7 @@ class AnimeFragment : Fragment() {
 
     override fun onDestroyView() { super.onDestroyView();_binding = null }
 
-    val model: AnilistAnimeViewModel by activityViewModels()
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -151,8 +151,7 @@ class AnimeFragment : Fragment() {
             }
         }
 
-        val popularModel: AnilistSearch by activityViewModels()
-        popularModel.getSearch().observe(viewLifecycleOwner) {
+        model.getPopular().observe(viewLifecycleOwner) {
             if (it != null) {
                 val adapter = MediaLargeAdaptor(it.results, requireActivity())
                 var loading = false
@@ -170,7 +169,7 @@ class AnimeFragment : Fragment() {
                                         binding.animePopularProgress.visibility = View.VISIBLE
                                         scope.launch {
                                             loading = true
-                                            val get = withContext(Dispatchers.IO){ popularModel.loadNextPage(it) }
+                                            val get = withContext(Dispatchers.IO){ model.loadNextPage(it) }
                                             if (get != null) {
                                                 val a = it.results.size
                                                 it.results.addAll(get.results)
@@ -209,9 +208,10 @@ class AnimeFragment : Fragment() {
             if (it) {
                 scope.launch {
                     withContext(Dispatchers.IO){
+                        model.loaded = true
                         model.loadTrending()
                         model.loadUpdated()
-                        popularModel.loadSearch("ANIME", sort = "POPULARITY_DESC")
+                        model.loadPopular("ANIME", sort = "POPULARITY_DESC")
                     }
                     live.postValue(false)
                     _binding?.animeRefresh?.isRefreshing = false
@@ -227,7 +227,7 @@ class AnimeFragment : Fragment() {
     }
 
     override fun onResume() {
-        Refresh.activity[this.hashCode()]!!.postValue(true)
+        if(!model.loaded) Refresh.activity[this.hashCode()]!!.postValue(true)
         super.onResume()
         trendHandler?.postDelayed(trendRun,4000)
     }

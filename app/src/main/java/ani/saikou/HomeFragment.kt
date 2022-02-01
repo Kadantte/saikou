@@ -43,7 +43,7 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val scope = lifecycleScope
         fun load(){
-            if(activity!=null) requireActivity().runOnUiThread {
+            if(activity!=null && _binding!=null) lifecycleScope.launch(Dispatchers.Main) {
                 binding.homeUserName.text = Anilist.username
                 binding.homeUserEpisodesWatched.text = Anilist.episodesWatched.toString()
                 binding.homeUserChaptersRead.text = Anilist.chapterRead.toString()
@@ -204,7 +204,7 @@ class HomeFragment : Fragment() {
     }
 
     override fun onResume() {
-        Refresh.activity[1]!!.postValue(true)
+        if(!model.loaded) Refresh.activity[1]!!.postValue(true)
         super.onResume()
     }
 }
