@@ -18,6 +18,7 @@ Saikou is crafted based on simplistic yet out-of-state elegancy. It is an [Anili
 
 **🌟STAR THIS REPOSITORY TO SUPPORT THE DEVELOPER AND ENCOURAGE THE DEVELOPMENT OF THE APPLICATION!**
 
+<img src="https://cdn.discordapp.com/attachments/754674374598197350/938901226140102756/Screenshot_2022-02-03-21-57-29-17_f4add486f0ca06883ca4fa789e77e31e.jpg" style="width: 23%" /><img src="https://cdn.discordapp.com/attachments/754674374598197350/938901225238298635/Screenshot_2022-02-03-21-57-58-19_f4add486f0ca06883ca4fa789e77e31e.jpg" style="width: 23%" /><img src="https://cdn.discordapp.com/attachments/754674374598197350/938901492394508409/Screenshot_2022-02-03-21-58-58-28_f4add486f0ca06883ca4fa789e77e31e.jpg" style="width: 23%" /><img src="https://cdn.discordapp.com/attachments/754674374598197350/938901492121882624/Screenshot_2022-02-03-21-59-07-16_f4add486f0ca06883ca4fa789e77e31e.jpg" style=" width: 23%" />
 ## APP FEATURES
 
 ✓ Easy and functional way to stream anime and read manga, free with no ads.
