@@ -31,6 +31,8 @@ import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import ani.saikou.*
 import ani.saikou.anilist.Anilist
+import ani.saikou.anime.source.AnimeSources
+import ani.saikou.anime.source.HSources
 import ani.saikou.databinding.ActivityExoplayerBinding
 import ani.saikou.media.Media
 import ani.saikou.media.MediaDetailsViewModel
@@ -356,6 +358,8 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         media = intent.getSerializableExtra("media")!! as Media
         model.setMedia(media)
 
+        model.watchSources = if(media.isAdult) HSources else AnimeSources
+
         model.epChanged.observe(this) {
             epChanging = !it
         }
@@ -538,6 +542,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
         exoSource.setOnClickListener {
             changingServer = true
             media.selected!!.stream = null
+            saveData("${media.id}_${media.anime!!.selectedEpisode}", exoPlayer.currentPosition, this)
             model.saveSelected(media.id,media.selected!!,this)
             model.onEpisodeClick(media,episode.number,this.supportFragmentManager,
                 launch = false,
