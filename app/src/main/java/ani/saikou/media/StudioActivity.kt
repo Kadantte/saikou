@@ -53,9 +53,6 @@ class StudioActivity : AppCompatActivity() {
                 binding.studioRecycler.layoutManager = LinearLayoutManager(this)
             }
         }
-        if(!loaded) scope.launch {
-            withContext(Dispatchers.IO){ model.loadStudio(studio) }
-        }
         val live = Refresh.activity.getOrPut(this.hashCode()) { MutableLiveData(true) }
         live.observe(this) {
             if (it) {

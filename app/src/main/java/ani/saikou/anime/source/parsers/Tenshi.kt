@@ -18,15 +18,15 @@ import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 
-class Tenshi(override val name: String="tenshi.moe") : AnimeParser() {
+open class Tenshi(override val name: String="tenshi.moe") : AnimeParser() {
     private var cookie:MutableMap<String, String>?=null
 
-    private fun getCookies(): MutableMap<String, String> {
+    fun getCookies(): MutableMap<String, String> {
         cookie = cookie ?: Jsoup.connect("https://check.ddos-guard.net/check.js").ignoreContentType(true).method(Connection.Method.GET).execute().cookies()
         return cookie!!
     }
 
-    private fun getCookieHeaders() : String{
+    fun getCookieHeaders() : String{
         var a = ""
         cookie = cookie ?: getCookies()
         cookie!!.forEach {
@@ -74,9 +74,9 @@ class Tenshi(override val name: String="tenshi.moe") : AnimeParser() {
         return episode
     }
 
-    private fun load(episode: Episode,it:Element){
+    open fun load(episode: Episode,it:Element){
         val server = it.text().replace(" ","").replace("/-","")
-        val url = "https://tenshi.moe/embed?v="+("${it.attr("href")}|").findBetween("?v=","|")
+        val url = "https://$name/embed?v="+("${it.attr("href")}|").findBetween("?v=","|")
         val unSanitized = Jsoup.connect(url).header("Referer",episode.link!!).cookies(getCookies()).get().select("main").toString().findBetween("player.source = ",";")!!
         val json = Json.decodeFromString<JsonObject>(
             Regex("""([a-z0-9A-Z_]+): """,RegexOption.DOT_MATCHES_ALL)
@@ -111,19 +111,24 @@ class Tenshi(override val name: String="tenshi.moe") : AnimeParser() {
         try{
             var slug:Source? = loadData("tenshi_${media.id}")
             if (slug==null) {
-                val it = media.getMangaName()
-                live.postValue("Searching for $it")
-                logger("Tenshi : Searching for $it")
-                val search = search(it)
-                if (search.isNotEmpty()) {
-                    slug = search[0]
-                    saveSource(slug,media.id,false)
+                fun s(it:String):Boolean{
+                    live.postValue("Searching for $it")
+                    logger("Tenshi : Searching for $it")
+                    val search = search(it)
+                    if (search.isNotEmpty()) {
+                        slug = search[0]
+                        saveSource(slug!!,media.id,false)
+                        return true
+                    }
+                    return false
                 }
+                if(!s(media.nameMAL?:media.name))
+                    s(media.nameRomaji)
             }
             else {
-                live.postValue("Selected : ${slug.name}")
+                live.postValue("Selected : ${slug!!.name}")
             }
-            if (slug!=null) return getSlugEpisodes(slug.link)
+            if (slug!=null) return getSlugEpisodes(slug!!.link)
         }catch (e:Exception){
             toastString("$e")
         }
@@ -134,7 +139,7 @@ class Tenshi(override val name: String="tenshi.moe") : AnimeParser() {
         logger("Searching for : $string")
         val responseArray = arrayListOf<Source>()
         try{
-            Jsoup.connect("https://tenshi.moe/anime?q=$string&s=vtt-d").cookies(mutableMapOf("loop-view" to "thumb")).cookies(getCookies()).get().apply {
+            Jsoup.connect("https://$name/anime?q=$string&s=vtt-d").cookies(mutableMapOf("loop-view" to "thumb")).cookies(getCookies()).get().apply {
                 select("ul.loop.anime-loop.thumb > li > a").forEach{
                     responseArray.add(
                         Source(

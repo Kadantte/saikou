@@ -24,6 +24,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import ani.saikou.*
 import ani.saikou.anilist.Anilist
 import ani.saikou.anime.AnimeWatchFragment
+import ani.saikou.anime.HWatchFragment
 import ani.saikou.databinding.ActivityMediaBinding
 import ani.saikou.manga.MangaSourceFragment
 import com.google.android.material.appbar.AppBarLayout
@@ -39,6 +40,7 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
     private lateinit var tabLayout : BottomNavigationView
     var selected = 0
     var anime = true
+    private var adult = false
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -126,15 +128,17 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
             }
         }
 
+        adult = media.isAdult
+
         tabLayout.menu.clear()
         if (media.anime!=null){
             binding.mediaTotal.text = if (media.anime!!.nextAiringEpisode!=null) " | "+(media.anime!!.nextAiringEpisode.toString()+" | "+(media.anime!!.totalEpisodes?:"~").toString()) else " | "+(media.anime!!.totalEpisodes?:"~").toString()
-            viewPager.adapter = ViewPagerAdapter(supportFragmentManager, lifecycle,true)
+            viewPager.adapter = ViewPagerAdapter(supportFragmentManager, lifecycle,true,adult)
             tabLayout.inflateMenu(R.menu.anime_menu_detail)
         }
         else if (media.manga!=null){
             binding.mediaTotal.text = " | "+(media.manga!!.totalChapters?:"~").toString()
-            viewPager.adapter = ViewPagerAdapter(supportFragmentManager, lifecycle,false)
+            viewPager.adapter = ViewPagerAdapter(supportFragmentManager, lifecycle,false,adult)
             tabLayout.inflateMenu(R.menu.manga_menu_detail)
             anime = false
         }
@@ -200,7 +204,7 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         super.onResume()
     }
     //ViewPager
-    private class ViewPagerAdapter(fragmentManager: FragmentManager, lifecycle: Lifecycle,private val anime:Boolean=true) :
+    private class ViewPagerAdapter(fragmentManager: FragmentManager, lifecycle: Lifecycle,private val anime:Boolean,private val adult:Boolean) :
         FragmentStateAdapter(fragmentManager, lifecycle) {
 
         override fun getItemCount(): Int = 2
@@ -209,7 +213,7 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
             if (anime){
                 when (position) {
                     0 -> return MediaInfoFragment()
-                    1 -> return AnimeWatchFragment()
+                    1 -> return if(!adult) AnimeWatchFragment() else HWatchFragment()
                 }
             }
             else{

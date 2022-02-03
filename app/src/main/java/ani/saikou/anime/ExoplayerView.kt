@@ -396,7 +396,7 @@ class ExoplayerView : AppCompatActivity(), Player.Listener {
             )
         }
         playerView.findViewById<ImageButton>(R.id.exo_next_ep).setOnClickListener {
-            if(episodeArr.size>currentEpisodeIndex+1) {
+            if(episodeArr.size>currentEpisodeIndex+1 && isInitialized) {
                 if(exoPlayer.currentPosition/episodeLength>0.8f && Anilist.userid!=null) {
                     if(progressDialog!=null) {
                         progressDialog?.setCancelable(false)

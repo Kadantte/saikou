@@ -2,8 +2,8 @@ package ani.saikou.anime.source
 
 import ani.saikou.anime.source.parsers.*
 
-object AnimeSources {
-    val Names = arrayListOf(
+object AnimeSources : Sources() {
+    override val names = arrayListOf(
         "GOGO",
         "GOGO-DUB",
         "9ANIME",
@@ -13,8 +13,8 @@ object AnimeSources {
         "TENSHI",
     )
 
-    private val animeParsers:MutableMap<Int,AnimeParser> = mutableMapOf()
-    operator fun get(i:Int) : AnimeParser?{
+    val animeParsers:MutableMap<Int,AnimeParser> = mutableMapOf()
+    override operator fun get(i:Int) : AnimeParser?{
         val a = when (i) {
             0 -> animeParsers.getOrPut(i) { Gogo() }
             1 -> animeParsers.getOrPut(i) { Gogo(true) }
@@ -27,7 +27,7 @@ object AnimeSources {
         }
         return a
     }
-    fun flushLive(){
+    override fun flushLive(){
         animeParsers.forEach{
             it.value.live.value=null
         }

@@ -2,6 +2,7 @@ package ani.saikou
 
 import android.animation.ObjectAnimator
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -34,6 +35,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 class AnimeFragment : Fragment() {
     private var _binding: FragmentAnimeBinding? = null
@@ -75,8 +78,19 @@ class AnimeFragment : Fragment() {
         binding.animePopularRecyclerView.updateLayoutParams{ height=resources.displayMetrics.heightPixels+navBarHeight-80f.px }
         binding.animePopularProgress.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin += navBarHeight }
         binding.animePopularRecyclerView.updatePaddingRelative(bottom = navBarHeight+80f.px)
-        binding.animeRefresh.setSlingshotDistance(statusBarHeight+128)
-        binding.animeRefresh.setProgressViewEndTarget(false, statusBarHeight+128)
+        var height = statusBarHeight
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val displayCutout = requireActivity().window.decorView.rootWindowInsets.displayCutout
+            if (displayCutout != null) {
+                if (displayCutout.boundingRects.size>0) {
+                    height = max(statusBarHeight,
+                        min(displayCutout.boundingRects[0].width(),displayCutout.boundingRects[0].height())
+                    )
+                }
+            }
+        }
+        binding.animeRefresh.setSlingshotDistance(height+128)
+        binding.animeRefresh.setProgressViewEndTarget(false, height+128)
         binding.animeRefresh.setOnRefreshListener {
             Refresh.activity[this.hashCode()]!!.postValue(true)
         }

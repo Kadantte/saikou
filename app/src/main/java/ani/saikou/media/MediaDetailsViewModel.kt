@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import ani.saikou.anilist.Anilist
 import ani.saikou.anime.Episode
 import ani.saikou.anime.SelectorDialogFragment
-import ani.saikou.anime.source.AnimeSources
+import ani.saikou.anime.source.Sources
 import ani.saikou.loadData
 import ani.saikou.logger
 import ani.saikou.manga.MangaChapter
@@ -45,33 +45,35 @@ class MediaDetailsViewModel:ViewModel() {
     fun getFillerEpisodes() : LiveData<MutableMap<String,Episode>> = fillerEpisodes
     fun loadFillerEpisodes(s:Media){ if (fillerEpisodes.value==null) fillerEpisodes.postValue(AnimeFillerList.getFillers(s.idMAL?:return))}
 
+    var watchSources:Sources?=null
+
     private val episodes: MutableLiveData<MutableMap<Int,MutableMap<String,Episode>>> = MutableLiveData<MutableMap<Int,MutableMap<String,Episode>>>(null)
     private val epsLoaded = mutableMapOf<Int,MutableMap<String,Episode>>()
     fun getEpisodes() : LiveData<MutableMap<Int,MutableMap<String,Episode>>> = episodes
     fun loadEpisodes(media: Media,i:Int){
         logger("Loading Episodes : $epsLoaded")
         if(!epsLoaded.containsKey(i)) {
-            epsLoaded[i] = AnimeSources[i]!!.getEpisodes(media)
+            epsLoaded[i] = watchSources?.get(i)!!.getEpisodes(media)
         }
         episodes.postValue(epsLoaded)
     }
     fun overrideEpisodes(i: Int, source: Source,id:Int){
-        AnimeSources[i]!!.saveSource(source,id)
-        epsLoaded[i] = AnimeSources[i]!!.getSlugEpisodes(source.link)
+        watchSources?.get(i)!!.saveSource(source,id)
+        epsLoaded[i] = watchSources?.get(i)!!.getSlugEpisodes(source.link)
         episodes.postValue(epsLoaded)
     }
 
     private var episode: MutableLiveData<Episode?> = MutableLiveData<Episode?>(null)
     fun getEpisode() : LiveData<Episode?> = episode
     fun loadEpisodeStreams(ep: Episode,i:Int){
-        episode.postValue(AnimeSources[i]?.getStreams(ep)?:ep)
+        episode.postValue(watchSources?.get(i)?.getStreams(ep)?:ep)
         MainScope().launch(Dispatchers.Main) {
             episode.value = null
         }
     }
     fun loadEpisodeStream(ep: Episode,selected: Selected):Boolean{
         return if(selected.stream!=null) {
-            episode.postValue(AnimeSources[selected.source]?.getStream(ep, selected.stream!!))
+            episode.postValue(watchSources?.get(selected.source)?.getStream(ep, selected.stream!!))
             MainScope().launch(Dispatchers.Main) {
                 episode.value = null
             }

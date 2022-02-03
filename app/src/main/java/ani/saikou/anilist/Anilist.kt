@@ -11,11 +11,13 @@ object Anilist {
 
     var token : String? = null
     var username : String? = null
+    var adult : Boolean = false
     var userid : Int? = null
     var avatar : String? = null
     var episodesWatched : Int? = null
     var chapterRead : Int? = null
     var genres:Map<String,String>?=null
+    var tags:ArrayList<String>?=null
     var sortBy = mapOf(
         Pair("Score","SCORE_DESC"),
         Pair("Popularity","POPULARITY_DESC"),

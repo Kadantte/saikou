@@ -32,6 +32,8 @@ class SearchActivity : AppCompatActivity() {
     private val scope = lifecycleScope
     private var screenWidth:Float = 0f
     private var search:SearchResults?=null
+    private var adult = false
+    val model: AnilistSearch by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,8 +68,7 @@ class SearchActivity : AppCompatActivity() {
         binding.searchGenre.setAdapter(ArrayAdapter(this, R.layout.item_dropdown,(Anilist.genres?: mapOf()).keys.toTypedArray()))
         binding.searchSortBy.setText(intent.getStringExtra("sortBy")?:"")
         binding.searchSortBy.setAdapter(ArrayAdapter(this, R.layout.item_dropdown,Anilist.sortBy.keys.toTypedArray()))
-
-        val model: AnilistSearch by viewModels()
+        binding.searchTag.setAdapter(ArrayAdapter(this, R.layout.item_dropdown,Anilist.tags?: arrayListOf()))
 
         fun recycler(){
             if (search!=null) {
@@ -130,8 +131,9 @@ class SearchActivity : AppCompatActivity() {
             val search = if (binding.searchBarText.text.toString()!="") binding.searchBarText.text.toString() else null
             val genre = if (binding.searchGenre.text.toString()!="") arrayListOf(binding.searchGenre.text.toString()) else null
             val sortBy = if (binding.searchSortBy.text.toString()!="") Anilist.sortBy[binding.searchSortBy.text.toString()] else null
+            val tag = if (binding.searchTag.text.toString()!="") arrayListOf(binding.searchTag.text.toString()) else null
             scope.launch {
-                withContext(Dispatchers.IO){ model.loadSearch(type,search,genre,sortBy?:"SEARCH_MATCH") }
+                withContext(Dispatchers.IO){ model.loadSearch(type,search,genre,tag,sortBy?:"SEARCH_MATCH",adult) }
             }
         }
 
@@ -146,10 +148,12 @@ class SearchActivity : AppCompatActivity() {
         }
         binding.searchBar.setEndIconOnClickListener{ searchTitle() }
         binding.searchGenre.setOnItemClickListener { _, _, _, _ -> searchTitle() }
+        binding.searchTag.setOnItemClickListener { _, _, _, _ -> searchTitle() }
         binding.searchSortBy.setOnItemClickListener { _, _, _, _ -> searchTitle() }
 
         binding.searchClear.setOnClickListener {
             binding.searchGenre.setText("")
+            binding.searchTag.setText("")
             binding.searchSortBy.setText("")
             searchTitle()
         }
@@ -167,6 +171,31 @@ class SearchActivity : AppCompatActivity() {
             grid = false
             saveData("searchGrid",grid)
             recycler()
+        }
+
+        if(Anilist.adult) {
+            binding.searchAdultCheck.visibility=View.VISIBLE
+            adult = intent.getBooleanExtra("hentai", false)
+            binding.searchAdultCheck.isChecked = adult
+            if(adult){
+                binding.searchGenreCont.visibility=View.GONE
+                binding.searchTagCont.visibility=View.VISIBLE
+            }
+            binding.searchAdultCheck.setOnCheckedChangeListener { _, b ->
+                adult = b
+                if(b && Anilist.tags!=null){
+                    binding.searchGenreCont.visibility=View.GONE
+                    binding.searchTagCont.visibility=View.VISIBLE
+                }else{
+                    binding.searchGenreCont.visibility=View.VISIBLE
+                    binding.searchTagCont.visibility=View.GONE
+                }
+                binding.searchGenre.setText("")
+                binding.searchTag.setText("")
+                searchTitle()
+            }
+        }else{
+            binding.searchAdultCheck.visibility=View.GONE
         }
 
         if(intent.getStringExtra("genre")!=null || intent.getStringExtra("sortBy")!=null) searchTitle()

@@ -36,7 +36,10 @@ class GenreAdapter(
     inner class GenreViewHolder(val binding: ItemGenreBinding) : RecyclerView.ViewHolder(binding.root) {
         init {
             itemView.setOnClickListener {
-                ContextCompat.startActivity(activity, Intent(activity, SearchActivity::class.java).putExtra("type",type).putExtra("genre",genres[bindingAdapterPosition]).putExtra("sortBy","Trending"),null)
+                ContextCompat.startActivity(activity, Intent(activity, SearchActivity::class.java).putExtra("type",type).putExtra("genre",genres[bindingAdapterPosition]).putExtra("sortBy","Trending").also {
+                    if(genres[bindingAdapterPosition].lowercase()=="hentai")
+                        it.putExtra("hentai",true)
+                },null)
             }
         }
     }

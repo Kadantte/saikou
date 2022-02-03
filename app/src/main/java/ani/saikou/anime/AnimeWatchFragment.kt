@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.anime.source.AnimeSources
+import ani.saikou.anime.source.HSources
+import ani.saikou.anime.source.Sources
 import ani.saikou.databinding.FragmentAnimeWatchBinding
 import ani.saikou.dp
 import ani.saikou.media.Media
@@ -26,7 +28,8 @@ import kotlinx.coroutines.launch
 import kotlin.math.ceil
 
 
-class AnimeWatchFragment : Fragment() {
+open class AnimeWatchFragment : Fragment() {
+    open val sources : Sources = AnimeSources
     private var _binding: FragmentAnimeWatchBinding? = null
     private val binding get() = _binding!!
     private val model : MediaDetailsViewModel by activityViewModels()
@@ -57,7 +60,10 @@ class AnimeWatchFragment : Fragment() {
                 media.selected = model.loadSelected(media.id)
                 progress = View.GONE
                 binding.mediaInfoProgressBar.visibility = progress
-                val adapter = AnimeWatchAdapter(it,this)
+
+                model.watchSources = if(media.isAdult) HSources else AnimeSources
+
+                val adapter = AnimeWatchAdapter(it,this,null,sources)
                 binding.animeSourceRecycler.adapter = adapter
 
                 model.getEpisodes().observe(viewLifecycleOwner) { loadedEpisodes ->
@@ -155,7 +161,7 @@ class AnimeWatchFragment : Fragment() {
         val selected = media.selected!!
         model.saveSelected(media.id,selected,requireActivity())
         val recyclerViewState = binding.animeSourceRecycler.layoutManager?.onSaveInstanceState()
-        val adapters: ArrayList<RecyclerView.Adapter<out RecyclerView.ViewHolder>> = arrayListOf(AnimeWatchAdapter(media,this,chipAdapter))
+        val adapters: ArrayList<RecyclerView.Adapter<out RecyclerView.ViewHolder>> = arrayListOf(AnimeWatchAdapter(media,this,chipAdapter,sources))
         if(media.anime?.episodes?.isNotEmpty()==true)
             adapters.add(episodeAdapter(media,this,resources.displayMetrics.widthPixels.dp,selected.recyclerStyle,selected.recyclerReversed,start,end))
         binding.animeSourceRecycler.adapter = ConcatAdapter(adapters)

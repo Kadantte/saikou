@@ -12,14 +12,14 @@ import android.widget.LinearLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import ani.saikou.R
-import ani.saikou.anime.source.AnimeSources
+import ani.saikou.anime.source.Sources
 import ani.saikou.databinding.ItemAnimeWatchBinding
 import ani.saikou.loadData
 import ani.saikou.loadImage
 import ani.saikou.media.Media
 import ani.saikou.media.SourceSearchDialogFragment
 
-class AnimeWatchAdapter(private val media: Media, private val fragment: AnimeWatchFragment, private val chips:AnimeWatchChipAdapter?=null): RecyclerView.Adapter<AnimeWatchAdapter.ViewHolder>() {
+class AnimeWatchAdapter(private val media: Media, private val fragment: AnimeWatchFragment, private val chips:AnimeWatchChipAdapter?=null,private val sources: Sources): RecyclerView.Adapter<AnimeWatchAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemAnimeWatchBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -52,10 +52,9 @@ class AnimeWatchAdapter(private val media: Media, private val fragment: AnimeWat
         }
 
         //Source Selection
-        val sources = AnimeSources.Names
-        binding.animeSource.setText(sources[media.selected!!.source])
-        AnimeSources[media.selected!!.source]!!.live.observe(fragment.viewLifecycleOwner){ binding.animeSourceTitle.text = it }
-        binding.animeSource.setAdapter(ArrayAdapter(fragment.requireContext(), R.layout.item_dropdown, sources))
+        binding.animeSource.setText(sources.names[media.selected!!.source])
+        sources[media.selected!!.source]!!.live.observe(fragment.viewLifecycleOwner){ binding.animeSourceTitle.text = it }
+        binding.animeSource.setAdapter(ArrayAdapter(fragment.requireContext(), R.layout.item_dropdown, sources.names))
         binding.animeSourceTitle.isSelected = true
         binding.animeSource.setOnItemClickListener { _, _, i, _ ->
             binding.animeSourceTitle.text = ""
@@ -105,10 +104,16 @@ class AnimeWatchAdapter(private val media: Media, private val fragment: AnimeWat
 
         //Episode Handling
         if(media.anime?.episodes!=null) {
-            val continueEp = loadData<String>("${media.id}_current_ep")?:media.userProgress?.plus(1).toString()
-            if(media.anime.episodes!!.containsKey(continueEp)) {
+            val episodes = media.anime.episodes!!.keys.toTypedArray()
+            var continueEp = loadData<String>("${media.id}_current_ep")?:media.userProgress?.plus(1).toString()
+            if(episodes.contains(continueEp)) {
                 binding.animeSourceContinue.visibility = View.VISIBLE
                 handleProgress(binding.itemEpisodeProgressCont,binding.itemEpisodeProgress,binding.itemEpisodeProgressEmpty,media.id,continueEp)
+                if((binding.itemEpisodeProgress.layoutParams as LinearLayout.LayoutParams).weight>0.8f)
+                    if(episodes.indexOf(continueEp)!=-1) {
+                        continueEp = episodes[episodes.indexOf(continueEp) + 1]
+                        handleProgress(binding.itemEpisodeProgressCont,binding.itemEpisodeProgress,binding.itemEpisodeProgressEmpty,media.id,continueEp)
+                    }
                 val ep = media.anime.episodes!![continueEp]!!
                 loadImage(ep.thumb?:media.banner?:media.cover,binding.itemEpisodeImage)
                 if(ep.filler) binding.itemEpisodeFillerView.visibility = View.VISIBLE

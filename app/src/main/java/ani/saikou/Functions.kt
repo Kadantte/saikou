@@ -11,10 +11,7 @@ import android.content.res.Resources.getSystem
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
-import android.os.Bundle
-import android.os.Environment
-import android.os.Handler
-import android.os.Looper
+import android.os.*
 import android.text.InputFilter
 import android.text.Spanned
 import android.util.AttributeSet
@@ -29,6 +26,7 @@ import android.widget.DatePicker
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -125,10 +123,12 @@ fun <T> loadData(fileName:String,activity: Activity?=null): T? {
     return null
 }
 
-fun initActivity(a: Activity,view:View?=null) {
+fun initActivity(a: Activity) {
     val window = a.window
     WindowCompat.setDecorFitsSystemWindows(window, false)
-    if (view != null) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+    if (statusBarHeight==0) {
         val windowInsets = ViewCompat.getRootWindowInsets(window.decorView.findViewById(android.R.id.content))
         if (windowInsets!=null) {
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -488,7 +488,8 @@ fun download(activity: Activity, episode:Episode, animeTitle:String){
             request.addRequestHeader(it.key,it.value)
         }
     }
-    try {
+    try{
+    CoroutineScope(Dispatchers.IO).launch {
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         val direct = File(Environment.DIRECTORY_DOWNLOADS + "/Saikou/${animeTitle}/")
         if (!direct.exists()) direct.mkdirs()
@@ -498,12 +499,12 @@ fun download(activity: Activity, episode:Episode, animeTitle:String){
 
         request.setDestinationInExternalPublicDir(
             Environment.DIRECTORY_DOWNLOADS,
-            "/Saikou/${animeTitle}/$title (${stream.quality[episode.selectedQuality].quality})"
+            "/Saikou/${animeTitle}/$title (${stream.quality[episode.selectedQuality].quality}).mp4"
         )
         request.setTitle("$title : $animeTitle")
         manager.enqueue(request)
         toastString("Started Downloading\n$title : $animeTitle")
-    }catch (e:SecurityException){
+    }} catch (e:SecurityException){
         toastString("Please give permission to access Media from Settings, & Try again.")
     }
     catch (e:Exception){

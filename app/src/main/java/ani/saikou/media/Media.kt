@@ -19,6 +19,7 @@ data class Media(
     val banner: String?=null,
     var relation: String? =null,
 
+    var isAdult: Boolean,
     var isFav: Boolean = false,
     var notify: Boolean = false,
     val userPreferredName: String,

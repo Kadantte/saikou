@@ -35,13 +35,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q)
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         binding.root.doOnAttach {
-        initActivity(this, binding.root)
+        initActivity(this)
 
             binding.navbarContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> {
             bottomMargin = navBarHeight

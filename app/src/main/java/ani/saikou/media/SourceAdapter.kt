@@ -43,7 +43,7 @@ abstract class SourceAdapter(
             var a = true
             itemView.setOnLongClickListener {
                 a = !a
-                binding.itemCompactTitle.isSingleLine = a
+                binding.itemCompactTitle.maxLines = if(a) 1 else 100
                 true
             }
         }

@@ -2,6 +2,7 @@ package ani.saikou
 
 import android.animation.ObjectAnimator
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -24,6 +25,8 @@ import ani.saikou.media.Media
 import ani.saikou.media.MediaAdaptor
 import ani.saikou.user.ListActivity
 import kotlinx.coroutines.*
+import kotlin.math.max
+import kotlin.math.min
 
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
@@ -93,8 +96,17 @@ class HomeFragment : Fragment() {
                 }
             }
         }
-        binding.homeRefresh.setSlingshotDistance(statusBarHeight+128)
-        binding.homeRefresh.setProgressViewEndTarget(false, statusBarHeight+128)
+        var height = statusBarHeight
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val displayCutout = requireActivity().window.decorView.rootWindowInsets.displayCutout
+            if (displayCutout != null) {
+                if (displayCutout.boundingRects.size>0) {
+                    height = max(statusBarHeight,min(displayCutout.boundingRects[0].width(),displayCutout.boundingRects[0].height()))
+                }
+            }
+        }
+        binding.homeRefresh.setSlingshotDistance(height+128)
+        binding.homeRefresh.setProgressViewEndTarget(false, height+128)
         binding.homeRefresh.setOnRefreshListener {
             Refresh.activity[1]!!.postValue(true)
         }
@@ -183,18 +195,12 @@ class HomeFragment : Fragment() {
                             if (Anilist.query.getUserData()) load() else logger("Error loading data")
                         else load()
                         model.loaded = true
-                        //get Watching in new Thread
-                        val a = async { model.setAnimeContinue() }
-                        //get Reading in new Thread
-                        val b = async { model.setMangaContinue() }
-                        // get genres and respective images
-                        val c = async { model.setListImages() }
-                        //get List Images in current Thread(idle)
-
-                        //get Recommended in current Thread(idle)
-                        model.setRecommendation()
-
-                        awaitAll(a, b, c)
+                        arrayListOf<Deferred<*>>(
+                            async { model.setAnimeContinue() },
+                            async { model.setMangaContinue() },
+                            async { model.setListImages() },
+                            async {  model.setRecommendation() }
+                        ).awaitAll()
                     }
                     live.postValue(false)
                     _binding?.homeRefresh?.isRefreshing = false

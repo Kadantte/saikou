@@ -19,7 +19,6 @@ import ani.saikou.databinding.ActivityCharacterBinding
 import com.google.android.material.appbar.AppBarLayout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -62,7 +61,7 @@ class CharacterDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChang
 //        binding.characterBanner.setOnClickListener{ openImage(character.banner) }
 
         model.getCharacter().observe(this) {
-            if (it != null) {
+            if (it != null && !loaded) {
                 character = it
                 loaded = true
                 binding.characterProgress.visibility = View.GONE
@@ -91,14 +90,11 @@ class CharacterDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChang
                 }
             }
         }
-        if(!loaded) scope.launch {
-            withContext(Dispatchers.IO){ model.loadCharacter(character) }
-        }
 
-        val live = Refresh.activity.getOrPut(this.hashCode()){ MutableLiveData(false) }
+        val live = Refresh.activity.getOrPut(this.hashCode()){ MutableLiveData(true) }
         live.observe(this){
-            scope.launch {
-                withContext(Dispatchers.IO){ model.loadCharacter(character) }
+            scope.launch (Dispatchers.IO){
+               model.loadCharacter(character)
             }
         }
     }
