@@ -444,14 +444,15 @@ class AnilistQueries{
         val genres:MutableMap<String,String>? = loadData("genres",activity)
         var tags:ArrayList<String>? = loadData("tags",activity)
         val time :Long?= loadData("genresTime",activity)
-        suspend fun get(){
-            fun snack(string:String){
-                activity.runOnUiThread {
-                    val snackBar = Snackbar.make(activity.window.decorView.findViewById(android.R.id.content), string, Snackbar.LENGTH_LONG)
-                    snackBar.view.translationY = -navBarHeight.dp
-                    snackBar.show()
-                }
+        fun snack(string:String){
+            activity.runOnUiThread {
+                val snackBar = Snackbar.make(activity.window.decorView.findViewById(android.R.id.content), string, Snackbar.LENGTH_LONG)
+                snackBar.view.translationY = -navBarHeight.dp
+                snackBar.show()
             }
+        }
+        suspend fun get(){
+
             snack("Updating Genres, Please wait...")
             val returnMap = mutableMapOf<String,String>()
             val query = "{GenreCollection}"
@@ -505,8 +506,9 @@ class AnilistQueries{
             else get()
         }
         if (tags==null){
+            snack("Tags not Found, Loading Tags")
             success=false
-            executeQuery("""{ MediaTagCollection { name isAdult } }""")?.get("data")?.apply {
+            executeQuery("""{ MediaTagCollection { name isAdult } }""", force = true)!!["data"]!!.apply {
                 if(this!=JsonNull){
                     tags = arrayListOf()
                     this.jsonObject["MediaTagCollection"]!!.jsonArray.forEach{
