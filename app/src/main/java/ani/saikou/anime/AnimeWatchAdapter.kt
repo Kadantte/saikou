@@ -110,9 +110,9 @@ class AnimeWatchAdapter(private val media: Media, private val fragment: AnimeWat
                 binding.animeSourceContinue.visibility = View.VISIBLE
                 handleProgress(binding.itemEpisodeProgressCont,binding.itemEpisodeProgress,binding.itemEpisodeProgressEmpty,media.id,continueEp)
                 if((binding.itemEpisodeProgress.layoutParams as LinearLayout.LayoutParams).weight>0.8f){
-                    val e=episodes.indexOf(continueEp)
-                    if(e!=-1 && e<episodes.size) {
-                        continueEp = episodes[episodes.indexOf(continueEp) + 1]
+                    val  e = episodes.indexOf(continueEp)
+                    if (e != - 1 && e+1 < episodes.size) {
+                        continueEp = episodes[e + 1]
                         handleProgress(binding.itemEpisodeProgressCont,binding.itemEpisodeProgress,binding.itemEpisodeProgressEmpty,media.id,continueEp)
                     }
                 }
