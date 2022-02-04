@@ -28,11 +28,11 @@ class MediaDetailsViewModel:ViewModel() {
         return loadData<Selected>("$id-select")?: Selected()
     }
 
-    var continueMedia = false
+    var continueMedia:Boolean? = null
 
     private val media: MutableLiveData<Media> = MutableLiveData<Media>(null)
     fun getMedia(): LiveData<Media> = media
-    fun loadMedia(m:Media) { media.postValue(Anilist.query.mediaDetails(m)) }
+    fun loadMedia(m:Media) { if (m.shareLink==null) media.postValue(Anilist.query.mediaDetails(m)) }
     fun setMedia(m:Media) = media.postValue(m)
 
     val sources = MutableLiveData<ArrayList<Source>?>(null)

@@ -161,7 +161,7 @@ class MediaDetailsActivity : AppCompatActivity(), AppBarLayout.OnOffsetChangedLi
         tabLayout.selectedItemId = idFromSelect()
         viewPager.setCurrentItem(selected,false)
 
-        model.continueMedia = media.cameFromContinue
+        if(model.continueMedia==null) model.continueMedia = media.cameFromContinue
         if(media.cameFromContinue) selected = 1
         scope.launch {
             withContext(Dispatchers.IO){ model.loadMedia(media) }

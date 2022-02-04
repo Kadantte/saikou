@@ -13,16 +13,12 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import ani.saikou.R
+import ani.saikou.*
 import ani.saikou.databinding.BottomSheetSelectorBinding
 import ani.saikou.databinding.ItemStreamBinding
 import ani.saikou.databinding.ItemUrlBinding
-import ani.saikou.download
 import ani.saikou.media.Media
 import ani.saikou.media.MediaDetailsViewModel
-import ani.saikou.navBarHeight
-import ani.saikou.toastString
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.*
 import java.text.DecimalFormat
 

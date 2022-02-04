@@ -53,7 +53,7 @@ open class AnimeWatchFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.animeSourceRecycler.updatePadding(bottom = binding.animeSourceRecycler.paddingBottom + navBarHeight)
         binding.animeSourceRecycler.layoutManager = LinearLayoutManager(requireContext())
-        continueEp = model.continueMedia
+        continueEp = model.continueMedia?:false
         model.getMedia().observe(viewLifecycleOwner){
             if(it!=null){
                 media = it
@@ -136,7 +136,7 @@ open class AnimeWatchFragment : Fragment() {
         media.selected!!.source = i
         model.saveSelected(media.id, media.selected!!, requireActivity())
         lifecycleScope.launch(Dispatchers.IO) { model.loadEpisodes(media, i) }
-        return AnimeSources[i]!!.live
+        return sources[i]!!.live
     }
 
     fun onIconPressed(viewType:Int,reverse:Boolean){
@@ -154,6 +154,7 @@ open class AnimeWatchFragment : Fragment() {
     }
 
     fun onEpisodeClick(i:String){
+        model.continueMedia = false
         model.onEpisodeClick(media,i,requireActivity().supportFragmentManager)
     }
 
@@ -169,7 +170,7 @@ open class AnimeWatchFragment : Fragment() {
     }
 
     override fun onDestroy() {
-        AnimeSources.flushLive()
+        sources.flushLive()
         super.onDestroy()
     }
 

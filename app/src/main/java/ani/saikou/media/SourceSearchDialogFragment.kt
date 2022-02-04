@@ -12,6 +12,7 @@ import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import ani.saikou.BottomSheetDialogFragment
 import ani.saikou.anime.source.AnimeSourceAdapter
 import ani.saikou.anime.source.AnimeSources
 import ani.saikou.anime.source.HSources
@@ -20,7 +21,6 @@ import ani.saikou.manga.source.MangaSourceAdapter
 import ani.saikou.manga.source.MangaSources
 import ani.saikou.navBarHeight
 import ani.saikou.px
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

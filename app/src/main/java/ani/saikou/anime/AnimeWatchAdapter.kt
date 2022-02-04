@@ -109,11 +109,13 @@ class AnimeWatchAdapter(private val media: Media, private val fragment: AnimeWat
             if(episodes.contains(continueEp)) {
                 binding.animeSourceContinue.visibility = View.VISIBLE
                 handleProgress(binding.itemEpisodeProgressCont,binding.itemEpisodeProgress,binding.itemEpisodeProgressEmpty,media.id,continueEp)
-                if((binding.itemEpisodeProgress.layoutParams as LinearLayout.LayoutParams).weight>0.8f)
-                    if(episodes.indexOf(continueEp)!=-1) {
+                if((binding.itemEpisodeProgress.layoutParams as LinearLayout.LayoutParams).weight>0.8f){
+                    val e=episodes.indexOf(continueEp)
+                    if(e!=-1 && e<episodes.size) {
                         continueEp = episodes[episodes.indexOf(continueEp) + 1]
                         handleProgress(binding.itemEpisodeProgressCont,binding.itemEpisodeProgress,binding.itemEpisodeProgressEmpty,media.id,continueEp)
                     }
+                }
                 val ep = media.anime.episodes!![continueEp]!!
                 loadImage(ep.thumb?:media.banner?:media.cover,binding.itemEpisodeImage)
                 if(ep.filler) binding.itemEpisodeFillerView.visibility = View.VISIBLE
@@ -122,8 +124,11 @@ class AnimeWatchAdapter(private val media: Media, private val fragment: AnimeWat
                     fragment.onEpisodeClick(continueEp)
                 }
                 if(fragment.continueEp) {
-                    if((binding.itemEpisodeProgress.layoutParams as LinearLayout.LayoutParams).weight<0.8f) binding.animeSourceContinue.performClick()
-                    fragment.continueEp = false
+                    if((binding.itemEpisodeProgress.layoutParams as LinearLayout.LayoutParams).weight<0.8f) {
+                        binding.animeSourceContinue.performClick()
+                        fragment.continueEp = false
+                    }
+
                 }
             }
             binding.animeSourceProgressBar.visibility = View.GONE

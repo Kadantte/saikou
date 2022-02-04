@@ -7,6 +7,7 @@ import android.app.DatePickerDialog
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.content.res.Resources.getSystem
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -40,6 +41,8 @@ import ani.saikou.anilist.Anilist
 import ani.saikou.anime.Episode
 import ani.saikou.media.Media
 import ani.saikou.media.Source
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.squareup.picasso.OkHttp3Downloader
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.CoroutineScope
@@ -138,9 +141,19 @@ fun initActivity(a: Activity) {
     }
 }
 
+open class BottomSheetDialogFragment : BottomSheetDialogFragment() {
+    override fun onStart() {
+        super.onStart()
+        if (this.resources.configuration.orientation != Configuration.ORIENTATION_PORTRAIT) {
+            val behavior = BottomSheetBehavior.from(requireView().parent as View)
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        }
+    }
+}
 
 fun isOnline(context: Context): Boolean {
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    try{
     val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
     if (capabilities != null) {
         when {
@@ -156,7 +169,14 @@ fun isOnline(context: Context): Boolean {
                 logger("Device on Ethernet, TF man?")
                 return true
             }
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) ->{
+                logger("Device on VPN")
+                return true
+            }
         }
+    }
+    }catch (e:Exception){
+        toastString(e.toString())
     }
     return false
 }
@@ -488,8 +508,8 @@ fun download(activity: Activity, episode:Episode, animeTitle:String){
             request.addRequestHeader(it.key,it.value)
         }
     }
-    try{
     CoroutineScope(Dispatchers.IO).launch {
+        try{
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         val direct = File(Environment.DIRECTORY_DOWNLOADS + "/Saikou/${animeTitle}/")
         if (!direct.exists()) direct.mkdirs()
@@ -504,11 +524,12 @@ fun download(activity: Activity, episode:Episode, animeTitle:String){
         request.setTitle("$title : $animeTitle")
         manager.enqueue(request)
         toastString("Started Downloading\n$title : $animeTitle")
-    }} catch (e:SecurityException){
-        toastString("Please give permission to access Media from Settings, & Try again.")
-    }
-    catch (e:Exception){
-        toastString(e.toString())
+        } catch (e:SecurityException){
+            toastString("Please give permission to access Media from Settings, & Try again.")
+        }
+        catch (e:Exception){
+            toastString(e.toString())
+        }
     }
 }
 

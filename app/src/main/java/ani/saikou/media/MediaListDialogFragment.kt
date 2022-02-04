@@ -14,7 +14,6 @@ import androidx.lifecycle.lifecycleScope
 import ani.saikou.*
 import ani.saikou.anilist.Anilist
 import ani.saikou.databinding.BottomSheetMediaListBinding
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

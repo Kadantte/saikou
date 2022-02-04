@@ -98,7 +98,7 @@ class HomeFragment : Fragment() {
         }
         var height = statusBarHeight
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            val displayCutout = requireActivity().window.decorView.rootWindowInsets.displayCutout
+            val displayCutout = activity?.window?.decorView?.rootWindowInsets?.displayCutout
             if (displayCutout != null) {
                 if (displayCutout.boundingRects.size>0) {
                     height = max(statusBarHeight,min(displayCutout.boundingRects[0].width(),displayCutout.boundingRects[0].height()))

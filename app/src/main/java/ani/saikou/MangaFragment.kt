@@ -80,7 +80,7 @@ class MangaFragment : Fragment() {
         binding.mangaPopularRecyclerView.updatePaddingRelative(bottom = navBarHeight+80f.px)
         var height = statusBarHeight
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            val displayCutout = requireActivity().window.decorView.rootWindowInsets.displayCutout
+            val displayCutout = activity?.window?.decorView?.rootWindowInsets?.displayCutout
             if (displayCutout != null) {
                 if (displayCutout.boundingRects.size>0) {
                     height = max(statusBarHeight,
