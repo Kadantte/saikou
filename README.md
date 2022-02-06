@@ -41,7 +41,7 @@ Saikou is crafted based on simplistic yet out-of-state elegancy. It is an [Anili
  
 | SITE                                  | STATUS  |
 |:-------------------------------------:|:-------:|
-| [MangaBuddy](https://mangabuddy.com/) | WORKING |
+| [MangaBuddy](https://mangabuddy.com/) | NO |
 | [MangaSee](https://mangasee123.com/)  | WORKING |
 | [MangaPill](https://mangapill.com/)   | WORKING |
 | [MangaDex](https://mangadex.org/)     | WORKING |
