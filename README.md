@@ -31,7 +31,7 @@ Saikou is crafted based on simplistic yet out-of-state elegancy. It is an [Anili
 | SITE                       | STATUS  | DOWNLOADS |
 |:--------------------------:|:-------:|:---------:|
 | [Gogo](https://gogoanime.cm)       | WORKING | SOME      |
-| [Zoro](https://zoro.to)            | WORKING | NO        |
+| [Zoro](https://zoro.to)            | NO | NO        |
 | [9Anime](https://animekisa.in) 😮  | WORKING | NO        |
 | [Tenshi](https://tenshi.moe)       | WORKING | YES       |
 | [Twist](https://twist.moe)         | WORKING | YES       |
@@ -41,7 +41,7 @@ Saikou is crafted based on simplistic yet out-of-state elegancy. It is an [Anili
  
 | SITE                                  | STATUS  |
 |:-------------------------------------:|:-------:|
-| [MangaBuddy](https://mangabuddy.com/) | NO |
+| [MangaBuddy](https://mangabuddy.com/) | WORKING |
 | [MangaSee](https://mangasee123.com/)  | WORKING |
 | [MangaPill](https://mangapill.com/)   | WORKING |
 | [MangaDex](https://mangadex.org/)     | WORKING |
